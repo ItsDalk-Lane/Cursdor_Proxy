@@ -1,0 +1,15 @@
+.idea
+app
+app.asar.unpacked
+app.asar
+app-backup.asar
+test
+PS C:\Code\DDCS> python ddcs.py --v2
+C:\Code\DDCS\lib\extract.py:14: SyntaxWarning: invalid escape sequence '\{'
+  _re_text_vars = re.compile("(\{\d+})")
+Traceback (most recent call last):
+  File "C:\Code\DDCS\ddcs.py", line 12, in <module>
+    from lib.extract import replace
+  File "C:\Code\DDCS\lib\extract.py", line 6, in <module>
+    import black
+ModuleNotFoundError: No module named 'black'
