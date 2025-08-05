@@ -1,11 +1,10 @@
 {
-	"id": "sample-plugin",
-	"name": "Sample Plugin",
+	"id": "ai-chat",
+	"name": "AI 对话助手",
 	"version": "1.0.0",
 	"minAppVersion": "0.15.0",
-	"description": "Demonstrates some of the capabilities of the Obsidian API.",
-	"author": "Obsidian",
-	"authorUrl": "https://obsidian.md",
-	"fundingUrl": "https://obsidian.md/pricing",
+	"description": "简洁的 AI 对话界面，支持多种 AI 服务提供商。",
+	"author": "基于 HiNote 修改",
+	"authorUrl": "https://github.com/CatMuse",
 	"isDesktopOnly": false
 }

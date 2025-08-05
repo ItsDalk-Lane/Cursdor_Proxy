@@ -1,133 +1,208 @@
-import { App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting } from 'obsidian';
+import { Plugin } from 'obsidian';
+import { EnhancedAISettingTab } from './src/settings/SimpleEnhancedAISettingTab';
+import { PluginSettings, DEFAULT_SETTINGS } from './src/types';
+import { ChatView } from './src/components/ChatView';
+import { t } from './src/i18n';
 
-// Remember to rename these classes and interfaces!
-
-interface MyPluginSettings {
-	mySetting: string;
-}
-
-const DEFAULT_SETTINGS: MyPluginSettings = {
-	mySetting: 'default'
-}
-
-export default class HelloWorldPlugin extends Plugin {
-	settings: MyPluginSettings;
+export default class ChatPlugin extends Plugin {
+	settings: PluginSettings;
 
 	async onload() {
-		await this.loadSettings();
+		// 加载设置
+		const loadedData = await this.loadData();
+		this.settings = Object.assign({}, DEFAULT_SETTINGS, loadedData);
 
-		// This creates an icon in the left ribbon.
-		this.addRibbonIcon('dice', 'Hello Plugin', () => {
-			new Notice('你好啊！这是一个通知！');
-		});
-		// Perform additional things with the ribbon
-		// ribbonIconEl.addClass('my-plugin-ribbon-class'); // This line was removed as per the edit hint
+		// 添加设置标签页 - 使用新的增强设置标签页
+		this.addSettingTab(new EnhancedAISettingTab(this.app, this));
 
-		// This adds a status bar item to the bottom of the app. Does not work on mobile apps.
-		const statusBarItemEl = this.addStatusBarItem();
-		statusBarItemEl.setText('状态栏文字能不能改变了吗？');
-
-		// This adds a simple command that can be triggered anywhere
+		// 添加打开对话窗口的命令
 		this.addCommand({
-			id: 'open-sample-modal-simple',
-			name: 'Open sample modal (simple)',
+			id: 'open-chat-window',
+			name: t('Open AI chat window'),
 			callback: () => {
-				new SampleModal(this.app).open();
-			}
-		});
-		// This adds an editor command that can perform some operation on the current editor instance
-		this.addCommand({
-			id: 'sample-editor-command',
-			name: 'Sample editor command',
-			editorCallback: (editor: Editor, view: MarkdownView) => {
-				console.log(editor.getSelection());
-				editor.replaceSelection('Sample Editor Command');
-			}
-		});
-		// This adds a complex command that can check whether the current state of the app allows execution of the command
-		this.addCommand({
-			id: 'open-sample-modal-complex',
-			name: 'Open sample modal (complex)',
-			checkCallback: (checking: boolean) => {
-				// Conditions to check
-				const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
-				if (markdownView) {
-					// If checking is true, we're simply "checking" if the command can be run.
-					// If checking is false, then we want to actually perform the operation.
-					if (!checking) {
-						new SampleModal(this.app).open();
-					}
-
-					// This command will only show up in Command Palette when the check function returns true
-					return true;
-				}
+				const chatView = ChatView.getInstance(this.app, this);
+				chatView.show();
 			}
 		});
 
-		// This adds a settings tab so the user can configure various aspects of the plugin
-		this.addSettingTab(new SampleSettingTab(this.app, this));
-
-		// If the plugin hooks up any global DOM events (on parts of the app that doesn't belong to this plugin)
-		// Using this function will automatically remove the event listener when this plugin is disabled.
-		this.registerDomEvent(document, 'click', (evt: MouseEvent) => {
-			console.log('click', evt);
-		});
-
-		// When registering intervals, this function will automatically clear the interval when the plugin is disabled.
-		this.registerInterval(window.setInterval(() => console.log('setInterval'), 5 * 60 * 1000));
+		// 添加工具栏按钮
+		this.addRibbonIcon(
+			'bot-message-square',
+			'AI 对话',
+			() => {
+				const chatView = ChatView.getInstance(this.app, this);
+				chatView.show();
+			}
+		);
 	}
 
-	onunload() {
-
+	async onunload() {
+		// 如果对话窗口打开，关闭它
+		if (ChatView.instance) {
+			ChatView.instance.close();
+		}
 	}
 
 	async loadSettings() {
-		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
-	}
+        const loadedData = await this.loadData();
+        
+        // 初始化设置
+        if (!this.settings) {
+            this.settings = {
+                ai: {
+                    provider: DEFAULT_SETTINGS.ai.provider,
+                    openai: DEFAULT_SETTINGS.ai.openai ? { ...DEFAULT_SETTINGS.ai.openai } : undefined,
+                    anthropic: DEFAULT_SETTINGS.ai.anthropic ? { ...DEFAULT_SETTINGS.ai.anthropic } : undefined,
+                    gemini: DEFAULT_SETTINGS.ai.gemini ? { ...DEFAULT_SETTINGS.ai.gemini } : undefined,
+                    ollama: DEFAULT_SETTINGS.ai.ollama ? { ...DEFAULT_SETTINGS.ai.ollama } : undefined,
+                    deepseek: DEFAULT_SETTINGS.ai.deepseek ? { ...DEFAULT_SETTINGS.ai.deepseek } : undefined,
+                    siliconflow: DEFAULT_SETTINGS.ai.siliconflow ? { ...DEFAULT_SETTINGS.ai.siliconflow } : undefined
+                }
+            };
+        }
 
-	async saveSettings() {
-		await this.saveData(this.settings);
-	}
-}
+        if (loadedData?.ai) {
+            // 分别合并每个服务提供商的设置
+            if (loadedData.ai.provider) {
+                this.settings.ai.provider = loadedData.ai.provider;
+            }
+            if (loadedData.ai.openai && this.settings.ai.openai) {
+                this.settings.ai.openai = {
+                    apiKey: loadedData.ai.openai.apiKey || this.settings.ai.openai.apiKey,
+                    model: loadedData.ai.openai.model || this.settings.ai.openai.model,
+                    baseUrl: loadedData.ai.openai.baseUrl
+                };
+            }
+            if (loadedData.ai.anthropic && this.settings.ai.anthropic) {
+                this.settings.ai.anthropic = {
+                    apiKey: loadedData.ai.anthropic.apiKey || this.settings.ai.anthropic.apiKey,
+                    model: loadedData.ai.anthropic.model || this.settings.ai.anthropic.model,
+                    availableModels: loadedData.ai.anthropic.availableModels,
+                    apiAddress: loadedData.ai.anthropic.apiAddress || loadedData.ai.anthropic.baseUrl,
+                    isCustomModel: loadedData.ai.anthropic.isCustomModel || false,
+                    lastCustomModel: loadedData.ai.anthropic.lastCustomModel || ''
+                };
+            }
+            if (loadedData.ai.gemini && this.settings.ai.gemini) {
+                this.settings.ai.gemini = {
+                    apiKey: loadedData.ai.gemini.apiKey || this.settings.ai.gemini.apiKey,
+                    model: loadedData.ai.gemini.model || this.settings.ai.gemini.model,
+                    baseUrl: loadedData.ai.gemini.baseUrl,
+                    isCustomModel: loadedData.ai.gemini.isCustomModel || false
+                };
+            }
+            if (loadedData.ai.ollama && this.settings.ai.ollama) {
+                this.settings.ai.ollama = {
+                    host: loadedData.ai.ollama.host || this.settings.ai.ollama.host,
+                    model: loadedData.ai.ollama.model || this.settings.ai.ollama.model,
+                    availableModels: loadedData.ai.ollama.availableModels
+                };
+            }
+            if (loadedData.ai.deepseek && this.settings.ai.deepseek) {
+                this.settings.ai.deepseek = {
+                    apiKey: loadedData.ai.deepseek.apiKey || this.settings.ai.deepseek.apiKey,
+                    model: loadedData.ai.deepseek.model || this.settings.ai.deepseek.model,
+                    baseUrl: loadedData.ai.deepseek.baseUrl
+                };
+            }
+            if (loadedData.ai.siliconflow && this.settings.ai.siliconflow) {
+                this.settings.ai.siliconflow = {
+                    apiKey: loadedData.ai.siliconflow.apiKey || this.settings.ai.siliconflow.apiKey,
+                    model: loadedData.ai.siliconflow.model || this.settings.ai.siliconflow.model,
+                    baseUrl: loadedData.ai.siliconflow.baseUrl,
+                    isCustomModel: loadedData.ai.siliconflow.isCustomModel || false,
+                    lastCustomModel: loadedData.ai.siliconflow.lastCustomModel || ''
+                };
+            }
+        }
 
-class SampleModal extends Modal {
-	constructor(app: App) {
-		super(app);
-	}
+        await this.saveSettings();
+    }
 
-	onOpen() {
-		const {contentEl} = this;
-		contentEl.setText('Woah!');
-	}
+    async saveSettings() {
+        // 确保基础设置存在
+        if (!this.settings) {
+            this.settings = { ...DEFAULT_SETTINGS };
+        }
 
-	onClose() {
-		const {contentEl} = this;
-		contentEl.empty();
-	}
-}
+        // 确保 AI 设置存在
+        if (!this.settings.ai) {
+            this.settings.ai = { ...DEFAULT_SETTINGS.ai };
+        }
 
-class SampleSettingTab extends PluginSettingTab {
-	plugin: HelloWorldPlugin;
+        // 确保每个 AI 服务提供商的设置都存在并有默认值
+        if (!this.settings.ai.openai) {
+            this.settings.ai.openai = {
+                apiKey: '',
+                model: DEFAULT_SETTINGS.ai.openai?.model || 'gpt-4o',
+                baseUrl: DEFAULT_SETTINGS.ai.openai?.baseUrl
+            };
+        }
+        if (!this.settings.ai.anthropic) {
+            this.settings.ai.anthropic = {
+                apiKey: '',
+                model: 'claude-2',
+                availableModels: DEFAULT_SETTINGS.ai.anthropic?.availableModels,
+                apiAddress: DEFAULT_SETTINGS.ai.anthropic?.apiAddress,
+                isCustomModel: false,
+                lastCustomModel: ''
+            };
+        }
+        if (!this.settings.ai.gemini) {
+            this.settings.ai.gemini = {
+                apiKey: '',
+                model: 'gemini-1.5-flash',
+                isCustomModel: false,
+                baseUrl: DEFAULT_SETTINGS.ai.gemini?.baseUrl
+            };
+        }
+        if (!this.settings.ai.ollama) {
+            this.settings.ai.ollama = {
+                host: 'http://localhost:11434',
+                model: '',
+                availableModels: DEFAULT_SETTINGS.ai.ollama?.availableModels
+            };
+        }
+        if (!this.settings.ai.deepseek) {
+            this.settings.ai.deepseek = {
+                apiKey: '',
+                model: 'deepseek-chat',
+                baseUrl: DEFAULT_SETTINGS.ai.deepseek?.baseUrl
+            };
+        }
+        if (!this.settings.ai.siliconflow) {
+            this.settings.ai.siliconflow = {
+                apiKey: '',
+                model: 'deepseek-ai/DeepSeek-V2.5',
+                baseUrl: DEFAULT_SETTINGS.ai.siliconflow?.baseUrl,
+                isCustomModel: false,
+                lastCustomModel: ''
+            };
+        }
+        
+        await this.saveData(this.settings);
+    }
 
-	constructor(app: App, plugin: HelloWorldPlugin) {
-		super(app, plugin);
-		this.plugin = plugin;
-	}
-
-	display(): void {
-		const {containerEl} = this;
-
-		containerEl.empty();
-
-		new Setting(containerEl)
-			.setName('Setting #1')
-			.setDesc('It\'s a secret')
-			.addText(text => text
-				.setPlaceholder('Enter your secret')
-				.setValue(this.plugin.settings.mySetting)
-				.onChange(async (value) => {
-					this.plugin.settings.mySetting = value;
-					await this.plugin.saveSettings();
-				}));
-	}
+    // 获取当前活跃的模型配置
+    getCurrentModelConfig() {
+        // 如果启用了多模型管理
+        if (this.settings.enableMultiModel && this.settings.multiModels) {
+            const activeModel = this.settings.multiModels.find((m: any) => m.isActive);
+            if (activeModel) {
+                return {
+                    provider: activeModel.provider,
+                    ...activeModel.config
+                };
+            }
+        }
+        
+        // 回退到传统单一模型配置
+        const currentProvider = this.settings.ai.provider;
+        const providerConfig = this.settings.ai[currentProvider];
+        
+        return {
+            provider: currentProvider,
+            ...providerConfig
+        };
+    }
 }

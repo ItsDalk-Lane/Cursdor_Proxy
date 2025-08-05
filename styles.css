@@ -1,8 +1,588 @@
-/*
+/* AI Chat Plugin Styles */
 
-This CSS file will be included with your plugin, and
-available in the app when your plugin is enabled.
+/* Chat Message Content Styling */
+.highlight-chat-message-content.markdown-rendered p {
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+}
 
-If your plugin does not need CSS, delete this file.
+.highlight-chat-message-content.markdown-rendered .callout {
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+}
 
-*/
+.highlight-chat-message-content.markdown-rendered hr {
+    margin-top: 12px !important;
+    margin-bottom: 12px !important;
+}
+
+.highlight-chat-message-content.markdown-rendered blockquote {
+    margin: 0 !important;
+}
+
+.highlight-chat-message-content.markdown-rendered h1,
+.highlight-chat-message-content.markdown-rendered h2,
+.highlight-chat-message-content.markdown-rendered h3,
+.highlight-chat-message-content.markdown-rendered h4,
+.highlight-chat-message-content.markdown-rendered h5,
+.highlight-chat-message-content.markdown-rendered h6 {
+    margin-top: 0.5em !important;
+    margin-bottom: 0.5em !important;
+}
+
+.highlight-chat-message-content.markdown-rendered ul,
+.highlight-chat-message-content.markdown-rendered ol {
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+    padding-left: 1.5em !important;
+}
+
+.highlight-chat-message-content.markdown-rendered li {
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+/* Chat Window Styles */
+.highlight-chat-window {
+    position: fixed;
+    top: 20%;
+    right: 20px;
+    width: 400px;
+    min-width: 350px;
+    max-width: 80vw;
+    height: 600px;
+    min-height: 400px;
+    max-height: 80vh;
+    background: var(--background-primary);
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 8px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    resize: both;
+    overflow: hidden;
+}
+
+.highlight-chat-window.highlight-chat-hidden {
+    display: none;
+}
+
+.highlight-chat-header {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--background-modifier-border);
+    background: var(--background-secondary);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: move;
+    user-select: none;
+}
+
+.highlight-chat-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.highlight-chat-model {
+    font-size: 12px;
+    color: var(--text-muted);
+    padding: 2px 6px;
+    background: var(--background-modifier-border);
+    border-radius: 4px;
+    cursor: pointer;
+    user-select: none;
+    position: relative;
+}
+
+.highlight-chat-model::after {
+    content: "▼";
+    font-size: 8px;
+    margin-left: 4px;
+    opacity: 0.6;
+}
+
+.highlight-chat-model:hover {
+    background: var(--background-modifier-border-hover);
+    color: var(--text-normal);
+}
+
+/* 确保菜单在对话窗口上方显示 */
+.menu {
+    z-index: 10000 !important;
+}
+
+.ai-chat-settings .menu {
+    z-index: 10001 !important;
+}
+
+.highlight-chat-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+.highlight-chat-clear,
+.highlight-chat-close {
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border-radius: 3px;
+    color: var(--text-muted);
+}
+
+.highlight-chat-clear:hover,
+.highlight-chat-close:hover {
+    background: var(--background-modifier-hover);
+    color: var(--text-normal);
+}
+
+/* Chat History */
+.highlight-chat-history {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.highlight-chat-history.drag-over::before {
+    content: "将高亮文本拖拽到此处";
+    position: absolute;
+    top: var(--drag-guide-top, 50%);
+    left: 12px;
+    right: 12px;
+    height: var(--drag-guide-height, 100px);
+    border: 2px dashed var(--interactive-accent);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--interactive-accent-hover);
+    color: var(--interactive-accent);
+    font-weight: 500;
+    pointer-events: none;
+    z-index: 10;
+}
+
+/* Chat Messages */
+.highlight-chat-message {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.highlight-chat-message-user {
+    align-items: flex-end;
+}
+
+.highlight-chat-message-assistant {
+    align-items: flex-start;
+}
+
+.highlight-chat-message-content {
+    max-width: 85%;
+    padding: 8px 12px;
+    border-radius: 12px;
+    word-wrap: break-word;
+    line-height: 1.4;
+}
+
+.highlight-chat-message-user .highlight-chat-message-content {
+    background: var(--interactive-accent);
+    color: var(--text-on-accent);
+    align-self: flex-end;
+}
+
+.highlight-chat-message-assistant .highlight-chat-message-content {
+    background: var(--background-secondary);
+    color: var(--text-normal);
+    align-self: flex-start;
+}
+
+/* Typing Animation */
+.highlight-chat-cursor {
+    display: inline-block;
+    width: 2px;
+    height: 1em;
+    background: currentColor;
+    animation: blink 1s infinite;
+    margin-left: 2px;
+}
+
+@keyframes blink {
+    0%, 50% { opacity: 1; }
+    51%, 100% { opacity: 0; }
+}
+
+/* Chat Input */
+.highlight-chat-input-container {
+    padding: 16px;
+    border-top: 1px solid var(--background-modifier-border);
+}
+
+.highlight-chat-input {
+    width: 100%;
+    min-height: 60px;
+    max-height: 150px;
+    padding: 8px 12px;
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 8px;
+    background: var(--background-primary);
+    color: var(--text-normal);
+    resize: vertical;
+    font-family: var(--font-interface);
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+.highlight-chat-input:focus {
+    outline: none;
+    border-color: var(--interactive-accent);
+}
+
+/* Preview Cards */
+.highlight-chat-preview-cards {
+    margin-bottom: 12px;
+    padding: 8px;
+    background: var(--background-secondary);
+    border-radius: 6px;
+    border-left: 3px solid var(--interactive-accent);
+}
+
+.highlight-chat-preview-card {
+    padding: 6px;
+    background: var(--background-primary);
+    border-radius: 4px;
+    margin-bottom: 6px;
+    position: relative;
+}
+
+.highlight-chat-preview-card:last-child {
+    margin-bottom: 0;
+}
+
+.highlight-chat-preview-content {
+    font-size: 12px;
+    color: var(--text-normal);
+    line-height: 1.3;
+    max-height: 60px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.highlight-chat-preview-delete {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 16px;
+    height: 16px;
+    background: var(--background-modifier-error);
+    color: var(--text-on-accent);
+    border-radius: 50%;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 10px;
+}
+
+.highlight-chat-preview-card:hover .highlight-chat-preview-delete {
+    display: flex;
+}
+
+.highlight-chat-preview-delete:hover {
+    background: var(--background-modifier-error-hover);
+}
+
+/* AI Chat Plugin Settings - 只影响我们插件的设置 */
+
+/* AI Service Settings 容器样式 */
+.ai-service-settings {
+    padding: 0;
+}
+
+.ai-service-settings .setting-item {
+    border-bottom: 1px solid var(--background-modifier-border);
+    padding: 18px 0;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+}
+
+.ai-service-settings .setting-item:last-child {
+    border-bottom: none;
+}
+
+.ai-service-settings .setting-item-info {
+    flex: 1;
+    margin-right: 16px;
+}
+
+.ai-service-settings .setting-item-name {
+    font-weight: 500;
+    color: var(--text-normal);
+    margin-bottom: 4px;
+    font-size: 14px;
+}
+
+.ai-service-settings .setting-item-description {
+    color: var(--text-muted);
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+.ai-service-settings .setting-item-control {
+    flex-shrink: 0;
+    min-width: 160px;
+}
+
+/* 下拉框样式 - 仅限我们的插件 */
+.ai-service-settings .dropdown,
+.ai-service-settings select,
+.ai-chat-settings .dropdown,
+.ai-chat-settings select {
+    width: 100%;
+    height: 34px;
+    padding: 6px 12px;
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 6px;
+    background: var(--background-primary);
+    color: var(--text-normal);
+    cursor: pointer;
+    font-size: 13px;
+}
+
+.ai-service-settings .dropdown:hover,
+.ai-service-settings select:hover,
+.ai-chat-settings .dropdown:hover,
+.ai-chat-settings select:hover {
+    border-color: var(--background-modifier-border-hover);
+}
+
+.ai-service-settings .dropdown:focus,
+.ai-service-settings select:focus,
+.ai-chat-settings .dropdown:focus,
+.ai-chat-settings select:focus {
+    border-color: var(--interactive-accent);
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(var(--interactive-accent-rgb), 0.2);
+}
+
+/* 输入框样式 - 仅限我们的插件 */
+.ai-service-settings input[type="text"],
+.ai-service-settings input[type="password"],
+.ai-chat-settings input[type="text"],
+.ai-chat-settings input[type="password"] {
+    width: 100%;
+    height: 34px;
+    padding: 6px 12px;
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 6px;
+    background: var(--background-primary);
+    color: var(--text-normal);
+    font-size: 13px;
+}
+
+.ai-service-settings input[type="text"]:hover,
+.ai-service-settings input[type="password"]:hover,
+.ai-chat-settings input[type="text"]:hover,
+.ai-chat-settings input[type="password"]:hover {
+    border-color: var(--background-modifier-border-hover);
+}
+
+.ai-service-settings input[type="text"]:focus,
+.ai-service-settings input[type="password"]:focus,
+.ai-chat-settings input[type="text"]:focus,
+.ai-chat-settings input[type="password"]:focus {
+    border-color: var(--interactive-accent);
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(var(--interactive-accent-rgb), 0.2);
+}
+
+/* 按钮样式 - 仅限我们的插件 */
+.ai-service-settings button,
+.ai-chat-settings button {
+    height: 34px;
+    padding: 6px 16px;
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 6px;
+    background: var(--background-primary);
+    color: var(--text-normal);
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.ai-service-settings button:hover,
+.ai-chat-settings button:hover {
+    background: var(--background-modifier-hover);
+    border-color: var(--background-modifier-border-hover);
+}
+
+.ai-service-settings button:active,
+.ai-chat-settings button:active {
+    background: var(--background-modifier-active);
+}
+
+/* 主要按钮样式 */
+.ai-service-settings button.mod-cta,
+.ai-chat-settings button.mod-cta {
+    background: var(--interactive-accent);
+    color: var(--text-on-accent);
+    border-color: var(--interactive-accent);
+}
+
+.ai-service-settings button.mod-cta:hover,
+.ai-chat-settings button.mod-cta:hover {
+    background: var(--interactive-accent-hover);
+    border-color: var(--interactive-accent-hover);
+}
+
+/* 切换开关样式 */
+.ai-service-settings .checkbox-container,
+.ai-chat-settings .checkbox-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.ai-service-settings .checkbox-container input[type="checkbox"],
+.ai-chat-settings .checkbox-container input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    cursor: pointer;
+}
+
+/* 文本区域样式 */
+.ai-service-settings textarea,
+.ai-chat-settings textarea {
+    width: 100%;
+    min-height: 80px;
+    padding: 8px 12px;
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 6px;
+    background: var(--background-primary);
+    color: var(--text-normal);
+    font-size: 13px;
+    font-family: var(--font-monospace);
+    resize: vertical;
+}
+
+.ai-service-settings textarea:hover,
+.ai-chat-settings textarea:hover {
+    border-color: var(--background-modifier-border-hover);
+}
+
+.ai-service-settings textarea:focus,
+.ai-chat-settings textarea:focus {
+    border-color: var(--interactive-accent);
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(var(--interactive-accent-rgb), 0.2);
+}
+
+.setting-tab-button {
+    padding: 8px 16px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text-muted);
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+}
+
+.setting-tab-button:hover {
+    color: var(--text-normal);
+}
+
+.setting-tab-button.active {
+    color: var(--interactive-accent);
+    border-bottom-color: var(--interactive-accent);
+}
+
+.setting-tab-content {
+    min-height: 400px;
+}
+
+/* AI Service Settings */
+.ai-service-settings {
+    padding: 20px 0;
+}
+
+.ai-service-settings .setting-item {
+    border: none;
+    padding: 12px 0;
+}
+
+.ai-service-settings .setting-item-control {
+    min-width: 200px;
+}
+
+/* Resize Handle */
+.highlight-chat-resize-handle {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 12px;
+    height: 12px;
+    background: var(--background-modifier-border);
+    cursor: nw-resize;
+    border-radius: 0 0 8px 0;
+}
+
+.highlight-chat-resize-handle:hover {
+    background: var(--background-modifier-border-hover);
+}
+
+/* Context Settings */
+.highlight-chat-context-strategy,
+.highlight-chat-settings-select {
+    width: 100%;
+    padding: 4px 8px;
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 4px;
+    background: var(--background-primary);
+    color: var(--text-normal);
+}
+
+.highlight-chat-settings-slider {
+    width: 100%;
+    margin: 8px 0;
+}
+
+.highlight-chat-settings-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 8px 0;
+}
+
+/* Loading Animation */
+@keyframes ai-loading-spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.ai-loading-icon svg {
+    animation: ai-loading-spin 1s linear infinite;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .highlight-chat-window {
+        width: 90vw;
+        height: 70vh;
+        right: 5vw;
+        top: 15vh;
+    }
+    
+    .highlight-chat-preview-content {
+        font-size: 11px;
+    }
+}

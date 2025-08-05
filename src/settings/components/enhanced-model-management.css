@@ -1,0 +1,371 @@
+/* 增强模型管理样式 */
+
+.enhanced-global-settings {
+    margin-bottom: 2rem;
+    padding: 1rem;
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 8px;
+    background: var(--background-secondary);
+}
+
+.enhanced-model-list {
+    margin-bottom: 2rem;
+}
+
+.no-models-message {
+    text-align: center;
+    padding: 2rem;
+    color: var(--text-muted);
+    font-style: italic;
+}
+
+.model-item {
+    margin-bottom: 1rem;
+    padding: 1rem;
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 8px;
+    background: var(--background-primary);
+    transition: all 0.2s ease;
+}
+
+.model-item:hover {
+    border-color: var(--interactive-accent);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.model-item.active-model {
+    border-color: var(--interactive-accent);
+    background: var(--background-modifier-hover);
+}
+
+.model-item.disabled-model {
+    opacity: 0.6;
+    border-color: var(--background-modifier-border-hover);
+}
+
+.model-info {
+    margin-bottom: 1rem;
+}
+
+.model-title {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.model-name {
+    font-weight: 600;
+    font-size: 1.1em;
+    color: var(--text-normal);
+}
+
+.model-provider {
+    margin-left: 0.5rem;
+    color: var(--text-muted);
+    font-size: 0.9em;
+}
+
+.model-status {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.status-badge {
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.8em;
+    font-weight: 500;
+    text-transform: uppercase;
+}
+
+.status-badge.active {
+    background: var(--color-green);
+    color: white;
+}
+
+.status-badge.custom {
+    background: var(--color-blue);
+    color: white;
+}
+
+.status-badge.disabled {
+    background: var(--text-muted);
+    color: white;
+}
+
+.model-description {
+    color: var(--text-muted);
+    font-size: 0.9em;
+    line-height: 1.4;
+}
+
+.model-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.model-action-button {
+    padding: 0.4rem 0.8rem;
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 4px;
+    background: var(--background-primary);
+    color: var(--text-normal);
+    cursor: pointer;
+    font-size: 0.85em;
+    transition: all 0.2s ease;
+}
+
+.model-action-button:hover {
+    border-color: var(--interactive-accent);
+    background: var(--background-modifier-hover);
+}
+
+.model-action-button.primary {
+    background: var(--interactive-accent);
+    color: var(--text-on-accent);
+    border-color: var(--interactive-accent);
+}
+
+.model-action-button.primary:hover {
+    opacity: 0.8;
+}
+
+.model-action-button.danger {
+    background: var(--color-red);
+    color: white;
+    border-color: var(--color-red);
+}
+
+.model-action-button.danger:hover {
+    opacity: 0.8;
+}
+
+.add-model-section {
+    padding: 1rem;
+    border: 2px dashed var(--background-modifier-border);
+    border-radius: 8px;
+    background: var(--background-secondary);
+}
+
+/* 模态框样式 */
+.modal-button-container {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+    margin-top: 2rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--background-modifier-border);
+}
+
+.modal-button-container button {
+    padding: 0.5rem 1rem;
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 4px;
+    background: var(--background-primary);
+    color: var(--text-normal);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.modal-button-container button:hover {
+    border-color: var(--interactive-accent);
+    background: var(--background-modifier-hover);
+}
+
+.modal-button-container button.mod-cta {
+    background: var(--interactive-accent);
+    color: var(--text-on-accent);
+    border-color: var(--interactive-accent);
+}
+
+.modal-button-container button.mod-warning {
+    background: var(--color-red);
+    color: white;
+    border-color: var(--color-red);
+}
+
+/* 模型选择器模态框 */
+.model-option {
+    padding: 1rem;
+    margin-bottom: 0.5rem;
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 6px;
+    background: var(--background-primary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+}
+
+.model-option:hover {
+    border-color: var(--interactive-accent);
+    background: var(--background-modifier-hover);
+}
+
+.model-option.active {
+    border-color: var(--interactive-accent);
+    background: var(--background-modifier-success);
+}
+
+.model-option .model-name {
+    font-weight: 500;
+}
+
+.model-option .model-provider {
+    color: var(--text-muted);
+    font-size: 0.9em;
+}
+
+/* 表单样式增强 */
+.setting-item textarea {
+    min-height: 80px;
+    resize: vertical;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .model-actions {
+        flex-direction: column;
+    }
+    
+    .model-action-button {
+        width: 100%;
+        text-align: center;
+    }
+    
+    .modal-button-container {
+        flex-direction: column;
+    }
+    
+    .modal-button-container button {
+        width: 100%;
+    }
+}
+
+/* 动画效果 */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.model-item {
+    animation: fadeIn 0.3s ease;
+}
+
+/* 加载状态 */
+.loading-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-muted);
+}
+
+.loading-indicator::before {
+    content: "";
+    width: 16px;
+    height: 16px;
+    border: 2px solid var(--background-modifier-border);
+    border-top: 2px solid var(--interactive-accent);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* 工具提示 */
+.tooltip {
+    position: relative;
+}
+
+.tooltip:hover::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 0.5rem;
+    background: var(--background-tooltip);
+    color: var(--text-on-accent);
+    border-radius: 4px;
+    font-size: 0.8em;
+    white-space: nowrap;
+    z-index: 1000;
+    opacity: 0;
+    animation: fadeIn 0.2s ease forwards;
+}
+
+/* 搜索和过滤 */
+.model-search {
+    margin-bottom: 1rem;
+}
+
+.model-search input {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 4px;
+    background: var(--background-primary);
+    color: var(--text-normal);
+}
+
+.model-filter {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+}
+
+.filter-button {
+    padding: 0.3rem 0.6rem;
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 4px;
+    background: var(--background-primary);
+    color: var(--text-normal);
+    cursor: pointer;
+    font-size: 0.8em;
+    transition: all 0.2s ease;
+}
+
+.filter-button:hover,
+.filter-button.active {
+    border-color: var(--interactive-accent);
+    background: var(--interactive-accent);
+    color: var(--text-on-accent);
+}
+
+/* 统计信息 */
+.model-stats {
+    display: flex;
+    gap: 2rem;
+    margin-bottom: 1rem;
+    padding: 1rem;
+    background: var(--background-secondary);
+    border-radius: 6px;
+}
+
+.stat-item {
+    text-align: center;
+}
+
+.stat-value {
+    font-size: 1.5em;
+    font-weight: 600;
+    color: var(--interactive-accent);
+}
+
+.stat-label {
+    font-size: 0.8em;
+    color: var(--text-muted);
+    text-transform: uppercase;
+}

@@ -10,7 +10,9 @@ if you want to view the source, please visit the github repository of this plugi
 `;
 
 const prod = (process.argv[2] === "production");
-const watch = process.argv.includes("--watch");
+
+// 目标输出目录 - 你的 Obsidian 插件目录
+const targetDir = "C:/Users/Study_Superior/Desktop/沙箱仓库/.obsidian/plugins/ai-chat";
 
 const context = await esbuild.context({
 	banner: {
@@ -38,12 +40,13 @@ const context = await esbuild.context({
 	logLevel: "info",
 	sourcemap: prod ? false : "inline",
 	treeShaking: true,
-	outfile: "C:\\Users\\Study_Superior\\Desktop\\沙箱仓库\\.obsidian\\plugins\\第一次开发\\main.js",
+	outfile: `${targetDir}/main.js`,
+	minify: prod,
 });
 
-if (watch) {
-	await context.watch();
-} else {
+if (prod) {
 	await context.rebuild();
-	await context.dispose();
+	process.exit(0);
+} else {
+	await context.watch();
 }
