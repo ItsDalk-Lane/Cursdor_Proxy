@@ -1,0 +1,11 @@
+{
+  "id": "git-auto",
+  "name": "Git自动提交",
+  "version": "1.0.0",
+  "minAppVersion": "0.15.0",
+  "description": "自动化Git提交工具，支持AI生成提交信息",
+  "author": "Your Name",
+  "authorUrl": "https://github.com/yourusername",
+  "fundingUrl": "https://buymeacoffee.com/yourusername",
+  "isDesktopOnly": true
+}

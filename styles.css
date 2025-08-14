@@ -1,0 +1,654 @@
+/* Git Auto Commit Plugin Styles */
+
+/* 文件选择模态框样式 */
+.git-auto-commit .file-list {
+  max-height: 400px;
+  overflow-y: auto;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 8px;
+  padding: 8px;
+  background: var(--background-primary-alt);
+}
+
+.git-auto-commit .file-item {
+  padding: 12px 16px;
+  margin: 4px 0;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid transparent;
+  background: var(--background-primary);
+}
+
+.git-auto-commit .file-item:hover {
+  background: var(--background-modifier-hover);
+  border-color: var(--interactive-accent);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.git-auto-commit .file-item:active {
+  transform: translateY(0);
+}
+
+.git-auto-commit .file-item::before {
+  content: "📄";
+  font-size: 16px;
+  margin-right: 4px;
+}
+
+.git-auto-commit .file-item.modified::before {
+  content: "📝";
+}
+
+.git-auto-commit .file-item.added::before {
+  content: "➕";
+}
+
+.git-auto-commit .file-item.deleted::before {
+  content: "🗑️";
+}
+
+/* 提交信息模态框样式 */
+.git-auto-commit .commit-message-container {
+  padding: 20px;
+}
+
+.git-auto-commit .commit-message-input {
+  width: 100%;
+  min-height: 100px;
+  padding: 12px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
+  background: var(--background-primary);
+  color: var(--text-normal);
+  font-family: var(--font-monospace);
+  font-size: 14px;
+  line-height: 1.5;
+  resize: vertical;
+  transition: border-color 0.2s ease;
+}
+
+.git-auto-commit .commit-message-input:focus {
+  outline: none;
+  border-color: var(--interactive-accent);
+  box-shadow: 0 0 0 2px var(--interactive-accent-hover);
+}
+
+.git-auto-commit .commit-message-input::placeholder {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* 按钮容器样式 */
+.git-auto-commit .button-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--background-modifier-border);
+}
+
+.git-auto-commit .button-container button {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 80px;
+}
+
+.git-auto-commit .button-container .mod-cta {
+  background: var(--interactive-accent);
+  color: var(--text-on-accent);
+}
+
+.git-auto-commit .button-container .mod-cta:hover {
+  background: var(--interactive-accent-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.git-auto-commit .button-container .mod-cancel {
+  background: var(--background-secondary);
+  color: var(--text-normal);
+  border: 1px solid var(--background-modifier-border);
+}
+
+.git-auto-commit .button-container .mod-cancel:hover {
+  background: var(--background-modifier-hover);
+  border-color: var(--background-modifier-border-hover);
+}
+
+/* 功能区图标样式 */
+.git-auto-commit-ribbon-icon {
+  color: var(--text-muted);
+  transition: color 0.2s ease;
+}
+
+.git-auto-commit-ribbon-icon:hover {
+  color: var(--interactive-accent);
+}
+
+.git-auto-commit-ribbon-icon.is-active {
+  color: var(--interactive-accent);
+}
+
+/* 设置页面样式增强 */
+.git-auto-commit-settings {
+  padding: 20px;
+  max-width: 800px;
+}
+
+.git-auto-commit-settings h2 {
+  color: var(--text-accent);
+  border-bottom: 2px solid var(--interactive-accent);
+  padding-bottom: 8px;
+  margin-bottom: 24px;
+  font-size: 24px;
+  font-weight: 600;
+}
+
+.git-auto-commit-settings h3 {
+  color: var(--text-normal);
+  margin-top: 32px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 18px;
+  font-weight: 500;
+  border-bottom: 1px solid var(--background-modifier-border);
+  padding-bottom: 8px;
+}
+
+.git-auto-commit-settings h3::before {
+  font-size: 18px;
+}
+
+.git-auto-commit-settings .setting-item {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--background-modifier-border);
+  padding: 16px 0;
+  gap: 24px;
+  position: relative;
+  z-index: 1;
+  min-height: 50px;
+}
+
+.git-auto-commit-settings .setting-item:last-child {
+  border-bottom: none;
+}
+
+.git-auto-commit-settings .setting-item-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.git-auto-commit-settings .setting-item-name {
+  font-weight: 500;
+  color: var(--text-normal);
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+
+.git-auto-commit-settings .setting-item-description {
+  color: var(--text-muted);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.git-auto-commit-settings .setting-item-control {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  min-height: 32px;
+  min-width: 160px;
+  max-width: 200px;
+}
+
+/* 文本区域样式 */
+.git-auto-commit-settings textarea {
+  font-family: var(--font-monospace);
+  font-size: 13px;
+  line-height: 1.5;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
+  padding: 12px;
+  background: var(--background-primary);
+  color: var(--text-normal);
+  transition: border-color 0.2s ease;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.git-auto-commit-settings textarea:focus {
+  outline: none;
+  border-color: var(--interactive-accent);
+  box-shadow: 0 0 0 2px var(--interactive-accent-hover);
+}
+
+/* AI提示词使用内置增强版本，无需自定义样式 */
+
+/* 下拉菜单样式 */
+.git-auto-commit-settings .dropdown {
+  position: relative;
+  min-width: 160px;
+  max-width: 200px;
+  z-index: 10;
+}
+
+.git-auto-commit-settings select,
+.git-auto-commit-settings .dropdown select {
+  width: 100%;
+  min-width: 160px;
+  max-width: 200px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
+  padding: 8px 32px 8px 12px;
+  background: var(--background-primary);
+  color: var(--text-normal);
+  font-size: 14px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  appearance: none;
+  background-image: url('data:image/svg+xml;charset=US-ASCII,<svg width="12" height="8" viewBox="0 0 12 8" xmlns="http://www.w3.org/2000/svg"><path d="M6 8L0 2h12L6 8z" fill="%23888"/></svg>');
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 12px;
+  position: relative;
+  z-index: 11;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.git-auto-commit-settings select:hover,
+.git-auto-commit-settings .dropdown select:hover {
+  border-color: var(--interactive-accent);
+  background-color: var(--background-modifier-hover);
+  z-index: 12;
+}
+
+.git-auto-commit-settings select:focus,
+.git-auto-commit-settings .dropdown select:focus {
+  outline: none;
+  border-color: var(--interactive-accent);
+  box-shadow: 0 0 0 2px var(--interactive-accent-hover);
+  z-index: 12;
+}
+
+/* 确保下拉菜单选项不被覆盖 */
+.git-auto-commit-settings select option {
+  background: var(--background-primary);
+  color: var(--text-normal);
+  padding: 10px 12px;
+  white-space: nowrap;
+  min-height: 36px;
+  line-height: 1.6;
+  font-size: 14px;
+}
+
+/* 修复下拉菜单展开时的高度 */
+.git-auto-commit-settings select {
+  /* 确保下拉菜单有足够的空间展示选项 */
+  max-height: none;
+}
+
+.git-auto-commit-settings select:focus {
+  /* 聚焦时确保下拉列表正常显示 */
+  max-height: none;
+}
+
+/* 针对不同浏览器的下拉菜单优化 */
+.git-auto-commit-settings select {
+  /* WebKit浏览器优化 */
+  -webkit-appearance: none;
+  /* Firefox优化 */
+  -moz-appearance: none;
+}
+
+/* 确保下拉菜单选项区域有足够高度 */
+.git-auto-commit-settings select[size] {
+  height: auto;
+  min-height: 120px;
+}
+
+.git-auto-commit-settings select:not([size]):not([multiple]) {
+  height: 36px;
+}
+
+/* 输入框样式 */
+.git-auto-commit-settings input[type="text"],
+.git-auto-commit-settings input[type="password"] {
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
+  padding: 8px 12px;
+  background: var(--background-primary);
+  color: var(--text-normal);
+  transition: border-color 0.2s ease;
+  font-size: 14px;
+  width: 100%;
+}
+
+.git-auto-commit-settings input[type="text"]:focus,
+.git-auto-commit-settings input[type="password"]:focus {
+  outline: none;
+  border-color: var(--interactive-accent);
+  box-shadow: 0 0 0 2px var(--interactive-accent-hover);
+}
+
+/* 密码输入框特殊样式 */
+.git-auto-commit-settings input[type="password"] {
+  font-family: monospace;
+  letter-spacing: 2px;
+}
+
+/* 切换开关样式增强 */
+.git-auto-commit-settings .setting-item-control {
+  display: flex;
+  align-items: center;
+  min-height: 32px;
+}
+
+/* Obsidian原生Toggle样式优化 */
+.git-auto-commit-settings .checkbox-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.git-auto-commit-settings .checkbox-container .checkbox {
+  width: 42px;
+  height: 22px;
+  background: var(--background-modifier-border);
+  border-radius: 11px;
+  position: relative;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid var(--background-modifier-border);
+}
+
+.git-auto-commit-settings .checkbox-container .checkbox:hover {
+  background: var(--background-modifier-hover);
+  border-color: var(--interactive-accent);
+}
+
+.git-auto-commit-settings .checkbox-container .checkbox.is-enabled {
+  background: var(--interactive-accent);
+  border-color: var(--interactive-accent);
+}
+
+.git-auto-commit-settings .checkbox-container .checkbox:before {
+  content: '';
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  background: var(--background-primary);
+  border-radius: 50%;
+  top: 1px;
+  left: 1px;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.git-auto-commit-settings .checkbox-container .checkbox.is-enabled:before {
+  transform: translateX(20px);
+  background: var(--text-on-accent);
+}
+
+/* 重置按钮特殊样式 */
+.git-auto-commit-settings .mod-warning {
+  background: var(--text-error);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.git-auto-commit-settings .mod-warning:hover {
+  background: var(--text-error);
+  opacity: 0.8;
+  transform: translateY(-1px);
+}
+
+/* 通知样式增强 */
+.notice.git-auto-commit-notice {
+  border-left: 4px solid var(--interactive-accent);
+  background: var(--background-primary-alt);
+}
+
+.notice.git-auto-commit-notice.success {
+  border-left-color: var(--text-success);
+}
+
+.notice.git-auto-commit-notice.error {
+  border-left-color: var(--text-error);
+}
+
+.notice.git-auto-commit-notice.warning {
+  border-left-color: var(--text-warning);
+}
+
+/* 模态框通用样式 */
+.modal.git-auto-commit-modal .modal-content {
+  padding: 24px;
+  max-width: 600px;
+  width: 90vw;
+}
+
+.modal.git-auto-commit-modal .modal-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text-accent);
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.modal.git-auto-commit-modal .modal-title::before {
+  font-size: 24px;
+}
+
+/* 加载状态样式 */
+.git-auto-commit .loading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.git-auto-commit .loading::before {
+  content: "⏳";
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* 成功状态样式 */
+.git-auto-commit .success {
+  color: var(--text-success);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.git-auto-commit .success::before {
+  content: "✅";
+}
+
+/* 错误状态样式 */
+.git-auto-commit .error {
+  color: var(--text-error);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.git-auto-commit .error::before {
+  content: "❌";
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .git-auto-commit .button-container {
+      flex-direction: column;
+      gap: 8px;
+  }
+  
+  .git-auto-commit .button-container button {
+      width: 100%;
+  }
+  
+  .modal.git-auto-commit-modal .modal-content {
+      width: 95vw;
+      padding: 16px;
+  }
+  
+  .git-auto-commit .file-list {
+      max-height: 300px;
+  }
+}
+
+/* 深色主题适配 */
+.theme-dark .git-auto-commit .file-item {
+  background: var(--background-primary);
+  border-color: var(--background-modifier-border);
+}
+
+.theme-dark .git-auto-commit .file-item:hover {
+  background: var(--background-modifier-hover);
+  box-shadow: 0 2px 8px rgba(255, 255, 255, 0.1);
+}
+
+/* 浅色主题适配 */
+.theme-light .git-auto-commit .file-item {
+  background: var(--background-primary);
+  border-color: var(--background-modifier-border);
+}
+
+.theme-light .git-auto-commit .file-item:hover {
+  background: var(--background-modifier-hover);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* 滚动条样式 */
+.git-auto-commit .file-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.git-auto-commit .file-list::-webkit-scrollbar-track {
+  background: var(--background-secondary);
+  border-radius: 4px;
+}
+
+.git-auto-commit .file-list::-webkit-scrollbar-thumb {
+  background: var(--background-modifier-border);
+  border-radius: 4px;
+}
+
+.git-auto-commit .file-list::-webkit-scrollbar-thumb:hover {
+  background: var(--background-modifier-border-hover);
+}
+
+/* 动画效果 */
+.git-auto-commit .fade-in {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+      opacity: 0;
+      transform: translateY(-10px);
+  }
+  to {
+      opacity: 1;
+      transform: translateY(0);
+  }
+}
+
+.git-auto-commit .slide-up {
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+      opacity: 0;
+      transform: translateY(20px);
+  }
+  to {
+      opacity: 1;
+      transform: translateY(0);
+  }
+}
+
+/* 工具提示样式 */
+.git-auto-commit .tooltip {
+  position: relative;
+  cursor: help;
+}
+
+.git-auto-commit .tooltip::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--background-tooltip);
+  color: var(--text-on-accent);
+  padding: 6px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+  z-index: 1000;
+}
+
+.git-auto-commit .tooltip:hover::after {
+  opacity: 1;
+}
+
+/* 状态指示器 */
+.git-auto-commit .status-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 6px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+.git-auto-commit .status-indicator.connected {
+  background: rgba(var(--color-green-rgb), 0.1);
+  color: var(--text-success);
+}
+
+.git-auto-commit .status-indicator.disconnected {
+  background: rgba(var(--color-red-rgb), 0.1);
+  color: var(--text-error);
+}
+
+.git-auto-commit .status-indicator.pending {
+  background: rgba(var(--color-yellow-rgb), 0.1);
+  color: var(--text-warning);
+}

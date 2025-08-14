@@ -1,0 +1,43 @@
+{
+  "settings": {
+    "defaultCommitScope": "all",
+    "defaultMessageType": "ai",
+    "pushToRemote": true,
+    "remoteBranch": "main",
+    "autoCommit": false,
+    "includeFileTypes": [
+      ".md",
+      ".txt",
+      ".canvas",
+      ".json"
+    ],
+    "excludePatterns": [
+      ".obsidian/",
+      "node_modules/",
+      ".git/"
+    ],
+    "showNotifications": true
+  },
+  "models": {
+    "configs": [
+      {
+        "id": "model_1755008147584_esyaupqlk",
+        "displayName": "deepseek-coder",
+        "modelName": "deepseek-coder",
+        "provider": "deepseek",
+        "baseURL": "https://api.deepseek.com/v1",
+        "apiKey": "sk-6a0d868747874c13b436ab3685d74c47",
+        "maxContextTokens": 64000,
+        "maxOutputTokens": 8000,
+        "isVerified": true,
+        "createdAt": 1755008147584,
+        "lastModified": 1755008147584,
+        "encodedApiKey": "c2stNmEwZDg2ODc0Nzg3NGMxM2I0MzZhYjM2ODVkNzRjNDc="
+      }
+    ],
+    "defaultModelId": "model_1755008147584_esyaupqlk"
+  },
+  "preferences": {},
+  "version": "1.0.0",
+  "lastModified": 1755009745375
+}
