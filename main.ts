@@ -1,4 +1,4 @@
-import { App, Plugin, PluginSettingTab, Setting, Notice, Modal } from 'obsidian';
+import { App, Plugin, PluginSettingTab, Setting, Notice, Modal, WorkspaceLeaf } from 'obsidian';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import { PREDEFINED_PROVIDERS } from './model-config';
@@ -6,6 +6,8 @@ import { DataManager } from './data-manager';
 import { NewModelConfigManager, ModelConfig } from './new-model-config-manager';
 import { ModelManagementModal, DefaultModelSelector } from './ai-settings-components';
 import { DataMigrationChecker } from './data-migration-modal';
+import { GitCommitView, GIT_COMMIT_VIEW_TYPE } from './git-commit-view';
+import { GitChangeInfo } from './git-types';
 
 const execAsync = promisify(exec);
 
@@ -18,6 +20,8 @@ interface GitAutoCommitSettings {
     includeFileTypes: string[];
     excludePatterns: string[];
     showNotifications: boolean;
+    batchProcessingEnabled: boolean;
+    batchSizeLimitMB: number;
 }
 
 const ENHANCED_SYSTEM_PROMPT = `你是一个专业的Git提交信息生成助手。请根据提供的git diff内容，生成符合Conventional Commits规范的详细提交信息。
@@ -77,7 +81,9 @@ const DEFAULT_SETTINGS: GitAutoCommitSettings = {
     autoCommit: false,
     includeFileTypes: ['.md', '.txt', '.canvas', '.json'],
     excludePatterns: ['.obsidian/', 'node_modules/', '.git/'],
-    showNotifications: true
+    showNotifications: true,
+    batchProcessingEnabled: true,
+    batchSizeLimitMB: 10
 };
 
 export default class GitAutoCommitPlugin extends Plugin {
@@ -99,17 +105,23 @@ export default class GitAutoCommitPlugin extends Plugin {
         // 检查数据迁移状态并显示相关信息
         await DataMigrationChecker.checkAndShowMigrationIfNeeded(this.app, this.dataManager);
 
+        // 注册Git提交视图
+        this.registerView(
+            GIT_COMMIT_VIEW_TYPE,
+            (leaf) => new GitCommitView(leaf, this)
+        );
+
         // 添加功能区图标
-        this.addRibbonIcon('upload', 'Git自动提交', (evt: MouseEvent) => {
-            this.performGitCommit();
+        this.addRibbonIcon('upload', 'Git自动提交', async (evt: MouseEvent) => {
+            await this.activateGitCommitView();
         });
 
         // 添加命令
         this.addCommand({
             id: 'git-auto-commit',
             name: '执行Git提交',
-            callback: () => {
-                this.performGitCommit();
+            callback: async () => {
+                await this.activateGitCommitView();
             }
         });
 
@@ -153,10 +165,38 @@ export default class GitAutoCommitPlugin extends Plugin {
             }
         });
 
+        this.addCommand({
+            id: 'test-batch-processing',
+            name: '测试分批处理功能',
+            callback: () => {
+                this.testBatchProcessing();
+            }
+        });
+
         // 添加设置选项卡
         this.addSettingTab(new GitAutoCommitSettingTab(this.app, this));
 
         console.log('Git Auto Commit 插件已加载 - 使用新的数据存储系统');
+    }
+
+    async activateGitCommitView() {
+        const leaves = this.app.workspace.getLeavesOfType(GIT_COMMIT_VIEW_TYPE);
+        let leaf: WorkspaceLeaf;
+        
+        if (leaves.length === 0) {
+            // 如果视图不存在，创建新的叶子
+            leaf = this.app.workspace.getRightLeaf(false) ?? this.app.workspace.getLeaf();
+            await leaf.setViewState({
+                type: GIT_COMMIT_VIEW_TYPE,
+                active: true
+            });
+        } else {
+            // 如果视图已存在，激活它
+            leaf = leaves[0];
+        }
+        
+        // 显示视图
+        this.app.workspace.revealLeaf(leaf);
     }
 
     onunload() {
@@ -247,8 +287,8 @@ export default class GitAutoCommitPlugin extends Plugin {
                 }
             }
 
-            // 执行Git操作
-            await this.executeGitOperations(filesToCommit, commitMessage);
+            // 执行Git操作 - 智能分批处理
+            await this.executeGitOperationsWithBatching(filesToCommit, commitMessage);
 
             if (this.settings.showNotifications) {
                 new Notice('✅ Git提交完成！');
@@ -260,12 +300,157 @@ export default class GitAutoCommitPlugin extends Plugin {
         }
     }
 
+    async getGitChanges(): Promise<GitChangeInfo[]> {
+        try {
+            const vaultPath = (this.app.vault.adapter as any).basePath || 
+                             (this.app.vault.adapter as any).path ||
+                             this.app.vault.configDir;
+            
+            const { stdout } = await execAsync('git status --porcelain', { 
+                cwd: vaultPath,
+                maxBuffer: 10 * 1024 * 1024 // 10MB 缓冲区
+            });
+            
+            if (!stdout.trim()) {
+                return [];
+            }
+
+            const changes: GitChangeInfo[] = [];
+            const lines = stdout.split('\n').filter(line => line.trim());
+
+            for (const line of lines) {
+                if (line.length < 4) continue;
+
+                const status = line.substring(0, 2).trim() as GitChangeInfo['status'];
+                const filePath = line.substring(3);
+
+                // 检查文件是否符合包含/排除规则
+                const hasValidExtension = this.settings.includeFileTypes.some(ext => 
+                    filePath.endsWith(ext)
+                );
+                if (!hasValidExtension) continue;
+
+                const isExcluded = this.settings.excludePatterns.some(pattern => 
+                    filePath.includes(pattern)
+                );
+                if (isExcluded) continue;
+
+                const statusText = this.getStatusText(status);
+                
+                // 尝试获取diff信息（对于修改的文件）
+                let diff = '';
+                try {
+                    if (status === 'M' || status === 'MM') {
+                        const { stdout: diffOutput } = await execAsync(
+                            `git diff HEAD -- "${filePath}"`, 
+                            { 
+                                cwd: vaultPath,
+                                maxBuffer: 2 * 1024 * 1024 // 2MB 缓冲区用于diff
+                            }
+                        );
+                        diff = diffOutput.trim();
+                    }
+                } catch (error) {
+                    console.warn(`获取文件 ${filePath} 的diff失败:`, error);
+                }
+
+                changes.push({
+                    filePath,
+                    status,
+                    statusText,
+                    diff
+                });
+            }
+
+            return changes;
+
+        } catch (error) {
+            console.error('获取Git变更失败:', error);
+            throw error;
+        }
+    }
+
+    private getStatusText(status: string): string {
+        switch (status) {
+            case 'M': return '修改';
+            case 'A': return '新增';
+            case 'D': return '删除';
+            case 'R': return '重命名';
+            case '??': return '未跟踪';
+            case 'MM': return '混合变更';
+            default: return status;
+        }
+    }
+
+    async performActualCommit(filesToCommit: string[], commitMessage: string): Promise<void> {
+        try {
+            const vaultPath = (this.app.vault.adapter as any).basePath || 
+                             (this.app.vault.adapter as any).path ||
+                             this.app.vault.configDir;
+
+            // 如果没有指定文件，提交所有变更
+            if (filesToCommit.length === 0) {
+                await execAsync('git add .', { 
+                    cwd: vaultPath,
+                    maxBuffer: 50 * 1024 * 1024 // 50MB 缓冲区
+                });
+            } else {
+                // 添加指定文件
+                for (const file of filesToCommit) {
+                    await execAsync(`git add "${file}"`, { 
+                        cwd: vaultPath,
+                        maxBuffer: 10 * 1024 * 1024 // 10MB 缓冲区
+                    });
+                }
+            }
+
+            // 执行提交
+            await execAsync(`git commit -m "${commitMessage.replace(/"/g, '\\"')}"`, { 
+                cwd: vaultPath,
+                maxBuffer: 5 * 1024 * 1024 // 5MB 缓冲区
+            });
+
+            if (this.settings.showNotifications) {
+                new Notice('✅ 提交成功！');
+            }
+
+        } catch (error) {
+            console.error('Git提交失败:', error);
+            throw error;
+        }
+    }
+
+    async pushToRemoteRepository(): Promise<void> {
+        try {
+            const vaultPath = (this.app.vault.adapter as any).basePath || 
+                             (this.app.vault.adapter as any).path ||
+                             this.app.vault.configDir;
+
+            // 推送到远程仓库
+            await execAsync(`git push origin ${this.settings.remoteBranch}`, { 
+                cwd: vaultPath,
+                maxBuffer: 10 * 1024 * 1024 // 10MB 缓冲区
+            });
+
+            if (this.settings.showNotifications) {
+                new Notice('✅ 推送到远程仓库成功！');
+            }
+
+        } catch (error) {
+            console.error('推送到远程仓库失败:', error);
+            throw error;
+        }
+    }
+
     async validateRepository(): Promise<boolean> {
         try {
             const vaultPath = (this.app.vault.adapter as any).basePath || 
                              (this.app.vault.adapter as any).path ||
                              this.app.vault.configDir;
-            await execAsync('git rev-parse --git-dir', { cwd: vaultPath });
+            await execAsync('git rev-parse --git-dir', { 
+                cwd: vaultPath,
+                maxBuffer: 1024 * 1024 // 1MB 缓冲区（足够小命令使用）
+            });
             return true;
         } catch (error) {
             new Notice('❌ 当前目录不是Git仓库，请先初始化Git仓库');
@@ -278,7 +463,10 @@ export default class GitAutoCommitPlugin extends Plugin {
             const vaultPath = (this.app.vault.adapter as any).basePath || 
                              (this.app.vault.adapter as any).path ||
                              this.app.vault.configDir;
-            const { stdout } = await execAsync('git status --porcelain', { cwd: vaultPath });
+            const { stdout } = await execAsync('git status --porcelain', { 
+                cwd: vaultPath,
+                maxBuffer: 10 * 1024 * 1024 // 10MB 缓冲区
+            });
             
             if (!stdout.trim()) {
                 return [];
@@ -319,19 +507,40 @@ export default class GitAutoCommitPlugin extends Plugin {
             if (filesToCommit.length > 0) {
                 console.log('Git Auto Commit - 添加指定文件到暂存区:', filesToCommit);
                 for (const file of filesToCommit) {
-                    await execAsync(`git add "${file}"`, { cwd: vaultPath });
+                    await execAsync(`git add "${file}"`, { 
+                        cwd: vaultPath,
+                        maxBuffer: 5 * 1024 * 1024 // 5MB 缓冲区
+                    });
                 }
             } else {
                 console.log('Git Auto Commit - 添加所有文件到暂存区');
-                await execAsync('git add .', { cwd: vaultPath });
+                await execAsync('git add .', { 
+                    cwd: vaultPath,
+                    maxBuffer: 10 * 1024 * 1024 // 10MB 缓冲区
+                });
             }
 
             // 获取详细的diff信息，包含文件名
-            const { stdout: gitDiff } = await execAsync('git diff --cached --name-status', { cwd: vaultPath });
-            const { stdout: gitDiffContent } = await execAsync('git diff --cached', { cwd: vaultPath });
+            const { stdout: gitDiff } = await execAsync('git diff --cached --name-status', { 
+                cwd: vaultPath,
+                maxBuffer: 50 * 1024 * 1024 // 50MB 缓冲区
+            });
+            const { stdout: gitDiffContent } = await execAsync('git diff --cached', { 
+                cwd: vaultPath,
+                maxBuffer: 50 * 1024 * 1024 // 50MB 缓冲区
+            });
             
             console.log('Git Auto Commit - Git diff 状态:', gitDiff);
             console.log('Git Auto Commit - Git diff 内容长度:', gitDiffContent.length);
+
+            // 检查 diff 内容大小并给出警告
+            if (gitDiffContent.length > 10 * 1024 * 1024) { // 10MB
+                console.warn('Git Auto Commit - 检测到大量文件变更，diff 内容超过 10MB，可能影响 AI 处理性能');
+                new Notice('⚠️ 检测到大量文件变更，AI 分析可能需要较长时间', 3000);
+            } else if (gitDiffContent.length > 5 * 1024 * 1024) { // 5MB
+                console.warn('Git Auto Commit - 检测到较多文件变更，diff 内容超过 5MB');
+                new Notice('📝 检测到较多文件变更，正在分析...', 2000);
+            }
 
             if (!gitDiff.trim()) {
                 console.log('Git Auto Commit - 没有检测到文件变更，使用默认提交信息');
@@ -483,7 +692,10 @@ export default class GitAutoCommitPlugin extends Plugin {
                 const vaultPath = (this.app.vault.adapter as any).basePath || 
                                  (this.app.vault.adapter as any).path ||
                                  this.app.vault.configDir;
-                const { stdout: gitDiff } = await execAsync('git diff --cached --name-status', { cwd: vaultPath });
+                const { stdout: gitDiff } = await execAsync('git diff --cached --name-status', { 
+                    cwd: vaultPath,
+                    maxBuffer: 50 * 1024 * 1024 // 50MB 缓冲区
+                });
                 
                 if (gitDiff.trim()) {
                     const fileChanges = this.parseFileChanges(gitDiff);
@@ -1027,20 +1239,42 @@ export default class GitAutoCommitPlugin extends Plugin {
             `${change.status} ${change.file} (${change.type})`
         ).join('\n');
 
-        // 限制diff内容长度，但保留重要信息
+        // 改进的diff内容长度限制
         let details = diffContent;
-        if (details.length > 5000) {
+        const maxLength = 8000; // 增加到8000字符
+        
+        if (details.length > maxLength) {
+            console.log(`Git Auto Commit - Diff内容过长 (${details.length}字符)，正在智能截断...`);
+            
             // 提取关键信息：文件头、添加的内容摘要
             const lines = details.split('\n');
-            const importantLines = lines.filter(line => 
-                line.startsWith('+++') || 
-                line.startsWith('---') || 
-                line.startsWith('@@') ||
-                (line.startsWith('+') && !line.startsWith('+++') && line.length > 20) ||
-                (line.startsWith('-') && !line.startsWith('---') && line.length > 20)
-            ).slice(0, 50); // 限制行数
+            const importantLines: string[] = [];
+            let currentLength = 0;
             
-            details = importantLines.join('\n') + '\n... (内容已截断)';
+            // 优先保留文件头和重要变更
+            for (const line of lines) {
+                // 保留文件头信息
+                if (line.startsWith('+++') || line.startsWith('---') || line.startsWith('@@')) {
+                    importantLines.push(line);
+                    currentLength += line.length + 1;
+                }
+                // 保留有意义的添加和删除行（过滤掉空行和极短的行）
+                else if ((line.startsWith('+') && !line.startsWith('+++') && line.trim().length > 10) ||
+                         (line.startsWith('-') && !line.startsWith('---') && line.trim().length > 10)) {
+                    if (currentLength + line.length + 1 < maxLength - 200) { // 留些空间给结尾信息
+                        importantLines.push(line);
+                        currentLength += line.length + 1;
+                    }
+                }
+                
+                // 避免过度截断
+                if (importantLines.length > 100 || currentLength > maxLength - 200) {
+                    break;
+                }
+            }
+            
+            details = importantLines.join('\n') + 
+                     `\n\n... (已截断，原始长度: ${diffContent.length}字符, 显示: ${importantLines.length}行)`;
         }
 
         return { summary, details };
@@ -1357,6 +1591,325 @@ ${contextInfo.details}`;
         }
     }
 
+    async executeGitOperationsWithBatching(filesToCommit: string[], commitMessage: string) {
+        // 检查是否启用分批处理
+        if (!this.settings.batchProcessingEnabled) {
+            console.log('Git Auto Commit - 分批处理已禁用，执行正常提交');
+            await this.executeGitOperations(filesToCommit, commitMessage);
+            return;
+        }
+
+        const vaultPath = (this.app.vault.adapter as any).basePath || 
+                         (this.app.vault.adapter as any).path ||
+                         this.app.vault.configDir;
+
+        try {
+            // 首先检查整体变更大小
+            const overallSize = await this.calculateChangeSize(filesToCommit, vaultPath);
+            const sizeLimitMB = this.settings.batchSizeLimitMB;
+            const sizeLimit = sizeLimitMB * 1024 * 1024;
+
+            console.log(`Git Auto Commit - 检测到变更总大小: ${(overallSize / 1024 / 1024).toFixed(2)}MB`);
+
+            if (overallSize <= sizeLimit) {
+                // 如果总大小在限制内，直接执行正常提交
+                console.log('Git Auto Commit - 变更大小在限制内，执行正常提交');
+                await this.executeGitOperations(filesToCommit, commitMessage);
+                return;
+            }
+
+            // 需要分批处理
+            console.log(`Git Auto Commit - 变更大小超过${sizeLimitMB}MB限制，开始智能分批处理`);
+            new Notice(`📦 检测到大量变更(${(overallSize / 1024 / 1024).toFixed(1)}MB)，正在智能分批提交...`, 4000);
+
+            const batches = await this.createSmartBatches(filesToCommit, vaultPath, sizeLimit);
+            console.log(`Git Auto Commit - 分为 ${batches.length} 个批次处理`);
+
+            let batchNumber = 1;
+            let totalBatches = batches.length;
+
+            for (const batch of batches) {
+                try {
+                    console.log(`Git Auto Commit - 处理批次 ${batchNumber}/${totalBatches}，包含 ${batch.files.length} 个文件`);
+                    new Notice(`📦 提交批次 ${batchNumber}/${totalBatches} (${batch.files.length}个文件)`, 2000);
+
+                    // 为每个批次生成特定的提交信息
+                    const batchCommitMessage = this.generateBatchCommitMessage(commitMessage, batchNumber, totalBatches, batch);
+                    
+                    // 执行批次提交
+                    await this.executeGitOperations(batch.files, batchCommitMessage);
+                    
+                    console.log(`Git Auto Commit - 批次 ${batchNumber} 提交成功`);
+                    batchNumber++;
+
+                    // 在批次之间稍作停顿，避免过于频繁的操作
+                    if (batchNumber <= totalBatches) {
+                        await new Promise(resolve => setTimeout(resolve, 1000));
+                    }
+
+                } catch (error) {
+                    console.error(`Git Auto Commit - 批次 ${batchNumber} 提交失败:`, error);
+                    throw new Error(`批次 ${batchNumber} 提交失败: ${error.message}`);
+                }
+            }
+
+            new Notice(`✅ 分批提交完成！共处理 ${totalBatches} 个批次`, 3000);
+            console.log(`Git Auto Commit - 所有批次提交完成，共 ${totalBatches} 个批次`);
+
+        } catch (error) {
+            console.error('Git Auto Commit - 分批提交失败:', error);
+            throw error;
+        }
+    }
+
+    async calculateChangeSize(filesToCommit: string[], vaultPath: string): Promise<number> {
+        try {
+            // 暂时添加所有文件到暂存区
+            if (filesToCommit.length > 0) {
+                for (const file of filesToCommit) {
+                    await execAsync(`git add "${file}"`, { 
+                        cwd: vaultPath,
+                        maxBuffer: 5 * 1024 * 1024
+                    });
+                }
+            } else {
+                await execAsync('git add .', { 
+                    cwd: vaultPath,
+                    maxBuffer: 10 * 1024 * 1024
+                });
+            }
+
+            // 获取 diff 统计信息
+            const { stdout: diffStat } = await execAsync('git diff --cached --numstat', { 
+                cwd: vaultPath,
+                maxBuffer: 10 * 1024 * 1024
+            });
+
+            // 计算总的变更行数作为大小估算
+            let totalChanges = 0;
+            const lines = diffStat.trim().split('\n').filter(line => line.trim());
+            
+            for (const line of lines) {
+                const [added, deleted] = line.split('\t');
+                if (added !== '-' && deleted !== '-') {
+                    totalChanges += parseInt(added || '0') + parseInt(deleted || '0');
+                }
+            }
+
+            // 估算每行平均 50 字节
+            const estimatedSize = totalChanges * 50;
+            
+            // 重置暂存区（撤销刚才的add操作）
+            await execAsync('git reset', { 
+                cwd: vaultPath,
+                maxBuffer: 5 * 1024 * 1024
+            });
+
+            return estimatedSize;
+
+        } catch (error) {
+            console.error('Git Auto Commit - 计算变更大小失败:', error);
+            // 如果计算失败，返回一个较大的值以触发分批处理
+            return 20 * 1024 * 1024; // 20MB
+        }
+    }
+
+    async createSmartBatches(filesToCommit: string[], vaultPath: string, sizeLimit: number): Promise<Array<{files: string[], estimatedSize: number}>> {
+        const batches: Array<{files: string[], estimatedSize: number}> = [];
+        const filesWithSizes: Array<{file: string, size: number}> = [];
+
+        // 获取每个文件的大小信息
+        const filesToProcess = filesToCommit.length > 0 ? filesToCommit : await this.getAllModifiedFiles(vaultPath);
+
+        for (const file of filesToProcess) {
+            try {
+                const size = await this.estimateFileChangeSize(file, vaultPath);
+                filesWithSizes.push({ file, size });
+            } catch (error) {
+                console.warn(`Git Auto Commit - 无法估算文件 ${file} 的大小，使用默认值`);
+                filesWithSizes.push({ file, size: 100 * 1024 }); // 默认 100KB
+            }
+        }
+
+        // 按文件大小排序，大文件优先
+        filesWithSizes.sort((a, b) => b.size - a.size);
+
+        let currentBatch: string[] = [];
+        let currentSize = 0;
+        const targetSize = sizeLimit * 0.8; // 使用80%的限制作为目标
+
+        for (const { file, size } of filesWithSizes) {
+            // 如果单个文件就超过限制，单独成为一个批次
+            if (size > targetSize) {
+                if (currentBatch.length > 0) {
+                    batches.push({ files: [...currentBatch], estimatedSize: currentSize });
+                    currentBatch = [];
+                    currentSize = 0;
+                }
+                batches.push({ files: [file], estimatedSize: size });
+                continue;
+            }
+
+            // 如果添加这个文件会超过限制，先完成当前批次
+            if (currentSize + size > targetSize && currentBatch.length > 0) {
+                batches.push({ files: [...currentBatch], estimatedSize: currentSize });
+                currentBatch = [file];
+                currentSize = size;
+            } else {
+                currentBatch.push(file);
+                currentSize += size;
+            }
+        }
+
+        // 添加最后一个批次
+        if (currentBatch.length > 0) {
+            batches.push({ files: [...currentBatch], estimatedSize: currentSize });
+        }
+
+        return batches;
+    }
+
+    async getAllModifiedFiles(vaultPath: string): Promise<string[]> {
+        const { stdout } = await execAsync('git status --porcelain', { 
+            cwd: vaultPath,
+            maxBuffer: 10 * 1024 * 1024
+        });
+        
+        return stdout
+            .split('\n')
+            .filter(line => line.trim())
+            .map(line => line.substring(3))
+            .filter(file => {
+                const hasValidExtension = this.settings.includeFileTypes.some(ext => 
+                    file.endsWith(ext)
+                );
+                if (!hasValidExtension) return false;
+
+                const isExcluded = this.settings.excludePatterns.some(pattern => 
+                    file.includes(pattern)
+                );
+                return !isExcluded;
+            });
+    }
+
+    async estimateFileChangeSize(file: string, vaultPath: string): Promise<number> {
+        try {
+            // 暂时添加单个文件
+            await execAsync(`git add "${file}"`, { 
+                cwd: vaultPath,
+                maxBuffer: 5 * 1024 * 1024
+            });
+
+            // 获取该文件的 diff 统计
+            const { stdout: diffStat } = await execAsync(`git diff --cached --numstat -- "${file}"`, { 
+                cwd: vaultPath,
+                maxBuffer: 5 * 1024 * 1024
+            });
+
+            // 重置该文件
+            await execAsync(`git reset -- "${file}"`, { 
+                cwd: vaultPath,
+                maxBuffer: 1024 * 1024
+            });
+
+            if (diffStat.trim()) {
+                const [added, deleted] = diffStat.trim().split('\t');
+                if (added !== '-' && deleted !== '-') {
+                    const changes = parseInt(added || '0') + parseInt(deleted || '0');
+                    return changes * 50; // 估算每行50字节
+                }
+            }
+
+            return 1024; // 默认1KB
+
+        } catch (error) {
+            console.warn(`Git Auto Commit - 估算文件 ${file} 大小失败:`, error);
+            return 10 * 1024; // 默认10KB
+        }
+    }
+
+    generateBatchCommitMessage(originalMessage: string, batchNumber: number, totalBatches: number, batch: {files: string[], estimatedSize: number}): string {
+        const sizeInMB = (batch.estimatedSize / 1024 / 1024).toFixed(1);
+        const fileCount = batch.files.length;
+        
+        // 从原始消息中提取主要内容（去掉可能的详细信息）
+        const mainMessage = originalMessage.split('\n')[0] || originalMessage;
+        
+        const batchInfo = totalBatches > 1 ? ` [批次 ${batchNumber}/${totalBatches}]` : '';
+        const batchMessage = `${mainMessage}${batchInfo}
+
+批次信息:
+- 文件数量: ${fileCount}
+- 预估大小: ${sizeInMB}MB
+- 批次号: ${batchNumber}/${totalBatches}
+
+包含文件:
+${batch.files.slice(0, 10).map(f => `- ${f}`).join('\n')}${batch.files.length > 10 ? `\n... 还有 ${batch.files.length - 10} 个文件` : ''}`;
+
+        return batchMessage;
+    }
+
+    // 用于测试分批处理逻辑的方法
+    async testBatchProcessing() {
+        try {
+            const vaultPath = (this.app.vault.adapter as any).basePath || 
+                             (this.app.vault.adapter as any).path ||
+                             this.app.vault.configDir;
+            
+            // 获取当前所有修改的文件
+            const modifiedFiles = await this.getModifiedFiles();
+            console.log('Git Auto Commit - 当前修改的文件:', modifiedFiles);
+            
+            if (modifiedFiles.length === 0) {
+                new Notice('📦 没有检测到修改的文件');
+                return;
+            }
+
+            // 计算变更大小
+            const changeSize = await this.calculateChangeSize(modifiedFiles, vaultPath);
+            console.log(`Git Auto Commit - 预估变更大小: ${(changeSize / 1024 / 1024).toFixed(2)}MB`);
+            
+            // 测试分批逻辑
+            const sizeLimit = this.settings.batchSizeLimitMB * 1024 * 1024;
+            console.log(`Git Auto Commit - 配置的大小限制: ${this.settings.batchSizeLimitMB}MB`);
+            
+            if (changeSize > sizeLimit) {
+                const batches = await this.createSmartBatches(modifiedFiles, vaultPath, sizeLimit);
+                console.log(`Git Auto Commit - 将分为 ${batches.length} 个批次:`);
+                
+                let totalFiles = 0;
+                let totalSize = 0;
+                
+                batches.forEach((batch, index) => {
+                    console.log(`  批次 ${index + 1}: ${batch.files.length} 个文件, ${(batch.estimatedSize / 1024 / 1024).toFixed(2)}MB`);
+                    totalFiles += batch.files.length;
+                    totalSize += batch.estimatedSize;
+                });
+                
+                console.log(`Git Auto Commit - 总计: ${totalFiles} 个文件, ${(totalSize / 1024 / 1024).toFixed(2)}MB`);
+                
+                new Notice(
+                    `📦 分批处理测试结果:\n` +
+                    `变更大小: ${(changeSize / 1024 / 1024).toFixed(2)}MB\n` +
+                    `将分为: ${batches.length} 个批次\n` +
+                    `总文件数: ${totalFiles}`,
+                    5000
+                );
+            } else {
+                new Notice(
+                    `📦 分批处理测试结果:\n` +
+                    `变更大小: ${(changeSize / 1024 / 1024).toFixed(2)}MB\n` +
+                    `无需分批，可直接提交`,
+                    3000
+                );
+            }
+
+        } catch (error) {
+            console.error('Git Auto Commit - 分批处理测试失败:', error);
+            new Notice(`❌ 分批处理测试失败: ${error.message}`);
+        }
+    }
+
     async executeGitOperations(filesToCommit: string[], commitMessage: string) {
         const vaultPath = (this.app.vault.adapter as any).basePath || 
                          (this.app.vault.adapter as any).path ||
@@ -1366,14 +1919,23 @@ ${contextInfo.details}`;
             // 添加文件到暂存区
             if (filesToCommit.length > 0) {
                 for (const file of filesToCommit) {
-                    await execAsync(`git add "${file}"`, { cwd: vaultPath });
+                    await execAsync(`git add "${file}"`, { 
+                        cwd: vaultPath,
+                        maxBuffer: 5 * 1024 * 1024 // 5MB 缓冲区
+                    });
                 }
             } else {
-                await execAsync('git add .', { cwd: vaultPath });
+                await execAsync('git add .', { 
+                    cwd: vaultPath,
+                    maxBuffer: 10 * 1024 * 1024 // 10MB 缓冲区
+                });
             }
 
             // 检查是否有文件需要提交
-            const { stdout: stagedFiles } = await execAsync('git diff --cached --name-only', { cwd: vaultPath });
+            const { stdout: stagedFiles } = await execAsync('git diff --cached --name-only', { 
+                cwd: vaultPath,
+                maxBuffer: 10 * 1024 * 1024 // 10MB 缓冲区
+            });
             if (!stagedFiles.trim()) {
                 throw new Error('没有文件需要提交');
             }
@@ -1390,7 +1952,10 @@ ${contextInfo.details}`;
                 
                 try {
                     await writeFile(tmpFile, escapedMessage, 'utf8');
-                    await execAsync(`git commit -F "${tmpFile}"`, { cwd: vaultPath });
+                    await execAsync(`git commit -F "${tmpFile}"`, { 
+                        cwd: vaultPath,
+                        maxBuffer: 5 * 1024 * 1024 // 5MB 缓冲区
+                    });
                     await unlink(tmpFile); // 清理临时文件
                 } catch (error) {
                     // 清理临时文件
@@ -1403,12 +1968,18 @@ ${contextInfo.details}`;
                 }
             } else {
                 // 单行提交信息使用-m参数
-                await execAsync(`git commit -m "${escapedMessage}"`, { cwd: vaultPath });
+                await execAsync(`git commit -m "${escapedMessage}"`, { 
+                    cwd: vaultPath,
+                    maxBuffer: 5 * 1024 * 1024 // 5MB 缓冲区
+                });
             }
 
             // 推送
             if (this.settings.pushToRemote) {
-                await execAsync(`git push origin ${this.settings.remoteBranch}`, { cwd: vaultPath });
+                await execAsync(`git push origin ${this.settings.remoteBranch}`, { 
+                    cwd: vaultPath,
+                    maxBuffer: 10 * 1024 * 1024 // 10MB 缓冲区
+                });
             }
 
         } catch (error) {
@@ -1768,6 +2339,45 @@ class GitAutoCommitSettingTab extends PluginSettingTab {
                 .onChange(async (value) => {
                     this.plugin.settings.excludePatterns = value.split(',').map(s => s.trim()).filter(s => s);
                     await this.plugin.saveSettings();
+                }));
+
+        // 分批处理设置
+        containerEl.createEl('h3', { text: '📦 分批处理' });
+
+        new Setting(containerEl)
+            .setName('启用智能分批处理')
+            .setDesc('当变更量超过限制时，自动分批提交以避免缓冲区溢出错误')
+            .addToggle(toggle => toggle
+                .setValue(this.plugin.settings.batchProcessingEnabled)
+                .onChange(async (value) => {
+                    this.plugin.settings.batchProcessingEnabled = value;
+                    await this.plugin.saveSettings();
+                }));
+
+        new Setting(containerEl)
+            .setName('分批大小限制 (MB)')
+            .setDesc('单次提交的最大数据量。超过此限制时将自动分批处理 (建议范围: 5-50MB)')
+            .addSlider(slider => slider
+                .setLimits(1, 50, 1)
+                .setValue(this.plugin.settings.batchSizeLimitMB)
+                .setDynamicTooltip()
+                .onChange(async (value) => {
+                    this.plugin.settings.batchSizeLimitMB = value;
+                    await this.plugin.saveSettings();
+                }))
+            .addExtraButton(button => button
+                .setIcon('info')
+                .setTooltip('分批处理说明')
+                .onClick(() => {
+                    new Notice(
+                        '📦 分批处理功能:\n' +
+                        '• 当检测到大量文件变更时自动分批提交\n' +
+                        '• 避免 "maxBuffer exceeded" 错误\n' +
+                        '• 每个批次都有独立的提交信息\n' +
+                        '• 较小的值会产生更多批次，但更稳定\n' +
+                        '• 建议根据仓库大小调整 (小仓库5-10MB，大仓库20-50MB)', 
+                        8000
+                    );
                 }));
 
         // 重置按钮

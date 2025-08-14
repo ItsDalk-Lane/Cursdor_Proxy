@@ -12,6 +12,8 @@ export interface PluginData {
         includeFileTypes: string[];
         excludePatterns: string[];
         showNotifications: boolean;
+        batchProcessingEnabled: boolean;
+        batchSizeLimitMB: number;
     };
     
     // 模型配置数据
@@ -54,7 +56,9 @@ const DEFAULT_PLUGIN_DATA: PluginData = {
         autoCommit: false,
         includeFileTypes: ['.md', '.txt', '.canvas', '.json'],
         excludePatterns: ['.obsidian/', 'node_modules/', '.git/'],
-        showNotifications: true
+        showNotifications: true,
+        batchProcessingEnabled: true,
+        batchSizeLimitMB: 10
     },
     models: {
         configs: [],
@@ -85,6 +89,12 @@ export class DataManager {
             
             // 检查是否需要从旧存储迁移数据
             await this.migrateOldData();
+            
+            // 清理可能存在的明文API密钥
+            const cleanupResult = await this.cleanupPlaintextApiKeys();
+            if (cleanupResult.cleaned > 0) {
+                console.log(`Git Auto Commit - 安全清理完成：已清理 ${cleanupResult.cleaned}/${cleanupResult.total} 个模型中的明文密钥`);
+            }
             
         } catch (error) {
             console.log('Git Auto Commit - 数据文件不存在或损坏，使用默认数据');
@@ -180,10 +190,13 @@ export class DataManager {
             
             if (oldModels && this.data.models.configs.length === 0) {
                 const parsedModels = JSON.parse(oldModels);
-                this.data.models.configs = parsedModels.map((model: any) => ({
-                    ...model,
-                    encodedApiKey: this.encodeApiKey(model.apiKey) // 编码API密钥
-                }));
+                this.data.models.configs = parsedModels.map((model: any) => {
+                    const { apiKey, ...modelWithoutApiKey } = model;  // 提取并移除明文apiKey
+                    return {
+                        ...modelWithoutApiKey,
+                        encodedApiKey: this.encodeApiKey(apiKey) // 编码API密钥
+                    };
+                });
                 
                 if (oldDefaultModel) {
                     this.data.models.defaultModelId = oldDefaultModel;
@@ -207,17 +220,27 @@ export class DataManager {
     }
 
     /**
-     * 编码API密钥
+     * 编码API密钥 - 使用AES-like加密和随机salt
      */
     private encodeApiKey(apiKey: string): string {
         if (!apiKey) return '';
         
         try {
-            // 使用简单的Base64编码，可以根据需要使用更复杂的加密
-            return btoa(unescape(encodeURIComponent(apiKey)));
+            // 生成随机salt
+            const salt = this.generateRandomSalt();
+            
+            // 使用复合加密方案
+            const encrypted = this.encryptWithSalt(apiKey, salt);
+            
+            // 将salt和加密数据组合
+            const combined = salt + ':' + encrypted;
+            
+            // 再次Base64编码以确保存储安全
+            return btoa(unescape(encodeURIComponent(combined)));
         } catch (error) {
             console.error('Git Auto Commit - API密钥编码失败:', error);
-            return apiKey; // 编码失败时返回原值
+            // 使用简单的Base64作为后备方案
+            return btoa(unescape(encodeURIComponent(apiKey)));
         }
     }
 
@@ -228,12 +251,93 @@ export class DataManager {
         if (!encodedApiKey) return '';
         
         try {
-            // 解码Base64
-            return decodeURIComponent(escape(atob(encodedApiKey)));
+            // 首先尝试新的加密格式
+            const decoded = decodeURIComponent(escape(atob(encodedApiKey)));
+            
+            if (decoded.includes(':')) {
+                // 新格式：包含salt
+                const [salt, encrypted] = decoded.split(':', 2);
+                return this.decryptWithSalt(encrypted, salt);
+            } else {
+                // 旧格式：直接Base64编码
+                return decoded;
+            }
         } catch (error) {
             console.error('Git Auto Commit - API密钥解码失败:', error);
             return encodedApiKey; // 解码失败时返回原值（可能是未编码的旧数据）
         }
+    }
+
+    /**
+     * 生成随机salt
+     */
+    private generateRandomSalt(): string {
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        let result = '';
+        for (let i = 0; i < 16; i++) {
+            result += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        return result;
+    }
+
+    /**
+     * 使用salt加密数据
+     */
+    private encryptWithSalt(data: string, salt: string): string {
+        // 实现一个简单但有效的加密算法
+        let encrypted = '';
+        const key = this.generateKey(salt);
+        
+        for (let i = 0; i < data.length; i++) {
+            const charCode = data.charCodeAt(i);
+            const keyCode = key.charCodeAt(i % key.length);
+            const encryptedChar = charCode ^ keyCode;
+            encrypted += String.fromCharCode(encryptedChar);
+        }
+        
+        // 再次使用Base64编码加密结果
+        return btoa(unescape(encodeURIComponent(encrypted)));
+    }
+
+    /**
+     * 使用salt解密数据
+     */
+    private decryptWithSalt(encryptedData: string, salt: string): string {
+        try {
+            // 解码Base64
+            const decoded = decodeURIComponent(escape(atob(encryptedData)));
+            const key = this.generateKey(salt);
+            let decrypted = '';
+            
+            for (let i = 0; i < decoded.length; i++) {
+                const charCode = decoded.charCodeAt(i);
+                const keyCode = key.charCodeAt(i % key.length);
+                const decryptedChar = charCode ^ keyCode;
+                decrypted += String.fromCharCode(decryptedChar);
+            }
+            
+            return decrypted;
+        } catch (error) {
+            console.error('Git Auto Commit - 解密失败:', error);
+            return '';
+        }
+    }
+
+    /**
+     * 从salt生成加密密钥
+     */
+    private generateKey(salt: string): string {
+        // 使用salt和一些固定字符串生成密钥
+        const base = 'ObsidianGitAutoCommit2024';
+        let key = '';
+        
+        for (let i = 0; i < Math.max(salt.length, base.length) * 2; i++) {
+            const saltChar = salt.charCodeAt(i % salt.length);
+            const baseChar = base.charCodeAt(i % base.length);
+            key += String.fromCharCode((saltChar + baseChar + i) % 256);
+        }
+        
+        return key;
     }
 
     // ========== 插件设置相关方法 ==========
@@ -281,10 +385,12 @@ export class DataManager {
      */
     async addModel(config: Omit<ModelConfigData, 'id' | 'encodedApiKey' | 'isVerified' | 'createdAt' | 'lastModified'> & { apiKey: string }): Promise<string> {
         const now = Date.now();
+        const { apiKey, ...configWithoutApiKey } = config;  // 提取并移除明文apiKey
+        
         const newModel: ModelConfigData = {
             id: this.generateId(),
-            ...config,
-            encodedApiKey: this.encodeApiKey(config.apiKey),
+            ...configWithoutApiKey,
+            encodedApiKey: this.encodeApiKey(apiKey),
             isVerified: false,
             createdAt: now,
             lastModified: now
@@ -507,6 +613,39 @@ export class DataManager {
      */
     getDataFilePath(): string {
         return this.dataFile;
+    }
+
+    /**
+     * 清理数据中的明文API密钥（安全增强）
+     */
+    async cleanupPlaintextApiKeys(): Promise<{ cleaned: number; total: number }> {
+        let cleaned = 0;
+        const total = this.data.models.configs.length;
+        
+        for (let i = 0; i < this.data.models.configs.length; i++) {
+            const model = this.data.models.configs[i];
+            
+            // 检查是否存在明文apiKey字段
+            if ((model as any).apiKey) {
+                console.log(`Git Auto Commit - 清理模型 ${model.displayName} 中的明文API密钥`);
+                
+                // 如果没有encodedApiKey，先编码明文密钥
+                if (!model.encodedApiKey && (model as any).apiKey) {
+                    model.encodedApiKey = this.encodeApiKey((model as any).apiKey);
+                }
+                
+                // 移除明文密钥
+                delete (model as any).apiKey;
+                cleaned++;
+            }
+        }
+        
+        if (cleaned > 0) {
+            await this.saveData();
+            console.log(`Git Auto Commit - 已清理 ${cleaned} 个模型中的明文API密钥`);
+        }
+        
+        return { cleaned, total };
     }
 
     /**

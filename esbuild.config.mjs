@@ -1,6 +1,8 @@
 import esbuild from "esbuild";
 import process from "process";
 import builtins from "builtin-modules";
+import { copyFileSync, mkdirSync, existsSync } from "fs";
+import { join, dirname } from "path";
 
 const banner =
 `/*
@@ -10,6 +12,27 @@ if you want to view the source, please visit the github repository of this plugi
 `;
 
 const prod = (process.argv[2] === 'production');
+const testBuild = (process.argv[2] === 'test');
+const testWatch = (process.argv[2] === 'test-watch');
+
+// 目标目录配置
+const targetDir = (testBuild || testWatch) ? 
+    'C:\\Code\\Obsidian沙箱仓库\\.obsidian\\plugins\\git-auto' : 
+    '.';
+
+const outfile = (testBuild || testWatch) ? 
+    join(targetDir, 'main.js') : 
+    'main.js';
+
+// 确保目标目录存在
+if (testBuild || testWatch) {
+    try {
+        mkdirSync(targetDir, { recursive: true });
+        console.log(`创建目标目录: ${targetDir}`);
+    } catch (error) {
+        console.log(`目标目录已存在或创建失败: ${error.message}`);
+    }
+}
 
 const context = await esbuild.context({
     banner: {
@@ -37,12 +60,41 @@ const context = await esbuild.context({
     logLevel: "info",
     sourcemap: prod ? false : 'inline',
     treeShaking: true,
-    outfile: 'main.js',
+    outfile: outfile,
 });
 
-if (prod) {
+// 复制必要文件的函数
+function copyRequiredFiles() {
+    if (!testBuild && !testWatch) return;
+    
+    const filesToCopy = [
+        'manifest.json',
+        'styles.css'
+    ];
+    
+    filesToCopy.forEach(file => {
+        try {
+            if (existsSync(file)) {
+                copyFileSync(file, join(targetDir, file));
+                console.log(`复制文件: ${file} -> ${targetDir}`);
+            } else {
+                console.warn(`文件不存在: ${file}`);
+            }
+        } catch (error) {
+            console.error(`复制文件失败 ${file}: ${error.message}`);
+        }
+    });
+}
+
+if (prod || testBuild) {
     await context.rebuild();
+    copyRequiredFiles();
+    console.log(`构建完成！输出目录: ${(testBuild || testWatch) ? targetDir : '当前目录'}`);
     process.exit(0);
+} else if (testWatch) {
+    copyRequiredFiles();
+    console.log(`开始监听文件变化...输出目录: ${targetDir}`);
+    await context.watch();
 } else {
     await context.watch();
 }

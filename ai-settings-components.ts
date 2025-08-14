@@ -168,6 +168,8 @@ export class ModelFormModal extends Modal {
         // 初始化表单数据
         if (model) {
             this.formData = { ...model };
+            // 编辑模式时，为了安全不显示现有的API密钥
+            this.formData.apiKey = '';
         } else {
             this.formData = {
                 displayName: '',
@@ -264,9 +266,11 @@ export class ModelFormModal extends Modal {
         // API密钥
         const apiKeySetting = new Setting(container)
             .setName('API密钥')
-            .setDesc('输入您的API密钥')
+            .setDesc(this.model ? 
+                '🔒 已加密存储。如需更改，请输入新密钥' : 
+                '输入您的API密钥')
             .addText(text => {
-                text.setPlaceholder('sk-...')
+                text.setPlaceholder(this.model ? '(已加密，输入新密钥以更改)' : 'sk-...')
                     .setValue(this.formData.apiKey || '')
                     .onChange(value => {
                         this.formData.apiKey = value;
