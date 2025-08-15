@@ -2,6 +2,7 @@ import type { Editor, TFile } from "obsidian";
 import { Notice } from "obsidian";
 import type { GitManager } from "./gitManager/gitManager";
 import { SimpleGit } from "./gitManager/simpleGit";
+import { t } from "./i18n";
 
 export async function openLineInGitHub(
     editor: Editor,
@@ -29,7 +30,7 @@ export async function openLineInGitHub(
             );
         }
     } else {
-        new Notice("It seems like you are not using GitHub");
+        new Notice(t("openInGitHub.notUsingGitHub"));
     }
 }
 
@@ -48,7 +49,7 @@ export async function openHistoryInGitHub(file: TFile, manager: GitManager) {
             `https://github.com/${user}/${repo}/commits/${branch}/${filePath}`
         );
     } else {
-        new Notice("It seems like you are not using GitHub");
+        new Notice(t("openInGitHub.notUsingGitHub"));
     }
 }
 

@@ -1,6 +1,9 @@
 import type { LineAuthorSettings } from "src/lineAuthor/model";
+import type { SupportedLanguage } from "src/i18n";
 
 export interface ObsidianGitSettings {
+    // Language settings
+    language: SupportedLanguage;
     commitMessage: string;
     autoCommitMessage: string;
     commitMessageScript: string;

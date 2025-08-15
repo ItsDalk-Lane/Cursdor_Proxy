@@ -12,6 +12,7 @@
     import StagedFileComponent from "./stagedFileComponent.svelte";
     import { arrayProxyWithNewLength, mayTriggerFileMenu } from "src/utils";
     import TooManyFilesComponent from "./tooManyFilesComponent.svelte";
+    import { t } from "src/i18n";
     interface Props {
         hierarchy: StatusRootTreeItem;
         plugin: ObsidianGit;
@@ -137,7 +138,7 @@
                             {#if fileType == FileType.staged}
                                 <div
                                     data-icon="minus"
-                                    aria-label="Unstage"
+                                    aria-label={t("components.actions.unstage")}
                                     onclick={(event) =>
                                         unstage(event, entity.path)}
                                     class="clickable-icon"
@@ -163,7 +164,7 @@
                             {:else}
                                 <div
                                     data-icon="undo"
-                                    aria-label="Discard"
+                                    aria-label={t("components.actions.discard")}
                                     onclick={(event) => discard(event, entity)}
                                     class="clickable-icon"
                                 >
@@ -185,7 +186,7 @@
                                 </div>
                                 <div
                                     data-icon="plus"
-                                    aria-label="Stage"
+                                    aria-label={t("components.actions.stage")}
                                     onclick={(event) =>
                                         stage(event, entity.path)}
                                     class="clickable-icon"

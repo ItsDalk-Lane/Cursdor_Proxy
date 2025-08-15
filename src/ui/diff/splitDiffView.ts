@@ -2,6 +2,7 @@ import type { Debouncer, ViewStateResult, WorkspaceLeaf } from "obsidian";
 import { debounce, ItemView, Platform } from "obsidian";
 import { SPLIT_DIFF_VIEW_CONFIG } from "src/constants";
 import { SimpleGit } from "src/gitManager/simpleGit";
+import { t } from "src/i18n";
 import type ObsidianGit from "src/main";
 import type { DiffViewState } from "src/types";
 
@@ -126,7 +127,7 @@ export default class SplitDiffView extends ItemView {
             let fileName = this.state.bFile.split("/").last();
             if (fileName?.endsWith(".md")) fileName = fileName.slice(0, -3);
 
-            return `Diff: ${fileName}`;
+            return t('ui.diff.title') + `: ${fileName}`;
         }
         return SPLIT_DIFF_VIEW_CONFIG.name;
     }

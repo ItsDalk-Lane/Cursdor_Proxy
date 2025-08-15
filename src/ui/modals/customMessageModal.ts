@@ -1,5 +1,6 @@
 import { moment, SuggestModal } from "obsidian";
 import type ObsidianGit from "src/main";
+import { t } from "src/i18n";
 
 export class CustomMessageModal extends SuggestModal<string> {
     resolve:
@@ -8,7 +9,7 @@ export class CustomMessageModal extends SuggestModal<string> {
     constructor(private readonly plugin: ObsidianGit) {
         super(plugin.app);
         this.setPlaceholder(
-            "Type your message and select optional the version with the added date."
+            t("modals.customMessage.placeholder")
         );
     }
 
@@ -28,7 +29,7 @@ export class CustomMessageModal extends SuggestModal<string> {
 
     getSuggestions(query: string): string[] {
         const date = moment().format(this.plugin.settings.commitDateFormat);
-        if (query == "") query = "...";
+        if (query == "") query = t("modals.general.defaultPlaceholder");
         return [query, `${date}: ${query}`, `${query}: ${date}`];
     }
 

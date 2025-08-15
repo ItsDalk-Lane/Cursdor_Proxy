@@ -2,6 +2,7 @@
     import { setIcon, TFile } from "obsidian";
     import { hoverPreview } from "obsidian-community-lib";
     import type { GitManager } from "src/gitManager/gitManager";
+    import { t } from "src/i18n";
     import type { FileStatusResult } from "src/types";
     import { DiscardModal } from "src/ui/modals/discardModal";
     import {
@@ -155,7 +156,7 @@
                 {#if fileOpenableInObsidian(change.vaultPath, view.app)}
                     <div
                         data-icon="go-to-file"
-                        aria-label="Open File"
+                        aria-label={t('ui.sourceControl.openFile')}
                         bind:this={buttons[0]}
                         onauxclick={open}
                         onclick={open}
@@ -164,14 +165,14 @@
                 {/if}
                 <div
                     data-icon="undo"
-                    aria-label="Discard"
+                    aria-label={t('ui.sourceControl.discard')}
                     bind:this={buttons[1]}
                     onclick={discard}
                     class="clickable-icon"
                 ></div>
                 <div
                     data-icon="plus"
-                    aria-label="Stage"
+                    aria-label={t('ui.sourceControl.stage')}
                     bind:this={buttons[2]}
                     onclick={stage}
                     class="clickable-icon"

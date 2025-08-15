@@ -45,5 +45,65 @@ export default tseslint.config(
         rules: {
             "no-undef": "off",
         },
+    },
+    {
+        files: ["**/*.mjs"],
+        languageOptions: {
+            globals: {
+                console: "readonly",
+                process: "readonly",
+                Buffer: "readonly",
+                __dirname: "readonly",
+                __filename: "readonly",
+                global: "readonly",
+                require: "readonly",
+                module: "readonly",
+                exports: "readonly",
+            },
+            ecmaVersion: "latest",
+            sourceType: "module",
+            parserOptions: {
+                projectService: false,  // 禁用 TypeScript 项目服务
+            },
+        },
+        rules: {
+            "@typescript-eslint/no-unused-vars": "off",
+            "@typescript-eslint/no-unsafe-assignment": "off",
+            "@typescript-eslint/no-unsafe-member-access": "off",
+            "@typescript-eslint/no-unsafe-call": "off",
+            "@typescript-eslint/no-unsafe-return": "off",
+            "@typescript-eslint/no-unsafe-argument": "off",
+            "@typescript-eslint/require-await": "off",
+            "@typescript-eslint/no-floating-promises": "off",
+            "@typescript-eslint/no-misused-promises": "off",
+        },
+    },
+    {
+        files: ["polyfill_buffer.js"],
+        languageOptions: {
+            globals: {
+                global: "readonly",
+                require: "readonly",
+                module: "readonly",
+                exports: "readonly",
+            },
+            ecmaVersion: "latest",
+            sourceType: "module",
+            parserOptions: {
+                projectService: false,  // 禁用 TypeScript 项目服务
+            },
+        },
+        rules: {
+            "@typescript-eslint/no-unused-vars": "off",
+            "@typescript-eslint/no-unsafe-assignment": "off",
+            "@typescript-eslint/no-unsafe-member-access": "off",
+            "@typescript-eslint/no-unsafe-call": "off",
+            "@typescript-eslint/no-unsafe-return": "off",
+            "@typescript-eslint/no-unsafe-argument": "off",
+            "@typescript-eslint/no-var-requires": "off",
+            "@typescript-eslint/require-await": "off",
+            "@typescript-eslint/no-floating-promises": "off",
+            "@typescript-eslint/no-misused-promises": "off",
+        },
     }
 );

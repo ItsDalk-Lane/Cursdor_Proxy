@@ -1,5 +1,6 @@
 import { SuggestModal } from "obsidian";
 import type ObsidianGit from "src/main";
+import { t } from "src/i18n";
 
 export interface OptionalGeneralModalConfig {
     options?: string[];
@@ -85,7 +86,7 @@ export class GeneralModal extends SuggestModal<string> {
         } else if (this.config.allowEmpty) {
             return [query.length > 0 ? query : " ", ...this.config.options];
         } else {
-            return [query.length > 0 ? query : "...", ...this.config.options];
+            return [query.length > 0 ? query : t("modals.general.defaultPlaceholder"), ...this.config.options];
         }
     }
 
@@ -101,7 +102,7 @@ export class GeneralModal extends SuggestModal<string> {
         if (this.resolve) {
             let res;
             if (this.config.allowEmpty && value === " ") res = "";
-            else if (value === "...") res = undefined;
+            else if (value === t("modals.general.defaultPlaceholder")) res = undefined;
             else res = value;
             this.resolve(res);
         }

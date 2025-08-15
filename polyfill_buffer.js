@@ -1,9 +1,11 @@
 import { Platform } from 'obsidian';
+import { Buffer as BufferPolyfill } from 'buffer';
+
 let buffer;
 if (Platform.isMobileApp) {
-    buffer = require('buffer/index.js').Buffer
+    buffer = BufferPolyfill;
 } else {
-    buffer = global.Buffer
+    buffer = global.Buffer;
 }
 
 export const Buffer = buffer;

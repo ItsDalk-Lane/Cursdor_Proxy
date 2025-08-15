@@ -1,0 +1,510 @@
+{
+  "version": "1.0",
+  "created": "2024-01-15",
+  "description": "Obsidian Git Plugin 硬编码文本翻译清单",
+  "total_items": 89,
+  "categories": {
+    "commands": {
+      "priority": "high",
+      "file": "src/commands.ts", 
+      "count": 29,
+      "items": [
+        {
+          "line": 16,
+          "original": "Edit .gitignore",
+          "translation": "编辑 .gitignore",
+          "path": "commands.editGitignore",
+          "status": "pending"
+        },
+        {
+          "line": 33,
+          "original": "Open source control view", 
+          "translation": "打开源代码控制视图",
+          "path": "commands.openSourceControlView",
+          "status": "pending"
+        },
+        {
+          "line": 58,
+          "original": "Open history view",
+          "translation": "打开历史视图", 
+          "path": "commands.openHistoryView",
+          "status": "pending"
+        },
+        {
+          "line": 84,
+          "original": "Open diff view",
+          "translation": "打开差异视图",
+          "path": "commands.openDiffView", 
+          "status": "pending"
+        },
+        {
+          "line": 104,
+          "original": "Open file on GitHub",
+          "translation": "在 GitHub 中打开文件",
+          "path": "commands.openFileOnGitHub",
+          "status": "pending"
+        },
+        {
+          "line": 112,
+          "original": "Open file history on GitHub",
+          "translation": "在 GitHub 中查看文件历史",
+          "path": "commands.openFileHistoryOnGitHub", 
+          "status": "pending"
+        },
+        {
+          "line": 120,
+          "original": "Pull",
+          "translation": "拉取",
+          "path": "commands.pull",
+          "status": "pending"
+        },
+        {
+          "line": 127,
+          "original": "Fetch", 
+          "translation": "获取",
+          "path": "commands.fetch",
+          "status": "pending"
+        },
+        {
+          "line": 133,
+          "original": "Switch to remote branch",
+          "translation": "切换到远程分支",
+          "path": "commands.switchToRemoteBranch",
+          "status": "pending"
+        },
+        {
+          "line": 140,
+          "original": "Add file to .gitignore",
+          "translation": "添加文件到 .gitignore", 
+          "path": "commands.addFileToGitignore",
+          "status": "pending"
+        },
+        {
+          "line": 155,
+          "original": "Commit-and-sync",
+          "translation": "提交并同步",
+          "path": "commands.commitAndSync",
+          "status": "pending"
+        },
+        {
+          "line": 164,
+          "original": "Commit-and-sync and then close Obsidian",
+          "translation": "提交同步后关闭 Obsidian",
+          "path": "commands.commitAndSyncAndClose",
+          "status": "pending"
+        },
+        {
+          "line": 174,
+          "original": "Commit-and-sync with specific message",
+          "translation": "使用自定义消息提交并同步",
+          "path": "commands.commitAndSyncWithMessage",
+          "status": "pending"
+        },
+        {
+          "line": 186,
+          "original": "Commit all changes",
+          "translation": "提交所有更改",
+          "path": "commands.commitAllChanges",
+          "status": "pending"
+        },
+        {
+          "line": 195,
+          "original": "Commit all changes with specific message",
+          "translation": "使用自定义消息提交所有更改",
+          "path": "commands.commitAllChangesWithMessage", 
+          "status": "pending"
+        },
+        {
+          "line": 207,
+          "original": "Commit",
+          "translation": "提交",
+          "path": "commands.commit",
+          "status": "pending"
+        },
+        {
+          "line": 222,
+          "original": "Commit staged",
+          "translation": "提交已暂存",
+          "path": "commands.commitStaged",
+          "status": "pending"
+        },
+        {
+          "line": 241,
+          "original": "Amend staged",
+          "translation": "修改已暂存",
+          "path": "commands.amendStaged",
+          "status": "pending"
+        },
+        {
+          "line": 256,
+          "original": "Commit with specific message",
+          "translation": "使用自定义消息提交",
+          "path": "commands.commitWithMessage",
+          "status": "pending"
+        },
+        {
+          "line": 271,
+          "original": "Commit staged with specific message", 
+          "translation": "使用自定义消息提交已暂存",
+          "path": "commands.commitStagedWithMessage",
+          "status": "pending"
+        },
+        {
+          "line": 287,
+          "original": "Push",
+          "translation": "推送",
+          "path": "commands.push",
+          "status": "pending"
+        },
+        {
+          "line": 293,
+          "original": "Stage current file",
+          "translation": "暂存当前文件",
+          "path": "commands.stageCurrentFile",
+          "status": "pending"
+        },
+        {
+          "line": 306,
+          "original": "Unstage current file",
+          "translation": "取消暂存当前文件",
+          "path": "commands.unstageCurrentFile",
+          "status": "pending"
+        },
+        {
+          "line": 319,
+          "original": "Edit remotes",
+          "translation": "编辑远程仓库",
+          "path": "commands.editRemotes",
+          "status": "pending"
+        },
+        {
+          "line": 326,
+          "original": "Remove remote",
+          "translation": "移除远程仓库",
+          "path": "commands.removeRemote",
+          "status": "pending"
+        },
+        {
+          "line": 333,
+          "original": "Set upstream branch",
+          "translation": "设置上游分支",
+          "path": "commands.setUpstreamBranch",
+          "status": "pending"
+        },
+        {
+          "line": 340,
+          "original": "CAUTION: Delete repository",
+          "translation": "⚠️ 危险：删除仓库",
+          "path": "commands.deleteRepository",
+          "status": "pending"
+        },
+        {
+          "line": 372,
+          "original": "Initialize a new repo",
+          "translation": "初始化新仓库",
+          "path": "commands.initRepo",
+          "status": "pending"
+        },
+        {
+          "line": 379,
+          "original": "Clone an existing remote repo",
+          "translation": "克隆现有远程仓库",
+          "path": "commands.cloneRepo",
+          "status": "pending"
+        }
+      ]
+    },
+    "constants": {
+      "priority": "high",
+      "file": "src/constants.ts",
+      "count": 4,
+      "items": [
+        {
+          "line": 69,
+          "original": "Source Control",
+          "translation": "源代码控制",
+          "path": "ui.sourceControl.title",
+          "status": "pending"
+        },
+        {
+          "line": 75,
+          "original": "History",
+          "translation": "历史",
+          "path": "ui.history.title", 
+          "status": "pending"
+        },
+        {
+          "line": 81,
+          "original": "Diff view",
+          "translation": "差异视图",
+          "path": "ui.diff.title",
+          "status": "pending"
+        },
+        {
+          "line": 86,
+          "original": "Diff View",
+          "translation": "差异视图",
+          "path": "ui.diff.title",
+          "status": "pending"
+        }
+      ]
+    },
+    "settings": {
+      "priority": "medium",
+      "file": "src/setting/settings.ts",
+      "count": 45,
+      "items": [
+        {
+          "line": 110,
+          "original": "Automatic",
+          "translation": "自动化",
+          "path": "settings.sections.automatic",
+          "status": "pending"
+        },
+        {
+          "line": 112,
+          "original": "Split timers for automatic commit and sync",
+          "translation": "为自动提交和同步分别设置计时器",
+          "path": "settings.autoBackup.splitTimers",
+          "status": "pending"
+        },
+        {
+          "line": 236,
+          "original": "Auto pull interval (minutes)",
+          "translation": "自动拉取间隔（分钟）",
+          "path": "settings.autoBackup.pullInterval",
+          "status": "pending"
+        },
+        {
+          "line": 318,
+          "original": "Commit message",
+          "translation": "提交消息",
+          "path": "settings.sections.commitMessage",
+          "status": "pending"
+        },
+        {
+          "line": 321,
+          "original": "Commit message on manual commit",
+          "translation": "手动提交时的提交消息",
+          "path": "settings.commitMessage.manual",
+          "status": "pending"
+        },
+        {
+          "line": 345,
+          "original": "Commit message script",
+          "translation": "提交消息脚本",
+          "path": "settings.commitMessage.script",
+          "status": "pending"
+        },
+        {
+          "line": 366,
+          "original": "{{date}} placeholder format",
+          "translation": "{{date}} 占位符格式",
+          "path": "settings.commitMessage.dateFormat",
+          "status": "pending"
+        },
+        {
+          "line": 380,
+          "original": "{{hostname}} placeholder replacement",
+          "translation": "{{hostname}} 占位符替换",
+          "path": "settings.commitMessage.hostname",
+          "status": "pending"
+        },
+        {
+          "line": 391,
+          "original": "Preview commit message",
+          "translation": "预览提交消息",
+          "path": "settings.commitMessage.preview",
+          "status": "pending"
+        },
+        {
+          "line": 403,
+          "original": "List filenames affected by commit in the commit body",
+          "translation": "在提交正文中列出受影响的文件名",
+          "path": "settings.commitMessage.listFiles",
+          "status": "pending"
+        },
+        {
+          "line": 414,
+          "original": "Pull",
+          "translation": "拉取",
+          "path": "settings.sections.pull",
+          "status": "pending"
+        },
+        {
+          "line": 418,
+          "original": "Merge strategy",
+          "translation": "合并策略",
+          "path": "settings.sync.mergeStrategy",
+          "status": "pending"
+        },
+        {
+          "line": 438,
+          "original": "Pull on startup",
+          "translation": "启动时拉取",
+          "path": "settings.sync.pullOnStartup",
+          "status": "pending"
+        },
+        {
+          "line": 450,
+          "original": "Commit-and-sync",
+          "translation": "提交并同步",
+          "path": "settings.sections.commitAndSync",
+          "status": "pending"
+        },
+        {
+          "line": 457,
+          "original": "Push on commit-and-sync",
+          "translation": "提交同步时推送",
+          "path": "settings.sync.pushOnCommitSync",
+          "status": "pending"
+        },
+        {
+          "line": 472,
+          "original": "Pull on commit-and-sync",
+          "translation": "提交同步时拉取",
+          "path": "settings.sync.pullOnCommitSync",
+          "status": "pending"
+        },
+        {
+          "line": 488,
+          "original": "Line author information",
+          "translation": "行作者信息",
+          "path": "settings.lineAuthor.title",
+          "status": "pending"
+        }
+      ]
+    },
+    "ui_components": {
+      "priority": "medium",
+      "file": "src/ui/sourceControl/sourceControl.svelte",
+      "count": 7,
+      "items": [
+        {
+          "line": 111,
+          "original": "Change Layout",
+          "translation": "更改布局",
+          "path": "ui.common.changeLayout",
+          "status": "pending"
+        },
+        {
+          "line": 125,
+          "original": "Refresh",
+          "translation": "刷新",
+          "path": "ui.common.refresh",
+          "status": "pending"
+        },
+        {
+          "line": 233,
+          "original": "Commit",
+          "translation": "提交",
+          "path": "ui.sourceControl.commit",
+          "status": "pending"
+        },
+        {
+          "line": 241,
+          "original": "Stage all",
+          "translation": "暂存全部",
+          "path": "ui.sourceControl.stageAll",
+          "status": "pending"
+        },
+        {
+          "line": 249,
+          "original": "Unstage all",
+          "translation": "取消暂存全部",
+          "path": "ui.sourceControl.unstageAll",
+          "status": "pending"
+        },
+        {
+          "line": 257,
+          "original": "Push",
+          "translation": "推送",
+          "path": "ui.sourceControl.push",
+          "status": "pending"
+        },
+        {
+          "line": 265,
+          "original": "Pull",
+          "translation": "拉取",
+          "path": "ui.sourceControl.pull",
+          "status": "pending"
+        }
+      ]
+    },
+    "modals": {
+      "priority": "low",
+      "file": "src/ui/modals/",
+      "count": 4,
+      "items": [
+        {
+          "file": "branchModal.ts",
+          "line": 14,
+          "original": "Select branch to checkout",
+          "translation": "选择要检出的分支",
+          "path": "modals.branch.selectBranch",
+          "status": "pending"
+        },
+        {
+          "file": "discardModal.ts", 
+          "line": 103,
+          "original": "Cancel",
+          "translation": "取消",
+          "path": "ui.common.cancel",
+          "status": "pending"
+        },
+        {
+          "file": "ignoreModal.ts",
+          "line": 35,
+          "original": "Save",
+          "translation": "保存",
+          "path": "ui.common.save",
+          "status": "pending"
+        }
+      ]
+    },
+    "error_messages": {
+      "priority": "high",
+      "file": "multiple",
+      "count": 3,
+      "items": [
+        {
+          "file": "src/setting/settings.ts",
+          "line": 103,
+          "original": "Git is not ready. When all settings are correct you can configure commit-sync, etc.",
+          "translation": "Git 尚未就绪。当所有设置正确后，您可以配置提交同步等功能。",
+          "path": "status.error.gitNotReady",
+          "status": "pending"
+        },
+        {
+          "file": "src/ui/diff/diffView.ts",
+          "line": 131,
+          "original": "File not found: ",
+          "translation": "文件未找到：",
+          "path": "status.error.fileNotFound",
+          "status": "pending"
+        }
+      ]
+    }
+  },
+  "technical_terms_to_preserve": [
+    "git-pull-request",
+    "data-tooltip-position", 
+    "CMD (⌘) + OPTION (⌥) + I",
+    "CTRL + SHIFT + I",
+    "merge",
+    "split",
+    "rebase"
+  ],
+  "implementation_notes": {
+    "i18n_function": "使用 t() 函数替换硬编码文本",
+    "path_convention": "使用点号分隔的嵌套路径，如 'commands.push'",
+    "file_organization": "按功能模块组织翻译键",
+    "testing": "每个模块完成后进行功能测试"
+  },
+  "next_steps": [
+    "开始任务 5: 汉化 manifest.json",
+    "开始任务 7: 汉化主要命令 (commands.ts)", 
+    "开始任务 6: 汉化常量配置 (constants.ts)",
+    "开始任务 12: 汉化设置页面"
+  ]
+}

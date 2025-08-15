@@ -6,6 +6,7 @@ import * as path from "path";
 import { resolve, sep } from "path";
 import type * as simple from "simple-git";
 import simpleGit, { GitError } from "simple-git";
+import { t } from "../i18n";
 import {
     ASK_PASS_INPUT_FILE,
     ASK_PASS_SCRIPT,
@@ -55,7 +56,7 @@ export class SimpleGit extends GitManager {
                         this.plugin.settings.basePath
                     );
                 } else if (!ignoreError) {
-                    new Notice("ObsidianGit: Base path does not exist");
+                    new Notice(t("gitManager.errors.basePathNotExist"));
                 }
             }
             this.absoluteRepoPath = basePath;
@@ -213,7 +214,7 @@ export class SimpleGit extends GitManager {
                     obscure: true,
                     placeholder:
                         data.length > 60
-                            ? "Enter a response to the message."
+                            ? t("gitManager.prompts.enterResponse")
                             : data,
                 }).openAndGetResult();
                 notice?.hide();
@@ -600,7 +601,7 @@ export class SimpleGit extends GitManager {
 
             if (!branchInfo.tracking && this.plugin.settings.updateSubmodules) {
                 this.plugin.log(
-                    "No tracking branch found. Ignoring pull of main repo and updating submodules only."
+                    t("gitManager.operations.noTrackingBranchPull")
                 );
                 return;
             }
@@ -626,7 +627,10 @@ export class SimpleGit extends GitManager {
                     } catch (err) {
                         this.plugin.displayError(
                             // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-                            `Pull failed (${this.plugin.settings.syncMethod}): ${"message" in err ? err.message : err}`
+                            t("gitManager.errors.pullFailed", { 
+                                method: this.plugin.settings.syncMethod, 
+                                error: "message" in err ? err.message : err 
+                            })
                         );
                         return;
                     }
@@ -641,7 +645,10 @@ export class SimpleGit extends GitManager {
                     } catch (err) {
                         this.plugin.displayError(
                             // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-                            `Sync failed (${this.plugin.settings.syncMethod}): ${"message" in err ? err.message : err}`
+                            t("gitManager.errors.syncFailed", { 
+                                method: this.plugin.settings.syncMethod, 
+                                error: "message" in err ? err.message : err 
+                            })
                         );
                     }
                 }
@@ -693,7 +700,7 @@ export class SimpleGit extends GitManager {
 
             if (!trackingBranch && this.plugin.settings.updateSubmodules) {
                 this.plugin.log(
-                    "No tracking branch found. Ignoring push of main repo and updating submodules only."
+                    t("gitManager.operations.noTrackingBranchPush")
                 );
                 return undefined;
             }
@@ -918,7 +925,7 @@ export class SimpleGit extends GitManager {
         if (typeof res === "string" || res == undefined) {
             return res;
         } else {
-            throw new Error("Config value is not a string");
+            throw new Error(t("gitManager.errors.configValueNotString"));
         }
     }
 

@@ -1,5 +1,6 @@
 import { type App, moment } from "obsidian";
 import type ObsidianGit from "../main";
+import { t } from "../i18n";
 import type {
     BranchInfo,
     DiffFile,
@@ -290,7 +291,7 @@ export abstract class GitManager {
 
                 files = chunks.join(", ");
             } else {
-                files = "Too many files to list";
+                files = t("gitManager.common.tooManyFiles");
             }
 
             template = template.replace("{{files}}", files);
@@ -307,9 +308,9 @@ export abstract class GitManager {
             if (status2.staged.length < 100) {
                 files = status2.staged.map((e) => e.path).join("\n");
             } else {
-                files = "Too many files to list";
+                files = t("gitManager.common.tooManyFiles");
             }
-            template = template + "\n\n" + "Affected files:" + "\n" + files;
+            template = template + "\n\n" + t("gitManager.common.affectedFiles") + "\n" + files;
         }
         return template;
     }

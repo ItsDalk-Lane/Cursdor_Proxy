@@ -2,9 +2,12 @@
     "author": "Your Name",
     "authorUrl": "https://github.com/yourusername",
     "id": "git-master",
-    "name": "Git自动化",
-    "description": "调用AI自动生成git提交信息",
+    "name": "Git Master",
+    "description": "AI-powered Git commit message generation",
     "isDesktopOnly": false,
     "fundingUrl": "https://buymeacoffee.com/yourusername",
     "version": "1.0.0"
 }
+
+
+

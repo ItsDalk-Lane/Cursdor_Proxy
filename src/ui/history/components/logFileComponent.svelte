@@ -1,5 +1,6 @@
 <script lang="ts">
     import { setIcon, TFile } from "obsidian";
+    import { t } from "src/i18n";
     import type { DiffFile } from "src/types";
     import {
         fileIsBinary,
@@ -91,7 +92,7 @@
                 {#if fileOpenableInObsidian(diff.vaultPath, view.app)}
                     <div
                         data-icon="go-to-file"
-                        aria-label="Open File"
+                        aria-label={t('ui.sourceControl.openFile')}
                         bind:this={buttons[0]}
                         onauxclick={open}
                         onclick={open}

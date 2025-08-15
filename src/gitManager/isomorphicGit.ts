@@ -12,6 +12,7 @@ import type {
 import git, { Errors, readBlob } from "isomorphic-git";
 import { Notice, requestUrl } from "obsidian";
 import type ObsidianGit from "../main";
+import { t } from "../i18n";
 import type {
     BranchInfo,
     FileStatusResult,
@@ -79,15 +80,14 @@ export class IsomorphicGit extends GitManager {
             },
             onAuthFailure: async () => {
                 new Notice(
-                    "Authentication failed. Please try with different credentials"
+                    t("gitManager.errors.authenticationFailed")
                 );
                 const username = await new GeneralModal(this.plugin, {
-                    placeholder: "Specify your username",
+                    placeholder: t("gitManager.prompts.specifyUsername"),
                 }).openAndGetResult();
                 if (username) {
                     const password = await new GeneralModal(this.plugin, {
-                        placeholder:
-                            "Specify your password/personal access token",
+                        placeholder: t("gitManager.prompts.specifyPasswordToken"),
                     }).openAndGetResult();
                     if (password) {
                         this.plugin.localStorage.setUsername(username);
@@ -150,7 +150,7 @@ export class IsomorphicGit extends GitManager {
         let notice: Notice | undefined;
         const timeout = window.setTimeout(() => {
             notice = new Notice(
-                "This takes longer: Getting status",
+                t("gitManager.operations.gettingStatusLong"),
                 this.noticeLength
             );
         }, 20000);
@@ -460,7 +460,7 @@ export class IsomorphicGit extends GitManager {
     }
 
     async pull(): Promise<FileStatusResult[]> {
-        const progressNotice = this.showNotice("Initializing pull");
+        const progressNotice = this.showNotice(t("gitManager.operations.initializingPull"));
         try {
             this.plugin.setPluginState({ gitAction: CurrentGitAction.pull });
 
@@ -501,7 +501,7 @@ export class IsomorphicGit extends GitManager {
                 upstreamCommit
             );
 
-            this.showNotice("Finished pull", false);
+            this.showNotice(t("gitManager.operations.finishedPull"), false);
 
             return changedFiles.map<FileStatusResult>((file) => ({
                 path: file.path,
@@ -528,7 +528,7 @@ export class IsomorphicGit extends GitManager {
         if (!(await this.canPush())) {
             return 0;
         }
-        const progressNotice = this.showNotice("Initializing push");
+        const progressNotice = this.showNotice(t("gitManager.operations.initializingPush"));
         try {
             this.plugin.setPluginState({ gitAction: CurrentGitAction.status });
             const status = await this.branchInfo();
@@ -690,7 +690,7 @@ export class IsomorphicGit extends GitManager {
     }
 
     async clone(url: string, dir: string, depth?: number): Promise<void> {
-        const progressNotice = this.showNotice("Initializing clone");
+        const progressNotice = this.showNotice(t("gitManager.operations.initializingClone"));
         try {
             await this.wrapFS(
                 git.clone({
@@ -747,7 +747,7 @@ export class IsomorphicGit extends GitManager {
     }
 
     async fetch(remote?: string): Promise<void> {
-        const progressNotice = this.showNotice("Initializing fetch");
+        const progressNotice = this.showNotice(t("gitManager.operations.initializingFetch"));
 
         try {
             const args = {
@@ -984,7 +984,7 @@ export class IsomorphicGit extends GitManager {
         let notice: Notice | undefined;
         const timeout = window.setTimeout(() => {
             notice = new Notice(
-                "This takes longer: Getting status",
+                t("gitManager.operations.gettingStatusLong"),
                 this.noticeLength
             );
         }, 20000);
@@ -1221,7 +1221,7 @@ export class IsomorphicGit extends GitManager {
         const email = await this.getConfig("user.email");
         if (!name || !email) {
             throw Error(
-                "Git author name and email are not set. Please set both fields in the settings."
+                t("gitManager.errors.authorNotSet")
             );
         }
     }

@@ -1,6 +1,32 @@
 # Changelog
 
-All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
+All notable changes to this project will be documented in this file.
+
+## [汉化版本] - 2024-01-15
+
+### 已完成 (Added)
+- ✅ **任务 9**: 源代码控制视图汉化
+  - 汉化 `sourceControl.svelte` 中的所有界面文本
+  - 汉化组件标题和按钮文本：提交、推送、拉取、暂存等操作
+  - 汉化文件状态显示文本：已暂存文件、未暂存文件、最近拉取的文件
+  - 汉化操作提示信息：所有 aria-label 属性
+  - 汉化相关组件：fileComponent、stagedFileComponent、pulledFileComponent
+
+- ✅ **任务 10**: 历史视图汉化  
+  - 汉化 `historyView.svelte` 中的界面文本
+  - 汉化操作按钮：更改布局、刷新等
+  - 汉化相关组件：logComponent、logFileComponent、logTreeComponent
+  - 保持提交历史显示格式和时间格式的正确显示
+
+### 技术改进 (Technical)
+- 在所有相关组件中导入并使用 i18n 翻译系统
+- 扩展中文语言包，新增源代码控制和历史视图相关翻译
+- 确保所有用户界面元素的可访问性标签正确翻译
+
+### 下一步计划 (Next)
+- 差异视图汉化 (任务 11)
+- 设置页面汉化 (任务 12-16)
+- 高级功能汉化 (任务 17-25) See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
 ## [2.35.0](https://github.com/Vinzent03/obsidian-git/compare/2.34.0...2.35.0) (2025-08-07)
 

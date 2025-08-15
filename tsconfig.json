@@ -24,7 +24,12 @@
     },
     "include": [
         "**/*.ts",
-        "eslint.config.mjs",
         "**/*.svelte"
+    ],
+    "exclude": [
+        "node_modules",
+        "esbuild.config.mjs",
+        "eslint.config.mjs",
+        "polyfill_buffer.js"
     ]
 }

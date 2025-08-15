@@ -3,6 +3,7 @@ import type { EventRef, ViewStateResult, WorkspaceLeaf } from "obsidian";
 import { ItemView, Platform } from "obsidian";
 import { DIFF_VIEW_CONFIG } from "src/constants";
 import { SimpleGit } from "src/gitManager/simpleGit";
+import { t } from "src/i18n";
 import type ObsidianGit from "src/main";
 import type { DiffViewState } from "src/types";
 
@@ -37,7 +38,7 @@ export default class DiffView extends ItemView {
             let fileName = this.state.bFile.split("/").last();
             if (fileName?.endsWith(".md")) fileName = fileName.slice(0, -3);
 
-            return `Diff: ${fileName}`;
+            return t('ui.diff.title') + `: ${fileName}`;
         }
         return DIFF_VIEW_CONFIG.name;
     }
@@ -128,7 +129,7 @@ export default class DiffView extends ItemView {
                     });
                     div.createEl("br");
                     div.createSpan({
-                        text: "File not found: " + this.state.bFile,
+                        text: t('status.error.fileNotFound') + ": " + this.state.bFile,
                     });
                 }
             } finally {
