@@ -5,4 +5,5 @@ export interface GitChangeInfo {
     statusText: string;
     diff?: string;
     selected?: boolean; // 是否被选择用于提交
+    isStaged?: boolean; // 是否已暂存
 }

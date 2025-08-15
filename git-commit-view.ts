@@ -197,33 +197,25 @@ export class GitCommitView extends ItemView {
         // 创建变更列表
         const changesTreeContainer = this.changesContainer.createDiv('tree-item nav-folder mod-root');
 
-        // Staged Changes 区域
-        const stagedChanges = this.changes.filter(change => change.status !== '??');
+        // 暂存变更区域
+        const stagedChanges = this.changes.filter(change => change.isStaged);
         if (stagedChanges.length > 0) {
-            this.createChangesGroup(changesTreeContainer, 'Staged Changes', stagedChanges, true);
+            this.createChangesGroup(changesTreeContainer, '暂存变更', stagedChanges, true);
         }
 
-        // Changes 区域
-        const unstagedChanges = this.changes.filter(change => change.status === '??');
+        // 变更区域（未暂存）
+        const unstagedChanges = this.changes.filter(change => !change.isStaged);
         if (unstagedChanges.length > 0) {
-            this.createChangesGroup(changesTreeContainer, 'Changes', unstagedChanges, false);
+            this.createChangesGroup(changesTreeContainer, '变更', unstagedChanges, false);
         }
     }
 
     private createChangesGroup(container: HTMLElement, title: string, changes: GitChangeInfo[], isStaged: boolean) {
         const groupContainer = container.createDiv(`${isStaged ? 'staged' : 'changes'} tree-item nav-folder`);
         
-        // 组标题
-        const titleContainer = groupContainer.createDiv('tree-item-self is-clickable nav-folder-title');
+        // 组标题（不可折叠）
+        const titleContainer = groupContainer.createDiv('tree-item-self nav-folder-title');
         
-        // 折叠图标
-        const collapseIcon = titleContainer.createDiv('tree-item-icon nav-folder-collapse-indicator collapse-icon');
-        collapseIcon.innerHTML = `
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon lucide-chevron-down">
-                <path d="M6 9L12 15L18 9"/>
-            </svg>
-        `;
-
         // 标题文本
         const titleText = titleContainer.createDiv('tree-item-inner nav-folder-title-content');
         titleText.textContent = title;
@@ -232,17 +224,11 @@ export class GitCommitView extends ItemView {
         const countBadge = titleContainer.createSpan('tree-item-flair');
         countBadge.textContent = changes.length.toString();
 
-        // 文件列表
+        // 文件列表（始终显示）
         const filesList = groupContainer.createDiv('tree-item-children nav-folder-children');
         
         changes.forEach(change => {
             this.createFileItem(filesList, change);
-        });
-
-        // 添加折叠功能
-        titleContainer.addEventListener('click', () => {
-            const isCollapsed = groupContainer.classList.contains('is-collapsed');
-            groupContainer.classList.toggle('is-collapsed', !isCollapsed);
         });
     }
 
@@ -464,15 +450,28 @@ export class GitCommitView extends ItemView {
             }
 
             .nav-header {
-                padding: 8px;
+                padding: 4px 8px;
                 border-bottom: 1px solid var(--background-modifier-border);
                 flex-shrink: 0;
+                min-height: 42px;
+                display: flex;
+                align-items: center;
             }
 
             .nav-buttons-container {
                 display: flex;
                 gap: 4px;
                 justify-content: flex-end;
+                width: 100%;
+            }
+
+            .nav-action-button {
+                padding: 6px;
+                min-height: 32px;
+                width: 32px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
             }
 
             .git-commit-msg {
@@ -621,6 +620,38 @@ export class GitCommitView extends ItemView {
                 padding: 2px 6px;
                 font-size: 10px;
                 margin-left: 8px;
+            }
+
+            /* 统一分组标题背景样式 */
+            .staged .tree-item-self,
+            .changes .tree-item-self {
+                background: transparent;
+                padding: 6px 8px;
+            }
+
+            .staged .tree-item-self:hover,
+            .changes .tree-item-self:hover {
+                background: var(--background-modifier-hover);
+            }
+
+            /* 移除分组的特殊背景色 */
+            .staged,
+            .changes {
+                background: transparent;
+            }
+
+            /* 文件列表项样式优化 */
+            .tree-item.nav-file {
+                margin: 1px 0;
+            }
+
+            .tree-item.nav-file .tree-item-self {
+                padding: 4px 8px;
+                border-radius: 4px;
+            }
+
+            .tree-item.nav-file .tree-item-self:hover {
+                background: var(--background-modifier-hover);
             }
 
             .clickable-icon.loading {

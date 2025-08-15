@@ -321,7 +321,10 @@ export default class GitAutoCommitPlugin extends Plugin {
             for (const line of lines) {
                 if (line.length < 4) continue;
 
-                const status = line.substring(0, 2).trim() as GitChangeInfo['status'];
+                // git status --porcelain 格式：XY filename
+                // X = 暂存区状态，Y = 工作区状态
+                const indexStatus = line[0]; // 暂存区状态
+                const workingStatus = line[1]; // 工作区状态
                 const filePath = line.substring(3);
 
                 // 检查文件是否符合包含/排除规则
@@ -335,14 +338,34 @@ export default class GitAutoCommitPlugin extends Plugin {
                 );
                 if (isExcluded) continue;
 
+                // 根据暂存区和工作区状态确定最终状态
+                let status: GitChangeInfo['status'];
+                let isStaged = false;
+
+                if (indexStatus !== ' ' && indexStatus !== '?') {
+                    // 文件已暂存
+                    isStaged = true;
+                    status = indexStatus as GitChangeInfo['status'];
+                } else if (workingStatus !== ' ') {
+                    // 文件未暂存但有变更
+                    isStaged = false;
+                    status = workingStatus === '?' ? '??' : workingStatus as GitChangeInfo['status'];
+                } else {
+                    continue; // 跳过没有变更的文件
+                }
+
                 const statusText = this.getStatusText(status);
                 
                 // 尝试获取diff信息（对于修改的文件）
                 let diff = '';
                 try {
                     if (status === 'M' || status === 'MM') {
+                        const diffCommand = isStaged ? 
+                            `git diff --cached -- "${filePath}"` : 
+                            `git diff HEAD -- "${filePath}"`;
+                        
                         const { stdout: diffOutput } = await execAsync(
-                            `git diff HEAD -- "${filePath}"`, 
+                            diffCommand, 
                             { 
                                 cwd: vaultPath,
                                 maxBuffer: 2 * 1024 * 1024 // 2MB 缓冲区用于diff
@@ -358,7 +381,8 @@ export default class GitAutoCommitPlugin extends Plugin {
                     filePath,
                     status,
                     statusText,
-                    diff
+                    diff,
+                    isStaged // 添加暂存状态标识
                 });
             }
 
