@@ -458,10 +458,10 @@ export function addCommmands(plugin: ObsidianGit) {
             plugin.localStorage.setPausedAutomatics(pause);
             if (pause) {
                 plugin.automaticsManager.unload();
-                new Notice("已暂停自动例程。");
+                new Notice(t("status.info.pausedRoutines"));
             } else {
                 plugin.automaticsManager.reload("commit", "push", "pull");
-                new Notice("已恢复自动例程。");
+                new Notice(t("status.info.resumedRoutines"));
             }
         },
     });

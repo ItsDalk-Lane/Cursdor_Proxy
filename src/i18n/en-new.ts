@@ -153,9 +153,7 @@ export const en = {
             warning: "Warning",
             info: "Info",
             success: "Success",
-            clear: "Clear",
-            yes: "YES",
-            no: "NO"
+            clear: "Clear"
         }
     },
 
@@ -321,7 +319,6 @@ export const en = {
             showFileCountInStatusBar: "Show number of changed files in status bar",
             
             // Author settings
-            authCommitAuthor: "Authentication/commit author",
             commitAuthor: "Commit author",
             username: "Username",
             usernameDesc: "Your username on git server. For example your username on GitHub",
@@ -438,8 +435,7 @@ export const en = {
                 utc: "UTC+0000/Z"
             },
             oldestAgeColoring: "Oldest age in coloring",
-            ignoreWhitespaceChanges: "Ignore whitespace and newlines in changes",
-            textColor: "Text color"
+            ignoreWhitespaceChanges: "Ignore whitespace and newlines in changes"
         }
     },
 
@@ -466,8 +462,7 @@ export const en = {
             currentBranch: "Current branch",
             selectBranch: "Select branch to checkout",
             createBranchName: "New branch name",
-            deleteBranchConfirm: "Are you sure you want to delete this branch?",
-            forceDeleteWarning: "This branch isn't merged into HEAD. Force delete?"
+            deleteBranchConfirm: "Are you sure you want to delete this branch?"
         },
 
         // General modals
@@ -475,8 +470,7 @@ export const en = {
             selectOption: "Select an option",
             enterValue: "Enter a value",
             noOptionsAvailable: "No options available",
-            defaultPlaceholder: "...",
-            vaultRoot: "Vault Root"
+            defaultPlaceholder: "..."
         },
 
         // Changed files modal
@@ -708,14 +702,6 @@ export const en = {
     // GitHub integration
     openInGitHub: {
         notUsingGitHub: "It looks like you are not using GitHub"
-    },
-
-    // Line author functionality
-    lineAuthor: {
-        copyCommitHash: "Copy commit hash",
-        showCommitHash: "Show commit hash",
-        showAuthor: "Show author",
-        showDate: "Show date"
     },
 
     // Conflict resolution

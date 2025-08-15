@@ -8,7 +8,6 @@ import {
     TextAreaComponent,
 } from "obsidian";
 import {
-    DATE_TIME_FORMAT_SECONDS,
     DEFAULT_SETTINGS,
     GIT_LINE_AUTHORING_MOVEMENT_DETECTION_MINIMAL_LENGTH,
 } from "src/constants";
@@ -29,7 +28,7 @@ import type {
     SyncMethod,
 } from "src/types";
 import { convertToRgb, formatMinutes, rgbToString } from "src/utils";
-import { i18n, getSupportedLanguages, setLanguage, type SupportedLanguage, t } from "src/i18n";
+import { getSupportedLanguages, setLanguage, type SupportedLanguage, t } from "src/i18n";
 
 const FORMAT_STRING_REFERENCE_URL =
     "https://momentjs.com/docs/#/parsing/string-format/";
@@ -94,7 +93,7 @@ export class ObsidianGitSettingsTab extends PluginSettingTab {
                     this.display();
                     
                     // Show success message
-                    new Notice(`语言已更改为 ${supportedLanguages[newLang].nativeName}`);
+                    new Notice(t("settings.advanced.languageChangeNotice", { language: supportedLanguages[newLang].nativeName }));
                 });
             });
 
@@ -281,8 +280,7 @@ export class ObsidianGitSettingsTab extends PluginSettingTab {
             setting = new Setting(containerEl)
                 .setName(t("settings.commitMessage.messageOnAutoAction", { action: commitOrSync }))
                 .setDesc(
-                    "Available placeholders: {{date}}" +
-                        " (see below), {{hostname}} (see below), {{numFiles}} (number of changed files in the commit) and {{files}} (changed files in commit message)."
+                    t("settings.commitMessage.templateDescPlaceholders")
                 )
                 .addTextArea((text) => {
                     text.setPlaceholder(
@@ -364,7 +362,7 @@ export class ObsidianGitSettingsTab extends PluginSettingTab {
                         })
                 );
             datePlaceholderSetting.descEl.innerHTML = `
-            Specify custom date format. E.g. "${DATE_TIME_FORMAT_SECONDS}. See <a href="https://momentjs.com">Moment.js</a> for more formats.`;
+            ${t("settings.advanced.dateFormatPlaceholder")}`;  
 
             new Setting(containerEl)
                 .setName(t('settings.commitMessage.hostname'))
@@ -411,9 +409,9 @@ export class ObsidianGitSettingsTab extends PluginSettingTab {
                     )
                     .addDropdown((dropdown) => {
                         const options: Record<SyncMethod, string> = {
-                            merge: "Merge",
-                            rebase: "Rebase",
-                            reset: "Other sync service (Only updates the HEAD without touching the working directory)",
+                            merge: t("settings.advanced.mergeStrategyDefault"),
+                            rebase: t("settings.advanced.mergeStrategyRebase"),
+                            reset: t("settings.advanced.mergeStrategyReset"),
                         };
                         dropdown.addOptions(options);
                         dropdown.setValue(plugin.settings.syncMethod);
@@ -679,7 +677,7 @@ export class ObsidianGitSettingsTab extends PluginSettingTab {
 
         if (plugin.gitManager instanceof IsomorphicGit) {
             new Setting(containerEl)
-                .setName("Authentication/commit author")
+                .setName(t("settings.advanced.authCommitAuthor"))
                 .setHeading();
         } else {
             new Setting(containerEl).setName(t("settings.advanced.commitAuthor")).setHeading();
@@ -1150,7 +1148,7 @@ export class ObsidianGitSettingsTab extends PluginSettingTab {
             this.createColorSetting("oldest");
 
             new Setting(this.containerEl)
-                .setName("Text color")
+                .setName(t("settings.lineAuthor.textColor"))
                 .addText((field) => {
                     field.setValue(this.settings.lineAuthor.textColorCss);
                     field.onChange(async (value) => {

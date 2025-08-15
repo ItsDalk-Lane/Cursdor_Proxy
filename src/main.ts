@@ -627,7 +627,7 @@ export default class ObsidianGit extends Plugin {
                     break;
                 default:
                     this.log(
-                        t("status.error.somethingWeirdHappened") + result
+                        t("status.error.somethingWeirdHappened") + String(result)
                     );
             }
         } catch (error) {
@@ -652,7 +652,7 @@ export default class ObsidianGit extends Plugin {
         });
         const url = await modal.openAndGetResult();
         if (url) {
-            const confirmOption = "Vault Root";
+            const confirmOption = t("modals.general.vaultRoot");
             let dir = await new GeneralModal(this, {
                 options:
                     this.gitManager instanceof IsomorphicGit
@@ -1005,9 +1005,7 @@ export default class ObsidianGit extends Plugin {
                     committedFiles = changedFiles.length;
                 }
                 this.displayMessage(
-                    `Committed${roughly ? " approx." : ""} ${committedFiles} ${
-                        committedFiles == 1 ? "file" : "files"
-                    }`
+                    `${t("status.success.committedFiles", { count: committedFiles.toString() })}${roughly ? " (大约)" : ""}`
                 );
             } else {
                 this.displayMessage(t("status.info.noChangesToCommit"));
@@ -1218,7 +1216,7 @@ export default class ObsidianGit extends Plugin {
         if (branchInfo.current) branchInfo.branches.remove(branchInfo.current);
         const branch = await new GeneralModal(this, {
             options: branchInfo.branches,
-            placeholder: "Delete branch",
+            placeholder: t("modals.branch.deleteBranchConfirm"),
             onlySelection: true,
         }).openAndGetResult();
         if (branch != undefined) {
@@ -1227,9 +1225,9 @@ export default class ObsidianGit extends Plugin {
             // Using await inside IF throws exception
             if (!merged) {
                 const forceAnswer = await new GeneralModal(this, {
-                    options: ["YES", "NO"],
+                    options: [t("ui.common.yes"), t("ui.common.no")],
                     placeholder:
-                        "This branch isn't merged into HEAD. Force delete?",
+                        t("modals.branch.forceDeleteWarning"),
                     onlySelection: true,
                 }).openAndGetResult();
                 if (forceAnswer !== "YES") {
@@ -1547,7 +1545,7 @@ ${t("conflictResolution.conflictedFilesInstructions")}
 
     displayError(data: unknown, timeout: number = 10 * 1000): void {
         if (data instanceof Errors.UserCanceledError) {
-            new Notice("Aborted");
+            new Notice(t("status.error.userCanceled"));
             return;
         }
         let error: Error;

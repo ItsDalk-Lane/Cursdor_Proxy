@@ -153,9 +153,7 @@ export const zhCN = {
             warning: "警告",
             info: "信息",
             success: "成功",
-            clear: "清除",
-            yes: "是",
-            no: "否"
+            clear: "清除"
         }
     },
 
@@ -321,7 +319,7 @@ export const zhCN = {
             showFileCountInStatusBar: "在状态栏显示更改文件的数量",
             
             // 作者设置
-            authCommitAuthor: "身份验证/提交作者",
+            commitAuthor: "提交作者",
             username: "用户名",
             usernameDesc: "您在git服务器上的用户名。例如您在GitHub上的用户名",
             password: "密码/个人访问令牌",
@@ -437,8 +435,7 @@ export const zhCN = {
                 utc: "UTC+0000/Z"
             },
             oldestAgeColoring: "着色中最旧年龄",
-            ignoreWhitespaceChanges: "忽略更改中的空白和换行符",
-            textColor: "文本颜色"
+            ignoreWhitespaceChanges: "忽略更改中的空白和换行符"
         }
     },
 
@@ -465,8 +462,7 @@ export const zhCN = {
             currentBranch: "当前分支",
             selectBranch: "选择要检出的分支",
             createBranchName: "新分支名称",
-            deleteBranchConfirm: "确定要删除此分支吗？",
-            forceDeleteWarning: "此分支尚未合并到 HEAD。强制删除？"
+            deleteBranchConfirm: "确定要删除此分支吗？"
         },
 
         // 通用模态框
@@ -474,8 +470,7 @@ export const zhCN = {
             selectOption: "选择一个选项",
             enterValue: "输入一个值",
             noOptionsAvailable: "无可用选项",
-            defaultPlaceholder: "...",
-            vaultRoot: "仓库根目录"
+            defaultPlaceholder: "..."
         },
 
         // 更改文件模态框
@@ -707,14 +702,6 @@ export const zhCN = {
     // GitHub 集成
     openInGitHub: {
         notUsingGitHub: "看起来您未使用 GitHub"
-    },
-
-    // 行作者功能
-    lineAuthor: {
-        copyCommitHash: "复制提交哈希",
-        showCommitHash: "显示提交哈希",
-        showAuthor: "显示作者",
-        showDate: "显示日期"
     },
 
     // 冲突解决
