@@ -1,14 +1,18 @@
 // Git提交侧边栏视图
-import { ItemView, WorkspaceLeaf, ButtonComponent, TextAreaComponent, Notice } from 'obsidian';
-import { GitChangeInfo } from './git-types';
+import { ItemView, WorkspaceLeaf, ButtonComponent, TextAreaComponent, Notice, setIcon } from 'obsidian';
+import { GitChangeInfo, FileStatusResult, Status } from './git-types';
 
 // 前向声明，避免循环导入
 interface GitAutoCommitPlugin {
     validateRepository(): Promise<boolean>;
     getGitChanges(): Promise<GitChangeInfo[]>;
+    getGitStatus(): Promise<Status>;  // 新增方法
     generateCommitMessageWithAI(files: string[]): Promise<string>;
     performActualCommit(files: string[], message: string): Promise<void>;
     pushToRemoteRepository(): Promise<void>;
+    debugLog(...args: any[]): void; // 新增调试方法
+    debugError(...args: any[]): void;
+    debugWarn(...args: any[]): void;
 }
 
 export const GIT_COMMIT_VIEW_TYPE = 'git-auto-commit-view';
@@ -17,8 +21,10 @@ export class GitCommitView extends ItemView {
     plugin: GitAutoCommitPlugin;
     private commitMessage: string = '';
     private changes: GitChangeInfo[] = [];
+    private status: Status | null = null;  // 新的状态对象
     private commitMessageTextarea: TextAreaComponent | null = null;
     private commitButton: ButtonComponent | null = null;
+    private stageButton: ButtonComponent | null = null;
     private pushButton: ButtonComponent | null = null;
     private refreshButton: ButtonComponent | null = null;
     private changesContainer: HTMLElement | null = null;
@@ -43,8 +49,16 @@ export class GitCommitView extends ItemView {
     }
 
     async onOpen() {
+        this.plugin.debugLog('=== GitCommitView onOpen 开始 ===');
         await this.buildView();
+        this.plugin.debugLog('=== buildView 完成，开始 refreshChanges ===');
         await this.refreshChanges();
+        this.plugin.debugLog('=== GitCommitView onOpen 完成 ===');
+        
+        // 添加窗口resize监听器
+        this.registerDomEvent(window, 'resize', () => {
+            setTimeout(() => this.adjustTextareaHeight(), 100);
+        });
     }
 
     onClose() {
@@ -68,12 +82,6 @@ export class GitCommitView extends ItemView {
 
         // 创建文件变更区域
         this.createChangesSection(contentEl);
-
-        // 创建操作按钮区域
-        this.createButtonSection(contentEl);
-
-        // 应用样式
-        this.applyStyles();
     }
 
     private createHeader(container: HTMLElement) {
@@ -89,14 +97,23 @@ export class GitCommitView extends ItemView {
             })
             .buttonEl.addClass('clickable-icon', 'nav-action-button');
 
-        // 提交按钮
+        // 提交按钮（改为圆圈包裹向上箭头，始终显示）
         this.commitButton = new ButtonComponent(buttonsContainer)
-            .setIcon('check')
+            .setIcon('arrow-up-circle')
             .setTooltip('提交')
             .onClick(async () => {
                 await this.performCommit();
             });
-        this.commitButton.buttonEl.addClass('clickable-icon', 'nav-action-button');
+        this.commitButton.buttonEl.addClass('clickable-icon', 'nav-action-button', 'git-commit-icon-button');
+
+        // 暂存按钮（一键暂存所有未暂存文件）
+        this.stageButton = new ButtonComponent(buttonsContainer)
+            .setIcon('plus-circle')
+            .setTooltip('暂存所有文件')
+            .onClick(async () => {
+                await this.performStageAll();
+            });
+        this.stageButton.buttonEl.addClass('clickable-icon', 'nav-action-button');
 
         // 刷新按钮
         this.refreshButton = new ButtonComponent(buttonsContainer)
@@ -107,36 +124,88 @@ export class GitCommitView extends ItemView {
             });
         
         this.refreshButton.buttonEl.addClass('clickable-icon', 'nav-action-button');
+
+        // 推送按钮（初始隐藏，成功提交后显示）
+        this.pushButton = new ButtonComponent(buttonsContainer)
+            .setIcon('upload')
+            .setTooltip('推送')
+            .onClick(async () => {
+                await this.performPush();
+            });
+        this.pushButton.buttonEl.addClass('clickable-icon', 'nav-action-button');
+        this.pushButton.buttonEl.style.display = 'none';
     }
 
     private createCommitMessageSection(container: HTMLElement) {
         const messageSection = container.createDiv('git-commit-msg');
         
+        // 创建消息输入容器（用于相对定位清除按钮）
+        const inputContainer = messageSection.createDiv('commit-msg-input-container');
+        
         // 提交信息输入框
-        this.commitMessageTextarea = new TextAreaComponent(messageSection);
+        this.commitMessageTextarea = new TextAreaComponent(inputContainer);
         this.commitMessageTextarea.inputEl.addClass('commit-msg-input');
         this.commitMessageTextarea.setPlaceholder('Commit Message');
-        this.commitMessageTextarea.onChange((value) => {
+        this.commitMessageTextarea.onChange(async (value) => {
             this.commitMessage = value;
-            this.updateButtonStates();
+            await this.updateButtonStates(); // 修复异步调用
             this.adjustTextareaHeight();
         });
 
-        // 设置初始高度并启用自动调整
-        this.commitMessageTextarea.inputEl.style.height = 'auto';
-        this.commitMessageTextarea.inputEl.style.minHeight = '60px';
+        // 设置自动高度调整
+        this.commitMessageTextarea.inputEl.style.minHeight = '54px';
         this.commitMessageTextarea.inputEl.style.resize = 'none';
+        this.commitMessageTextarea.inputEl.style.overflow = 'hidden';
         this.commitMessageTextarea.inputEl.addEventListener('input', () => {
             this.adjustTextareaHeight();
         });
+
+        // 创建清除按钮
+        const clearButton = inputContainer.createDiv('commit-msg-clear-button');
+        clearButton.setAttribute('aria-label', '清除提交信息');
+        clearButton.addEventListener('click', async () => {
+            this.commitMessage = '';
+            this.commitMessageTextarea?.setValue('');
+            await this.updateButtonStates(); // 修复异步调用
+            this.adjustTextareaHeight();
+        });
+
+        // 初始高度调整
+        this.adjustTextareaHeight();
     }
 
     private adjustTextareaHeight() {
         if (!this.commitMessageTextarea) return;
         
         const textarea = this.commitMessageTextarea.inputEl;
+        const messageSection = textarea.closest('.git-commit-msg') as HTMLElement;
+        if (!messageSection) return;
+
+        // 重置高度以获取真实的滚动高度
         textarea.style.height = 'auto';
-        textarea.style.height = Math.max(60, textarea.scrollHeight) + 'px';
+        
+        // 计算可用空间：git-view高度 - nav-header(37px) - nav-files-container最小高度(182px)
+        const gitViewEl = textarea.closest('.git-view') as HTMLElement;
+        if (!gitViewEl) return;
+        
+        const gitViewHeight = gitViewEl.clientHeight;
+        const availableHeight = gitViewHeight - 37 - 182; // 减去header和files容器最小高度
+        const maxTextareaHeight = Math.max(54, availableHeight - 20); // 减去容器padding
+        
+        // 计算内容高度
+        const contentHeight = Math.max(54, textarea.scrollHeight);
+        
+        if (contentHeight <= maxTextareaHeight) {
+            // 内容不超过最大高度，自动调整
+            textarea.style.height = contentHeight + 'px';
+            textarea.style.overflowY = 'hidden';
+            messageSection.style.height = (contentHeight + 13.5) + 'px'; // 13.5px是容器padding
+        } else {
+            // 内容超过最大高度，显示滚动条
+            textarea.style.height = maxTextareaHeight + 'px';
+            textarea.style.overflowY = 'auto';
+            messageSection.style.height = (maxTextareaHeight + 13.5) + 'px';
+        }
     }
 
     private createChangesSection(container: HTMLElement) {
@@ -144,22 +213,10 @@ export class GitCommitView extends ItemView {
         // 内容将在refreshChanges中填充
     }
 
-    private createButtonSection(container: HTMLElement) {
-        const buttonSection = container.createDiv('git-commit-buttons');
-        
-        // 推送按钮（初始隐藏）
-        this.pushButton = new ButtonComponent(buttonSection)
-            .setButtonText('🚀 推送')
-            .setClass('git-push-button')
-            .onClick(async () => {
-                await this.performPush();
-            });
-        
-        this.pushButton.buttonEl.style.display = 'none';
-    }
-
     private async refreshChanges() {
         if (this.isLoading) return;
+        
+        this.plugin.debugLog('=== refreshChanges 开始 ===');
         
         this.isLoading = true;
         this.updateLoadingState();
@@ -167,13 +224,18 @@ export class GitCommitView extends ItemView {
         try {
             // 验证Git仓库
             if (!(await this.plugin.validateRepository())) {
+                this.plugin.debugLog('Git仓库验证失败');
                 this.showEmptyState('当前目录不是Git仓库');
                 return;
             }
 
-            // 获取变更信息
-            this.changes = await this.plugin.getGitChanges();
-            this.updateChangesDisplay();
+            this.plugin.debugLog('Git仓库验证成功，开始获取状态...');
+            
+            // 获取Git状态信息 - 使用新的getGitStatus方法
+            this.status = await this.plugin.getGitStatus();
+            this.plugin.debugLog('获取到的Git状态:', this.status);
+            
+            await this.updateChangesDisplay();
 
         } catch (error) {
             console.error('刷新变更失败:', error);
@@ -181,55 +243,140 @@ export class GitCommitView extends ItemView {
         } finally {
             this.isLoading = false;
             this.updateLoadingState();
+            this.plugin.debugLog('=== refreshChanges 结束 ===');
         }
     }
 
-    private updateChangesDisplay() {
-        if (!this.changesContainer) return;
+    private async updateChangesDisplay() {
+        if (!this.changesContainer || !this.status) {
+            this.plugin.debugLog('=== updateChangesDisplay 跳过 ===');
+            this.plugin.debugLog('changesContainer:', this.changesContainer);
+            this.plugin.debugLog('status:', this.status);
+            return;
+        }
+
+        this.plugin.debugLog('=== updateChangesDisplay 开始 ===');
+        this.plugin.debugLog('Git状态对象:', this.status);
+        this.plugin.debugLog('暂存文件数量:', this.status.staged.length);
+        this.plugin.debugLog('未暂存文件数量:', this.status.changed.length);
 
         this.changesContainer.empty();
+        
+        // 更新 changes 数组 - 这是按钮状态依赖的关键数据
+        this.changes = [];
+        
+        // 添加暂存文件到 changes 数组
+        this.status.staged.forEach(file => {
+            this.changes.push({
+                filePath: file.path,
+                status: file.index as any, // 使用文件的索引状态
+                statusText: file.index || 'M', // 状态文本
+                isStaged: true,
+                diff: '' // diff 信息在需要时获取
+            });
+        });
+        
+        // 添加未暂存文件到 changes 数组
+        this.status.changed.forEach(file => {
+            this.changes.push({
+                filePath: file.path,
+                status: file.workingDir as any, // 使用文件的工作目录状态
+                statusText: file.workingDir || 'M', // 状态文本
+                isStaged: false,
+                diff: '' // diff 信息在需要时获取
+            });
+        });
+        
+        this.plugin.debugLog('=== updateChangesDisplay 填充changes数组 ===');
+        this.plugin.debugLog('最终changes数组长度:', this.changes.length);
+        this.plugin.debugLog('最终changes数组:', this.changes);
+        
+        // 更新按钮状态
+        await this.updateButtonStates();
 
-        if (this.changes.length === 0) {
-            this.showEmptyState('没有检测到文件变更');
+        if (this.status.all.length === 0) {
+            await this.showEmptyState('没有检测到文件变更');
             return;
         }
 
         // 创建变更列表
         const changesTreeContainer = this.changesContainer.createDiv('tree-item nav-folder mod-root');
 
-        // 暂存变更区域
-        const stagedChanges = this.changes.filter(change => change.isStaged);
-        if (stagedChanges.length > 0) {
-            this.createChangesGroup(changesTreeContainer, '暂存变更', stagedChanges, true);
+        // 显示暂存文件
+        if (this.status.staged.length > 0) {
+            this.createFileStatusGroup(changesTreeContainer, '暂存文件', this.status.staged, true);
         }
 
-        // 变更区域（未暂存）
-        const unstagedChanges = this.changes.filter(change => !change.isStaged);
-        if (unstagedChanges.length > 0) {
-            this.createChangesGroup(changesTreeContainer, '变更', unstagedChanges, false);
+        // 显示未暂存文件
+        if (this.status.changed.length > 0) {
+            this.createFileStatusGroup(changesTreeContainer, '未暂存文件', this.status.changed, false);
         }
     }
 
-    private createChangesGroup(container: HTMLElement, title: string, changes: GitChangeInfo[], isStaged: boolean) {
-        const groupContainer = container.createDiv(`${isStaged ? 'staged' : 'changes'} tree-item nav-folder`);
+    private createFileStatusGroup(container: HTMLElement, title: string, files: FileStatusResult[], isStaged: boolean) {
+        const groupContainer = container.createDiv(`${isStaged ? 'staged' : 'changes'} tree-item nav-folder git-change-group`);
         
-        // 组标题（不可折叠）
-        const titleContainer = groupContainer.createDiv('tree-item-self nav-folder-title');
-        
-        // 标题文本
+        const titleContainer = groupContainer.createDiv('tree-item-self nav-folder-title is-clickable');
+        const collapseIconEl = titleContainer.createDiv('collapse-icon');
+        setIcon(collapseIconEl, 'chevron-down');
         const titleText = titleContainer.createDiv('tree-item-inner nav-folder-title-content');
         titleText.textContent = title;
-
-        // 文件数量
         const countBadge = titleContainer.createSpan('tree-item-flair');
-        countBadge.textContent = changes.length.toString();
-
-        // 文件列表（始终显示）
-        const filesList = groupContainer.createDiv('tree-item-children nav-folder-children');
+        countBadge.textContent = files.length.toString();
         
-        changes.forEach(change => {
-            this.createFileItem(filesList, change);
+        const filesList = groupContainer.createDiv('tree-item-children nav-folder-children');
+        files.forEach(file => this.createFileStatusItem(filesList, file, isStaged));
+        
+        titleContainer.addEventListener('click', () => {
+            const willCollapse = !groupContainer.classList.contains('is-collapsed');
+            if (willCollapse) {
+                groupContainer.classList.add('is-collapsed');
+                filesList.style.display = 'none';
+                setIcon(collapseIconEl, 'chevron-right');
+            } else {
+                groupContainer.classList.remove('is-collapsed');
+                filesList.style.display = '';
+                setIcon(collapseIconEl, 'chevron-down');
+            }
         });
+    }
+
+    private createFileStatusItem(container: HTMLElement, file: FileStatusResult, isStaged: boolean) {
+        const fileItem = container.createDiv('tree-item nav-file');
+        const fileContent = fileItem.createDiv('tree-item-self nav-file-title is-clickable');
+        
+        // 文件名 - 只显示文件名，不显示完整路径
+        const fileName = fileContent.createDiv('tree-item-inner nav-file-title-content');
+        const displayName = this.getDisplayPath(file.vaultPath);
+        fileName.textContent = displayName;
+        
+        // 添加悬停显示完整路径的功能 - 使用解码后的仓库相对路径
+        const decodedPath = this.getDecodedPath(file.vaultPath);
+        fileName.setAttribute('title', decodedPath);
+        
+        // 文件状态图标 - 移到右侧
+        const statusIcon = fileContent.createDiv('tree-item-icon nav-file-tag git-status-right');
+        const statusText = this.getStatusText(isStaged ? file.index : file.workingDir);
+        statusIcon.textContent = statusText;
+        statusIcon.setAttribute('data-status', isStaged ? file.index : file.workingDir);
+        
+        // 点击事件
+        fileContent.addEventListener('click', () => {
+            // 可以在这里添加文件点击处理逻辑
+        });
+    }
+
+    private getStatusText(status: string): string {
+        switch (status) {
+            case 'M': return 'M';  // 修改
+            case 'A': return 'A';  // 新增
+            case 'D': return 'D';  // 删除
+            case 'R': return 'R';  // 重命名
+            case 'C': return 'C';  // 复制
+            case 'U': return 'U';  // 未跟踪
+            case '?': return '?';  // 未知
+            default: return status;
+        }
     }
 
     private createFileItem(container: HTMLElement, change: GitChangeInfo) {
@@ -273,16 +420,27 @@ export class GitCommitView extends ItemView {
     private async generateAIMessage() {
         try {
             new Notice('正在生成AI提交信息...');
-            const aiMessage = await this.plugin.generateCommitMessageWithAI([]);
+            this.plugin.debugLog('UI: 开始调用AI生成方法');
+            
+            // 使用新的方法，不会暂存文件
+            const aiMessage = await (this.plugin as any).generateAICommitMessageOnly();
+            this.plugin.debugLog('UI: AI方法返回结果:', aiMessage);
             
             if (aiMessage) {
                 this.commitMessage = aiMessage;
+                // 确保完整显示AI生成的信息
                 this.commitMessageTextarea?.setValue(aiMessage);
-                this.updateButtonStates();
+                this.adjustTextareaHeight(); // 调整高度以完整显示内容
+                await this.updateButtonStates();
                 new Notice('✅ AI提交信息生成完成');
+                this.plugin.debugLog('UI: AI提交信息设置成功');
+            } else {
+                this.plugin.debugWarn('UI: AI方法返回空结果');
+                new Notice('⚠️ AI生成的提交信息为空');
             }
         } catch (error) {
-            console.error('AI生成失败:', error);
+            this.plugin.debugError('UI: AI生成失败:', error);
+            this.plugin.debugError('UI: 错误详情:', error.message, error.stack);
             new Notice(`❌ AI生成失败: ${error.message}`);
         }
     }
@@ -293,48 +451,119 @@ export class GitCommitView extends ItemView {
             return;
         }
 
-        const selectedFiles = this.getSelectedFiles();
-        if (selectedFiles.length === 0) {
-            new Notice('❌ 没有要提交的文件');
+        // 获取所有未暂存的文件
+        const unstagedFiles = this.changes.filter(c => !c.isStaged).map(c => c.filePath);
+        
+        if (unstagedFiles.length === 0) {
+            new Notice('❌ 没有未暂存的文件需要提交');
             return;
         }
 
         try {
-            this.commitButton?.setButtonText('提交中...');
             this.commitButton?.setDisabled(true);
+            this.commitButton?.buttonEl.classList.add('loading');
             
-            await this.plugin.performActualCommit(selectedFiles, this.commitMessage.trim());
+            // 只添加未暂存的文件到暂存区并提交
+            await this.plugin.performActualCommit(unstagedFiles, this.commitMessage.trim());
             
-            // 切换到成功状态
-            this.showPostCommitState();
+            new Notice('✅ 提交成功！');
+            
+            // 清除输入框内容
+            this.commitMessage = '';
+            this.commitMessageTextarea?.setValue('');
+            this.adjustTextareaHeight();
+            
+            // 刷新文件状态
+            await this.refreshChanges();
+            
+            // 恢复按钮状态
+            this.commitButton?.buttonEl.classList.remove('loading');
+            this.commitButton?.setDisabled(false);
             
         } catch (error) {
             console.error('提交失败:', error);
             new Notice(`❌ 提交失败: ${error.message}`);
             
             // 恢复按钮状态
-            this.commitButton?.setButtonText('💾 提交');
+            this.commitButton?.buttonEl.classList.remove('loading');
             this.commitButton?.setDisabled(false);
+        }
+    }
+
+    private async performStageAll() {
+        // 获取所有未暂存的文件
+        const unstagedFiles = this.changes.filter(c => !c.isStaged);
+        
+        if (unstagedFiles.length === 0) {
+            new Notice('❌ 没有未暂存的文件需要暂存');
+            return;
+        }
+
+        try {
+            this.stageButton?.setDisabled(true);
+            this.stageButton?.buttonEl.classList.add('loading');
+            
+            // 使用插件的方法暂存所有未暂存文件
+            const filePaths = unstagedFiles.map(c => c.filePath);
+            await (this.plugin as any).stageFiles(filePaths);
+            
+            new Notice(`✅ 已暂存 ${unstagedFiles.length} 个文件`);
+            
+            // 刷新文件状态
+            await this.refreshChanges();
+            
+        } catch (error) {
+            console.error('暂存失败:', error);
+            new Notice(`❌ 暂存失败: ${error.message}`);
+        } finally {
+            // 恢复按钮状态
+            this.stageButton?.buttonEl.classList.remove('loading');
+            this.stageButton?.setDisabled(false);
         }
     }
 
     private async performPush() {
         try {
-            this.pushButton?.setButtonText('推送中...');
             this.pushButton?.setDisabled(true);
+            this.pushButton?.buttonEl.classList.add('loading');
+            
+            // 检查是否有本地提交可以推送
+            const vaultPath = (this.app.vault.adapter as any).basePath;
+            const { execSync } = require('child_process');
+            
+            try {
+                // 检查是否有未推送的提交
+                const unpushedCommits = execSync('git log --oneline @{u}..HEAD', { 
+                    cwd: vaultPath, 
+                    encoding: 'utf8' 
+                }).trim();
+                
+                if (!unpushedCommits) {
+                    new Notice('❌ 没有需要推送的本地提交');
+                    return;
+                }
+            } catch (checkError) {
+                // 如果命令失败，可能是没有上游分支，直接尝试推送
+                console.log('无法检查未推送提交，直接尝试推送');
+            }
             
             await this.plugin.pushToRemoteRepository();
-            new Notice('✅ 推送成功');
+            new Notice('✅ 推送到远程仓库成功');
             
-            // 重置界面
-            await this.resetToInitialState();
+            // 清除输入框内容
+            this.commitMessage = '';
+            this.commitMessageTextarea?.setValue('');
+            this.adjustTextareaHeight();
+            
+            // 刷新文件状态
+            await this.refreshChanges();
             
         } catch (error) {
             console.error('推送失败:', error);
             new Notice(`❌ 推送失败: ${error.message}`);
-            
+        } finally {
             // 恢复按钮状态
-            this.pushButton?.setButtonText('🚀 推送');
+            this.pushButton?.buttonEl.classList.remove('loading');
             this.pushButton?.setDisabled(false);
         }
     }
@@ -353,7 +582,7 @@ export class GitCommitView extends ItemView {
         
         // 显示推送按钮，隐藏提交按钮
         this.commitButton?.buttonEl.style.setProperty('display', 'none');
-        this.pushButton?.buttonEl.style.setProperty('display', 'inline-block');
+        this.pushButton?.buttonEl.style.setProperty('display', 'flex');
     }
 
     private showSuccessMessage() {
@@ -387,13 +616,109 @@ export class GitCommitView extends ItemView {
         return this.changes.map(change => change.filePath);
     }
 
-    private updateButtonStates() {
-        if (!this.commitButton) return;
-        
+    private async updateButtonStates() {
+        const unstagedFiles = this.changes.filter(c => !c.isStaged);
+        const stagedFiles = this.changes.filter(c => c.isStaged);
         const hasMessage = this.commitMessage.trim().length > 0;
-        const hasChanges = this.changes.length > 0;
         
-        this.commitButton.setDisabled(!hasMessage || !hasChanges);
+        this.plugin.debugLog('=== 按钮状态调试 ===');
+        this.plugin.debugLog('总文件变更数量:', this.changes.length);
+        this.plugin.debugLog('变更列表:', this.changes);
+        this.plugin.debugLog('未暂存文件数量:', unstagedFiles.length);
+        this.plugin.debugLog('已暂存文件数量:', stagedFiles.length);
+        this.plugin.debugLog('提交信息:', this.commitMessage);
+        this.plugin.debugLog('有提交信息:', hasMessage);
+        this.plugin.debugLog('提交按钮对象:', this.commitButton);
+        
+        // 提交按钮：有已暂存文件且有提交信息时可用
+        const shouldEnableCommit = stagedFiles.length > 0 && hasMessage;
+        this.plugin.debugLog('提交按钮应该启用:', shouldEnableCommit);
+        
+        if (this.commitButton) {
+            this.commitButton.setDisabled(!shouldEnableCommit);
+            
+            // 更新提示信息
+            if (stagedFiles.length === 0) {
+                this.commitButton.setTooltip('提交（没有已暂存文件）');
+            } else if (!hasMessage) {
+                this.commitButton.setTooltip('提交（请输入提交信息）');
+            } else {
+                this.commitButton.setTooltip('提交');
+            }
+            
+            this.plugin.debugLog('提交按钮禁用状态:', this.commitButton.buttonEl.disabled);
+        } else {
+            this.plugin.debugError('提交按钮对象为空!');
+        }
+        
+        // 暂存按钮：有未暂存文件时可用
+        const shouldEnableStage = unstagedFiles.length > 0;
+        this.plugin.debugLog('暂存按钮应该启用:', shouldEnableStage);
+        
+        if (this.stageButton) {
+            this.stageButton.setDisabled(!shouldEnableStage);
+            this.plugin.debugLog('暂存按钮禁用状态:', this.stageButton.buttonEl.disabled);
+        } else {
+            this.plugin.debugError('暂存按钮对象为空!');
+        }
+        
+        // 推送按钮：检查未推送提交数量并更新显示
+        await this.updatePushButtonState();
+        
+        this.plugin.debugLog('=== 按钮状态调试结束 ===');
+    }
+
+    private async updatePushButtonState() {
+        if (!this.pushButton) return;
+        
+        try {
+            const vaultPath = (this.app.vault.adapter as any).basePath;
+            const { execSync } = require('child_process');
+            
+            // 获取未推送的提交数量
+            const unpushedCommits = execSync('git rev-list --count @{u}..HEAD', { 
+                cwd: vaultPath, 
+                encoding: 'utf8' 
+            }).trim();
+            
+            const commitCount = parseInt(unpushedCommits) || 0;
+            
+            if (commitCount > 0) {
+                this.pushButton.setTooltip(`推送 (${commitCount}次提交)`);
+                this.pushButton.setDisabled(false);
+                
+                // 更新按钮文本显示提交次数
+                const buttonEl = this.pushButton.buttonEl;
+                const existingBadge = buttonEl.querySelector('.commit-count-badge');
+                if (existingBadge) {
+                    existingBadge.textContent = commitCount.toString();
+                } else {
+                    const badge = buttonEl.createDiv('commit-count-badge');
+                    badge.textContent = commitCount.toString();
+                }
+            } else {
+                this.pushButton.setTooltip('推送');
+                this.pushButton.setDisabled(true);
+                
+                // 移除提交次数显示
+                const buttonEl = this.pushButton.buttonEl;
+                const existingBadge = buttonEl.querySelector('.commit-count-badge');
+                if (existingBadge) {
+                    existingBadge.remove();
+                }
+            }
+        } catch (error) {
+            console.log('无法获取未推送提交数量，可能没有上游分支');
+            this.pushButton.setTooltip('推送');
+            this.pushButton.setDisabled(false);
+            
+            // 移除提交次数显示
+            const buttonEl = this.pushButton.buttonEl;
+            const existingBadge = buttonEl.querySelector('.commit-count-badge');
+            if (existingBadge) {
+                existingBadge.remove();
+            }
+        }
     }
 
     private updateLoadingState() {
@@ -402,8 +727,12 @@ export class GitCommitView extends ItemView {
         }
     }
 
-    private showEmptyState(message: string) {
+    private async showEmptyState(message: string) {
         if (!this.changesContainer) return;
+        
+        // 清空变更数组并更新按钮状态
+        this.changes = [];
+        await this.updateButtonStates();
         
         this.changesContainer.empty();
         const emptyState = this.changesContainer.createDiv('git-empty-state');
@@ -411,259 +740,99 @@ export class GitCommitView extends ItemView {
     }
 
     private getDisplayPath(filePath: string): string {
-        // 简化路径显示
-        const parts = filePath.split('/');
-        return parts[parts.length - 1];
+        // 简化路径显示 - 支持Windows和Unix路径分隔符
+        
+        // 首先去除路径中的引号
+        let cleanPath = filePath.replace(/^"/, '').replace(/"$/, '');
+        
+        // 解码UTF-8八进制转义字符
+        try {
+            // 使用更简单的方法：先转换为Buffer，再解码
+            if (cleanPath.includes('\\')) {
+                const buffer = Buffer.alloc(cleanPath.length);
+                let bufferIndex = 0;
+                
+                for (let i = 0; i < cleanPath.length; i++) {
+                    if (cleanPath[i] === '\\' && i + 3 < cleanPath.length && 
+                        /^\d{3}$/.test(cleanPath.substr(i + 1, 3))) {
+                        // 八进制转义序列
+                        const octal = cleanPath.substr(i + 1, 3);
+                        const byteValue = parseInt(octal, 8);
+                        buffer[bufferIndex++] = byteValue;
+                        i += 3; // 跳过已处理的字符
+                    } else {
+                        // 普通字符
+                        buffer[bufferIndex++] = cleanPath.charCodeAt(i);
+                    }
+                }
+                
+                // 截取实际使用的部分并解码
+                const actualBuffer = buffer.slice(0, bufferIndex);
+                cleanPath = actualBuffer.toString('utf8');
+            }
+        } catch (e) {
+            console.error('UTF-8解码失败:', e);
+            // 如果解码失败，简单地移除转义字符
+            cleanPath = cleanPath.replace(/\\(\d{3})/g, '');
+        }
+        
+        const parts = cleanPath.split(/[/\\]/);
+        let result = parts[parts.length - 1];
+        
+        // 清理文件名，去除特殊字符和状态标识
+        result = result.replace(/^\*/, '').replace(/\*$/, ''); // 去除开头和结尾的*号
+        result = result.trim(); // 去除空格
+        
+        return result;
     }
 
-    private getStatusText(status: string): string {
-        switch (status) {
-            case 'M': return 'M';
-            case 'A': return 'A';
-            case 'D': return 'D';
-            case 'R': return 'R';
-            case '??': return 'U';
-            case 'MM': return 'M';
-            default: return status;
+    private getDecodedPath(filePath: string): string {
+        // 获取解码后的完整仓库相对路径，用于悬停显示
+        
+        // 首先去除路径中的引号
+        let cleanPath = filePath.replace(/^"/, '').replace(/"$/, '');
+        
+        // 解码UTF-8八进制转义字符
+        try {
+            // 使用更简单的方法：先转换为Buffer，再解码
+            if (cleanPath.includes('\\')) {
+                const buffer = Buffer.alloc(cleanPath.length);
+                let bufferIndex = 0;
+                
+                for (let i = 0; i < cleanPath.length; i++) {
+                    if (cleanPath[i] === '\\' && i + 3 < cleanPath.length && 
+                        /^\d{3}$/.test(cleanPath.substr(i + 1, 3))) {
+                        // 八进制转义序列
+                        const octal = cleanPath.substr(i + 1, 3);
+                        const byteValue = parseInt(octal, 8);
+                        buffer[bufferIndex++] = byteValue;
+                        i += 3; // 跳过已处理的字符
+                    } else {
+                        // 普通字符
+                        buffer[bufferIndex++] = cleanPath.charCodeAt(i);
+                    }
+                }
+                
+                // 截取实际使用的部分并解码
+                const actualBuffer = buffer.slice(0, bufferIndex);
+                cleanPath = actualBuffer.toString('utf8');
+            }
+        } catch (e) {
+            console.error('UTF-8解码失败:', e);
+            // 如果解码失败，简单地移除转义字符
+            cleanPath = cleanPath.replace(/\\(\d{3})/g, '');
         }
+        
+        // 清理路径，去除特殊字符
+        cleanPath = cleanPath.replace(/^\*/, '').replace(/\*$/, ''); // 去除开头和结尾的*号
+        cleanPath = cleanPath.trim(); // 去除空格
+        
+        return cleanPath;
     }
 
     private escapeHtml(text: string): string {
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
-    }
-
-    private applyStyles() {
-        const style = document.createElement('style');
-        style.textContent = `
-            .git-commit-view {
-                height: 100%;
-                display: flex;
-                flex-direction: column;
-            }
-
-            .git-view {
-                height: 100%;
-                display: flex;
-                flex-direction: column;
-            }
-
-            .nav-header {
-                padding: 4px 8px;
-                border-bottom: 1px solid var(--background-modifier-border);
-                flex-shrink: 0;
-                min-height: 42px;
-                display: flex;
-                align-items: center;
-            }
-
-            .nav-buttons-container {
-                display: flex;
-                gap: 4px;
-                justify-content: flex-end;
-                width: 100%;
-            }
-
-            .nav-action-button {
-                padding: 6px;
-                min-height: 32px;
-                width: 32px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-            }
-
-            .git-commit-msg {
-                padding: 12px;
-                border-bottom: 1px solid var(--background-modifier-border);
-                flex-shrink: 0;
-            }
-
-            .commit-msg-input {
-                width: 100%;
-                min-height: 60px;
-                padding: 8px;
-                border: 1px solid var(--background-modifier-border);
-                border-radius: 4px;
-                background: var(--background-primary);
-                color: var(--text-normal);
-                font-family: var(--font-interface);
-                font-size: 13px;
-                resize: vertical;
-                margin-bottom: 8px;
-            }
-
-            .git-commit-ai-button {
-                display: flex;
-                justify-content: flex-end;
-                margin-bottom: 8px;
-            }
-
-            .ai-generate-button {
-                padding: 4px 8px;
-                font-size: 11px;
-                border-radius: 3px;
-            }
-
-            .git-commit-msg-clear-button {
-                position: absolute;
-                right: 20px;
-                top: 85px;
-                width: 16px;
-                height: 16px;
-                cursor: pointer;
-                opacity: 0.5;
-                background: var(--text-muted);
-                mask: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>') no-repeat center;
-                mask-size: 12px;
-            }
-
-            .git-commit-msg-clear-button:hover {
-                opacity: 1;
-            }
-
-            .nav-files-container {
-                flex: 1;
-                overflow-y: auto;
-                padding: 8px;
-            }
-
-            .git-file-status {
-                margin-left: auto;
-                padding: 2px 6px;
-                border-radius: 3px;
-                font-size: 10px;
-                font-weight: bold;
-                color: white;
-                min-width: 16px;
-                text-align: center;
-            }
-
-            .status-m { background-color: #2ea043; } /* Modified */
-            .status-a { background-color: #1f6feb; } /* Added */
-            .status-d { background-color: #da3633; } /* Deleted */
-            .status-r { background-color: #fb8500; } /* Renamed */
-            .status-u { background-color: #6f42c1; } /* Untracked */
-            .status-mm { background-color: #fd7e14; } /* Mixed */
-
-            .git-diff-container {
-                margin: 8px 0;
-                background: var(--background-secondary);
-                border: 1px solid var(--background-modifier-border);
-                border-radius: 4px;
-                padding: 8px;
-                font-family: var(--font-monospace);
-                font-size: 11px;
-                max-height: 200px;
-                overflow-y: auto;
-            }
-
-            .git-commit-buttons {
-                padding: 12px;
-                border-top: 1px solid var(--background-modifier-border);
-                display: flex;
-                gap: 8px;
-                flex-shrink: 0;
-            }
-
-            .git-push-button {
-                background: var(--interactive-accent);
-                color: var(--text-on-accent);
-            }
-
-            .git-empty-state {
-                text-align: center;
-                padding: 40px 20px;
-                color: var(--text-muted);
-                font-style: italic;
-            }
-
-            .git-success-container {
-                padding: 20px;
-                text-align: center;
-            }
-
-            .success-title {
-                color: var(--text-success);
-                margin-bottom: 10px;
-            }
-
-            .success-text {
-                color: var(--text-muted);
-                margin-bottom: 20px;
-            }
-
-            .commit-info {
-                background: var(--background-secondary);
-                padding: 12px;
-                border-radius: 6px;
-                border: 1px solid var(--background-modifier-border);
-                text-align: left;
-            }
-
-            .commit-message-display {
-                margin-top: 8px;
-                font-family: var(--font-monospace);
-                font-size: 12px;
-                background: var(--background-primary);
-                padding: 8px;
-                border-radius: 4px;
-                border: 1px solid var(--background-modifier-border-hover);
-                white-space: pre-wrap;
-            }
-
-            .tree-item-flair {
-                background: var(--background-modifier-border);
-                color: var(--text-muted);
-                border-radius: 10px;
-                padding: 2px 6px;
-                font-size: 10px;
-                margin-left: 8px;
-            }
-
-            /* 统一分组标题背景样式 */
-            .staged .tree-item-self,
-            .changes .tree-item-self {
-                background: transparent;
-                padding: 6px 8px;
-            }
-
-            .staged .tree-item-self:hover,
-            .changes .tree-item-self:hover {
-                background: var(--background-modifier-hover);
-            }
-
-            /* 移除分组的特殊背景色 */
-            .staged,
-            .changes {
-                background: transparent;
-            }
-
-            /* 文件列表项样式优化 */
-            .tree-item.nav-file {
-                margin: 1px 0;
-            }
-
-            .tree-item.nav-file .tree-item-self {
-                padding: 4px 8px;
-                border-radius: 4px;
-            }
-
-            .tree-item.nav-file .tree-item-self:hover {
-                background: var(--background-modifier-hover);
-            }
-
-            .clickable-icon.loading {
-                animation: rotate 1s linear infinite;
-            }
-
-            @keyframes rotate {
-                from { transform: rotate(0deg); }
-                to { transform: rotate(360deg); }
-            }
-        `;
-        
-        document.head.appendChild(style);
     }
 }

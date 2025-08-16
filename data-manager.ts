@@ -14,6 +14,7 @@ export interface PluginData {
         showNotifications: boolean;
         batchProcessingEnabled: boolean;
         batchSizeLimitMB: number;
+        debugMode: boolean; // 新增调试模式开关
     };
     
     // 模型配置数据
@@ -58,7 +59,8 @@ const DEFAULT_PLUGIN_DATA: PluginData = {
         excludePatterns: ['.obsidian/', 'node_modules/', '.git/'],
         showNotifications: true,
         batchProcessingEnabled: true,
-        batchSizeLimitMB: 10
+        batchSizeLimitMB: 10,
+        debugMode: false // 默认关闭调试模式
     },
     models: {
         configs: [],

@@ -1,5 +1,382 @@
 /* Git Auto Commit Plugin Styles */
 
+/* ===== 确保所有父容器高度一致 ===== */
+.workspace-leaf.mod-active {
+    height: 100% !important;
+}
+
+.workspace-leaf.mod-active .workspace-leaf-content {
+    height: 100% !important;
+}
+
+.view-content.git-commit-view {
+    height: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+/* ===== Git提交侧边栏视图样式 ===== */
+.git-commit-view {
+    height: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+.git-view {
+    height: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+/* ===== 导航标题栏容器 ===== */
+.git-commit-view .nav-header {
+    padding: 0 8px !important;
+    border-bottom: 1px solid var(--background-modifier-border) !important;
+    flex-shrink: 0 !important;
+    height: 37px !important;
+    min-height: 37px !important;
+    max-height: 37px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    box-sizing: border-box !important;
+}
+
+.git-commit-view .nav-buttons-container {
+    display: flex !important;
+    gap: 6px !important;
+    width: 100% !important;
+    justify-content: center !important;
+    align-items: center !important;
+    height: 37px !important;
+    min-height: 37px !important;
+    max-height: 37px !important;
+    box-sizing: border-box !important;
+}
+
+.git-commit-view .nav-action-button {
+    position: relative !important; /* 为徽章定位添加相对定位 */
+    padding: 0 !important;
+    height: 28px !important;
+    width: 28px !important;
+    min-height: 28px !important;
+    max-height: 28px !important;
+    min-width: 28px !important;
+    max-width: 28px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-radius: 4px !important;
+    line-height: 1 !important;
+    box-sizing: border-box !important;
+}
+
+.git-commit-view .nav-action-button:hover {
+    background: var(--background-modifier-hover) !important;
+}
+
+.git-commit-view .nav-action-button svg {
+    width: 18px !important;
+    height: 18px !important;
+}
+
+.git-commit-view .git-commit-icon-button .button-icon {
+    width: 18px !important;
+    height: 18px !important;
+}
+
+/* ===== 提交消息输入框容器 ===== */
+.git-commit-view .git-commit-msg {
+    padding: 6.75px 10px !important;
+    border-bottom: 1px solid var(--background-modifier-border) !important;
+    flex-shrink: 0 !important;
+    min-height: 67.5px !important;
+    display: flex !important;
+    align-items: flex-start !important;
+    box-sizing: border-box !important;
+    position: relative !important;
+}
+
+.git-commit-view .commit-msg-input-container {
+    width: 100% !important;
+    position: relative !important;
+    display: flex !important;
+    align-items: flex-start !important;
+}
+
+.git-commit-view .commit-msg-input {
+    width: 100% !important;
+    min-height: 54px !important;
+    padding: 8px 38px 8px 10px !important; /* 右侧留出清除按钮空间 */
+    border: 1px solid var(--background-modifier-border) !important;
+    border-radius: 4px !important;
+    background: var(--background-primary) !important;
+    color: var(--text-normal) !important;
+    font-family: var(--font-interface) !important;
+    font-size: 13px !important;
+    resize: none !important;
+    box-sizing: border-box !important;
+    margin: 0 !important;
+    line-height: 1.4 !important;
+    overflow-y: hidden !important; /* 默认隐藏滚动条 */
+}
+
+.git-commit-view .commit-msg-clear-button {
+    position: absolute !important;
+    right: 4px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    width: 28px !important;
+    height: 30px !important;
+    cursor: pointer !important;
+    opacity: 0.5 !important;
+    background: var(--text-muted) !important;
+    mask: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>') no-repeat center !important;
+    mask-size: 16px !important;
+    border-radius: 4px !important;
+    transition: opacity 0.2s ease !important;
+    z-index: 10 !important;
+}
+
+.git-commit-view .commit-msg-clear-button:hover {
+    opacity: 1 !important;
+    background: var(--text-error) !important;
+}
+
+/* AI 生成按钮 */
+.git-commit-view .git-commit-ai-button {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 8px;
+}
+
+.git-commit-view .ai-generate-button {
+    padding: 4px 8px;
+    font-size: 11px;
+    border-radius: 3px;
+}
+
+/* ===== 导航文件区域容器 ===== */
+.git-commit-view .nav-files-container {
+    flex: 1 !important;
+    overflow-y: auto !important;
+    padding: 0 !important;
+    min-height: 182px !important;
+}
+
+/* 文件状态标识 */
+.git-commit-view .git-file-status {
+    margin-left: auto;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 10px;
+    font-weight: bold;
+    color: white;
+    min-width: 16px;
+    text-align: center;
+}
+
+.git-commit-view .status-m { background-color: #2ea043; } /* Modified */
+.git-commit-view .status-a { background-color: #1f6feb; } /* Added */
+.git-commit-view .status-d { background-color: #da3633; } /* Deleted */
+.git-commit-view .status-r { background-color: #fb8500; } /* Renamed */
+.git-commit-view .status-u { background-color: #6f42c1; } /* Untracked */
+.git-commit-view .status-mm { background-color: #fd7e14; } /* Mixed */
+
+/* Diff 显示容器 */
+.git-commit-view .git-diff-container {
+    margin: 8px 0;
+    background: var(--background-secondary);
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 4px;
+    padding: 8px;
+    font-family: var(--font-monospace);
+    font-size: 11px;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+/* ===== 空状态 ===== */
+.git-commit-view .git-empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-muted);
+    font-style: italic;
+}
+
+/* 成功状态 */
+.git-commit-view .git-success-container {
+    padding: 20px;
+    text-align: center;
+}
+
+.git-commit-view .success-title {
+    color: var(--text-success);
+    margin-bottom: 10px;
+}
+
+.git-commit-view .success-text {
+    color: var(--text-muted);
+    margin-bottom: 20px;
+}
+
+.git-commit-view .commit-info {
+    background: var(--background-secondary);
+    padding: 12px;
+    border-radius: 6px;
+    border: 1px solid var(--background-modifier-border);
+    text-align: left;
+}
+
+.git-commit-view .commit-message-display {
+    margin-top: 8px;
+    font-family: var(--font-monospace);
+    font-size: 12px;
+    background: var(--background-primary);
+    padding: 8px;
+    border-radius: 4px;
+    border: 1px solid var(--background-modifier-border-hover);
+    white-space: pre-wrap;
+}
+
+/* ===== 树形结构样式 ===== */
+.git-commit-view .tree-item-flair {
+    background: var(--background-modifier-border) !important;
+    color: var(--text-muted) !important;
+    border-radius: 10px !important;
+    padding: 2px 6px !important;
+    font-size: 10px !important;
+    margin-left: auto !important;
+    flex-shrink: 0 !important;
+}
+
+/* ===== 分组标题样式 ===== */
+.git-commit-view .staged .tree-item-self,
+.git-commit-view .changes .tree-item-self {
+    background: transparent !important;
+    padding: 8px 12px !important;
+    height: 30px !important;
+    min-height: 30px !important;
+    max-height: 30px !important;
+    box-sizing: border-box !important;
+    display: flex !important;
+    align-items: center !important;
+}
+
+.git-commit-view .staged .tree-item-self:hover,
+.git-commit-view .changes .tree-item-self:hover {
+    background: var(--background-modifier-hover) !important;
+}
+
+.git-commit-view .staged,
+.git-commit-view .changes {
+    background: transparent !important;
+}
+
+/* ===== 文件列表项样式 ===== */
+.git-commit-view .tree-item.nav-file {
+    margin: 0 !important;
+}
+
+.git-commit-view .tree-item.nav-file .tree-item-self {
+    padding: 6px 12px !important;
+    border-radius: 0 !important;
+    min-height: 28px !important;
+    display: flex !important;
+    align-items: center !important;
+}
+
+.git-commit-view .tree-item.nav-file .tree-item-self:hover {
+    background: var(--background-modifier-hover) !important;
+}
+
+/* ===== 加载动画 ===== */
+.git-commit-view .clickable-icon.loading svg {
+    animation: git-rotate 1s linear infinite;
+}
+
+/* ===== 折叠分组样式 ===== */
+.git-commit-view .git-change-group {
+    border-bottom: 1px solid var(--background-modifier-border) !important;
+}
+
+.git-commit-view .git-change-group .collapse-icon {
+    width: 14px !important;
+    height: 14px !important;
+    margin-right: 8px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-shrink: 0 !important;
+}
+
+.git-commit-view .git-change-group .nav-folder-title {
+    display: flex !important;
+    align-items: center !important;
+    width: 100% !important;
+    height: 30px !important;
+    min-height: 30px !important;
+    box-sizing: border-box !important;
+}
+
+.git-commit-view .git-change-group.is-collapsed > .nav-folder-title {
+    opacity: 0.85 !important;
+}
+
+.git-commit-view .git-change-group.is-collapsed .tree-item-children {
+    display: none !important;
+}
+
+@keyframes git-rotate {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/* ===== 模态框样式 ===== */
+/* 文件选择模态框 */
+.git-auto-commit-file-selection .file-item {
+    padding: 10px;
+    cursor: pointer;
+    border-radius: 5px;
+    margin: 5px 0;
+}
+
+.git-auto-commit-file-selection .file-item:hover {
+    background-color: var(--background-modifier-hover);
+}
+
+.git-auto-commit-file-selection .button-container {
+    margin-top: 20px;
+    text-align: right;
+}
+
+/* 提交信息模态框 */
+.git-auto-commit-commit-message .commit-input {
+    width: 100%;
+    height: 100px;
+    margin-bottom: 20px;
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid var(--background-modifier-border);
+    background-color: var(--background-primary);
+    color: var(--text-normal);
+    resize: vertical;
+}
+
+.git-auto-commit-commit-message .button-container {
+    display: flex;
+    justify-content: space-between;
+}
+
+.git-auto-commit-commit-message .submit-button {
+    background-color: var(--interactive-accent);
+}
+
+/* ===== 原有样式保持不变 ===== */
 /* 文件选择模态框样式 */
 .git-auto-commit .file-list {
   max-height: 400px;
@@ -237,8 +614,6 @@
   box-shadow: 0 0 0 2px var(--interactive-accent-hover);
 }
 
-/* AI提示词使用内置增强版本，无需自定义样式 */
-
 /* 下拉菜单样式 */
 .git-auto-commit-settings .dropdown {
   position: relative;
@@ -261,6 +636,8 @@
   transition: all 0.2s ease;
   cursor: pointer;
   appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
   background-image: url('data:image/svg+xml;charset=US-ASCII,<svg width="12" height="8" viewBox="0 0 12 8" xmlns="http://www.w3.org/2000/svg"><path d="M6 8L0 2h12L6 8z" fill="%23888"/></svg>');
   background-repeat: no-repeat;
   background-position: right 12px center;
@@ -307,14 +684,6 @@
 .git-auto-commit-settings select:focus {
   /* 聚焦时确保下拉列表正常显示 */
   max-height: none;
-}
-
-/* 针对不同浏览器的下拉菜单优化 */
-.git-auto-commit-settings select {
-  /* WebKit浏览器优化 */
-  -webkit-appearance: none;
-  /* Firefox优化 */
-  -moz-appearance: none;
 }
 
 /* 确保下拉菜单选项区域有足够高度 */
@@ -651,4 +1020,61 @@
 .git-auto-commit .status-indicator.pending {
   background: rgba(var(--color-yellow-rgb), 0.1);
   color: var(--text-warning);
+}
+
+/* 状态图标右侧显示 */
+.git-status-right {
+    position: absolute !important;
+    right: 8px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    font-size: 12px !important;
+    font-weight: bold !important;
+    padding: 2px 6px !important;
+    border-radius: 3px !important;
+    background: var(--background-modifier-border) !important;
+    color: var(--text-muted) !important;
+    pointer-events: none !important;
+}
+
+/* 文件项目容器样式调整 */
+.git-commit-view .tree-item-self {
+    position: relative !important;
+    padding-right: 35px !important; /* 为右侧状态图标留出空间 */
+}
+
+/* 文件名容器样式 */
+.git-commit-view .tree-item-inner {
+    flex: 1 !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+}
+
+/* 状态图标颜色 - 统一背景色 */
+.git-status-right[data-status="M"],
+.git-status-right[data-status="A"],
+.git-status-right[data-status="D"],
+.git-status-right[data-status="?"],
+.git-status-right[data-status="U"] {
+    background: var(--background-modifier-border) !important;
+    color: var(--text-muted) !important;
+}
+
+/* ===== 提交次数徽章 ===== */
+.commit-count-badge {
+    position: absolute !important;
+    top: -2px !important;
+    right: -2px !important;
+    background: var(--interactive-accent) !important;
+    color: white !important;
+    border-radius: 10px !important;
+    font-size: 10px !important;
+    font-weight: bold !important;
+    padding: 2px 6px !important;
+    min-width: 16px !important;
+    text-align: center !important;
+    line-height: 1 !important;
+    z-index: 10 !important;
+    pointer-events: none !important;
 }
