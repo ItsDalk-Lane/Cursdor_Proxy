@@ -30,16 +30,16 @@ export default class CreateFileActionService implements IActionService {
             if (templateFilePath.trim() === "") {
                 formContent = "";
             } else {
-                const templateFilePath = await engine.process(formAction.templateFile, state, context.app);
+                const templateFilePath = await engine.process(formAction.templateFile, state, context.app, context.config);
                 const templateFile = app.vault.getAbstractFileByPath(templateFilePath);
                 if (!templateFile || !(templateFile instanceof TFile)) {
                     throw new Error(localInstance.template_file_not_exists + ": " + templateFilePath);
                 }
                 const templateContent = await app.vault.cachedRead(templateFile);
-                formContent = await engine.process(templateContent, state, context.app);
+                formContent = await engine.process(templateContent, state, context.app, context.config);
             }
         } else {
-            formContent = await engine.process(formAction.content, state, context.app);
+            formContent = await engine.process(formAction.content, state, context.app, context.config);
         }
 
         const filePath = await getFilePathFromAction(formAction, context);

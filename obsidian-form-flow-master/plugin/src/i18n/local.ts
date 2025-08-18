@@ -166,6 +166,8 @@ export interface Local {
 	text_content: string;
 	title: string;
 	to_internal_link: string;
+	extract_file_content: string;
+	extract_file_content_description: string;
 	top_below_title: string;
 	top_of_content: string;
 	type_date: string;

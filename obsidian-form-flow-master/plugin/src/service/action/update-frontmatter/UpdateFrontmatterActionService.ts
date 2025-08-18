@@ -25,12 +25,12 @@ export default class UpdateFrontmatterActionService implements IActionService {
             value: string | string[];
         }[] = []
         for (const property of action.propertyUpdates) {
-            const name = await engien.process(property.name, context.state, app);
+            const name = await engien.process(property.name, context.state, app, context.config);
             let value;
             if (Array.isArray(property.value)) {
                 value = [];
                 for (const item of property.value) {
-                    const res = await engien.process(item, context.state, app);
+                    const res = await engien.process(item, context.state, app, context.config);
                     if (Array.isArray(res)) {
                         value.push(...res);
                     } else {
@@ -38,7 +38,7 @@ export default class UpdateFrontmatterActionService implements IActionService {
                     }
                 }
             } else {
-                value = await engien.process(property.value, context.state, app);
+                value = await engien.process(property.value, context.state, app, context.config);
             }
             formatted.push({
                 name: name,

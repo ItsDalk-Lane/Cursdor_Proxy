@@ -175,6 +175,8 @@ export class Zh implements Local {
 	text_content = "文本内容";
 	title = "标题";
 	to_internal_link = "转为内链";
+	extract_file_content = "提取文件内容";
+	extract_file_content_description = "开启后，该字段的变量会读取文件的实际内容而不是文件路径";
 	today = "今天";
 	top_below_title = "指定标题下首行";
 	top_of_content = "内容首行";

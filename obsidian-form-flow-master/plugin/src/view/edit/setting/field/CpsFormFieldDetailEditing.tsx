@@ -149,6 +149,22 @@ export function CpsFormFieldDetailEditing(props: {
 							}}
 						/>
 					</CpsFormItem>
+					<CpsFormItem 
+						label={localInstance.extract_file_content}
+						description={localInstance.extract_file_content_description}
+					>
+						<ToggleControl
+							value={(field as IFileListField).extractContent === true}
+							onValueChange={(value) => {
+								const f = field as IFileListField;
+								const v = {
+									...f,
+									extractContent: value,
+								};
+								setField(v);
+							}}
+						/>
+					</CpsFormItem>
 				</>
 			)}
 

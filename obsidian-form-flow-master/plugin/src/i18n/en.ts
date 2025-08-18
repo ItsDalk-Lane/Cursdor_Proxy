@@ -175,6 +175,8 @@ export class En implements Local {
 	text_content = "Text Content";
 	title = "Title";
 	to_internal_link = "Convert to Internal Link";
+	extract_file_content = "Extract File Content";
+	extract_file_content_description = "When enabled, variables of this field will read the actual file content instead of file paths";
 	today = "Today";
 	top_below_title = "Top Below Title";
 	top_of_content = "Top of Content";

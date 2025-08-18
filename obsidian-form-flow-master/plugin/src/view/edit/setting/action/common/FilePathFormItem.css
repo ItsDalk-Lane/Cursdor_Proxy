@@ -71,3 +71,25 @@ input.form--FormFilePathSuggestInput:focus-visible {
 	background-color: var(--background-modifier-hover);
 	color: var(--text-normal);
 }
+
+/* 变量选项的特殊样式 */
+.form--FormFilePathSuggestItem--variable {
+	background-color: var(--interactive-accent-hover);
+	border-left: 3px solid var(--interactive-accent);
+}
+
+.form--FormFilePathSuggestItem--variable:hover {
+	background-color: var(--interactive-accent);
+	color: var(--text-on-accent);
+}
+
+.form--FormFilePathSuggestItem--variable[data-highlighted="true"] {
+	background-color: var(--interactive-accent);
+	color: var(--text-on-accent);
+}
+
+.form--VariableIcon {
+	color: var(--interactive-accent);
+	font-weight: bold;
+	margin-right: 4px;
+}

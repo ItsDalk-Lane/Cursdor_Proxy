@@ -5,6 +5,7 @@ import {
 	Clock,
 	File,
 	FileCode,
+	FileText,
 	Hash,
 	Key,
 	LetterText,
@@ -93,7 +94,7 @@ export const fieldTypeOptions = [
 	},
 	{
 		icon: <FileCode size={14} />,
-		value: FormFieldType.PROPERTY_VALUE_SUGGESTION,
+		value: FormFieldType.PROPERTY_VALUE,
 		label: localInstance.property_value_suggestions,
 	},
 ].map((opt) => {

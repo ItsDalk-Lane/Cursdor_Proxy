@@ -175,6 +175,8 @@ export class ZhTw implements Local {
 	text_content = "文字內容";
 	title = "標題";
 	to_internal_link = "轉為內鏈";
+	extract_file_content = "提取檔案內容";
+	extract_file_content_description = "開啟後，該欄位的變數會讀取檔案的實際內容而不是檔案路徑";
 	today = "今天";
 	top_below_title = "指定標題下首行";
 	top_of_content = "內容首行";

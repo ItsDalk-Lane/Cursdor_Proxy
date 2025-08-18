@@ -61,8 +61,9 @@ export function UpdateFrontmatterSetting(props: {
 			) : (
 				<>
 					<FilePathFormItem
-						label={""}
+						label=""
 						value={targetFilePath}
+						actionId={action.id}
 						onChange={(value) => {
 							const newAction = {
 								...action,

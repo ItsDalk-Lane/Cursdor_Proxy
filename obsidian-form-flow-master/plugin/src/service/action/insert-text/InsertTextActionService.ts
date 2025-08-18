@@ -12,6 +12,7 @@ import { ActionChain, ActionContext, IActionService } from "../IActionService";
 import { createFileFromActionIfNotExists } from "../util/createFileFromActionIfNotExists";
 import { getFilePathFromAction } from "../util/getFilePathFromAction";
 import { validateFileName } from "../util/validateFileName";
+import { FormConfig } from "src/model/FormConfig";
 import ContentInsertionService from "./ContentInsertionService";
 
 export default class InsertTextActionService implements IActionService {
@@ -39,20 +40,20 @@ export default class InsertTextActionService implements IActionService {
     private async inserText(filePath: string, state: FormState, formAction: InsertTextFormAction, context: ActionContext) {
         const app = context.app;
         const insertionService = new ContentInsertionService();
-        const content = await this.processContent(formAction.content, state, context.app);
+        const content = await this.processContent(formAction.content, state, context.app, context.config);
         const position = formAction.position;
         if (position === TextInsertPosition.TOP_OF_CONTENT) {
             await insertionService.insertToTopOfNote(app, filePath, content);
         } else if (position === TextInsertPosition.END_OF_CONTENT) {
             await insertionService.insertToBottomOfNote(app, filePath, content);
         } else if (position === TextInsertPosition.TOP_BELOW_TITLE && formAction.heading) {
-            const heading = await this.processContent(formAction.heading, state, context.app);
+            const heading = await this.processContent(formAction.heading, state, context.app, context.config);
             await insertionService.insertToTopBelowTitle(app, filePath, heading, content);
         } else if (position === TextInsertPosition.BOTTOM_BELOW_TITLE && formAction.heading) {
-            const heading = await this.processContent(formAction.heading, state, context.app);
+            const heading = await this.processContent(formAction.heading, state, context.app, context.config);
             await insertionService.insertToBottomBelowTitle(app, filePath, heading, content);
         } else if (formAction.position === TextInsertPosition.AT_CURSOR && formAction.targetFileType === TargetFileType.CURRENT_FILE) {
-            const content = await this.processContent(formAction.content, state, context.app);
+            const content = await this.processContent(formAction.content, state, context.app, context.config);
             await insertionService.insertToCurrentCursor(app, content);
             return Promise.resolve();
         } else {
@@ -70,9 +71,9 @@ export default class InsertTextActionService implements IActionService {
      * @param state 表单状态
      * @returns 处理后的内容
      */
-    private async processContent(content: string, state: FormState, app: App): Promise<string> {
+    private async processContent(content: string, state: FormState, app: App, config?: FormConfig): Promise<string> {
         const engine = new FormTemplateProcessEngine();
-        return engine.process(content, state, app);
+        return engine.process(content, state, app, config);
     }
 
 }

@@ -8,14 +8,17 @@ import { localInstance } from "src/i18n/locals";
 import { openFilePathDirectly } from "src/utils/openFilePathDirectly";
 import { Strings } from "src/utils/Strings";
 import CpsFormItem from "src/view/shared/CpsFormItem";
+import useFormConfig from "src/hooks/useFormConfig";
+import { usePathVariables } from "src/hooks/usePathVariables";
 
 export function FilePathFormItem(props: {
 	label: string;
 	value: string;
 	placeholder?: string;
 	onChange: (value: string) => void;
+	actionId?: string; // 新增，用于获取表单变量
 }) {
-	const { value, onChange } = props;
+	const { value, onChange, actionId } = props;
 
 	const app = useObsidianApp();
 	const exists = useMemo(() => {
@@ -46,6 +49,7 @@ export function FilePathFormItem(props: {
 		<CpsFormItem label={props.label}>
 			<MarkdownFileList
 				value={value}
+				actionId={actionId}
 				onChange={(value) => {
 					onChange(value);
 				}}
@@ -67,16 +71,22 @@ function MarkdownFileList(props: {
 	value: string;
 	onChange: (value: string) => void;
 	placeholder?: string;
+	actionId?: string; // 新增，用于获取表单变量
 }) {
-	const { value, onChange } = props;
+	const { value, onChange, actionId } = props;
 	const [open, setOpen] = useState(false);
 	const [activeIndex, setActiveIndex] = useState(-1);
 	const contentRef = useRef<HTMLDivElement>(null);
 	const listRef = useRef<HTMLDivElement>(null);
 	const app = useObsidianApp();
+	const formConfig = useFormConfig();
+	
+	// 获取表单变量（排除文件内容字段）
+	const variables = actionId ? usePathVariables(actionId, formConfig) : [];
+	
 	const items = useMemo(() => {
 		const files = app.vault.getMarkdownFiles();
-		const options = files
+		const fileOptions = files
 			.filter((f) => {
 				if (value === "") {
 					return true;
@@ -91,10 +101,28 @@ function MarkdownFileList(props: {
 					id: f.path,
 					value: f.path,
 					label: f.path,
+					type: 'file' as const,
 				};
 			});
-		return options;
-	}, [value]);
+
+		// 如果输入内容以 @ 开头，显示变量选项
+		const isVariableMode = value.trim().startsWith('@') || value.includes('{{@');
+		if (isVariableMode && variables.length > 0) {
+			const searchText = value.trim().replace('@', '').toLowerCase();
+			const variableOptions = variables
+				.filter(v => v.label.toLowerCase().includes(searchText))
+				.map(v => ({
+					id: `var_${v.label}`,
+					value: `{{@${v.label}}}`,
+					label: `{{@${v.label}}}`,
+					type: 'variable' as const,
+				}));
+			
+			return [...variableOptions, ...fileOptions];
+		}
+
+		return fileOptions;
+	}, [value, variables]);
 
 	// 滚动到活跃项
 	useEffect(() => {
@@ -118,6 +146,13 @@ function MarkdownFileList(props: {
 		if (event.nativeEvent.isComposing) {
 			return;
 		}
+		
+		// 当输入 @ 符号时，如果有表单变量，自动打开下拉列表
+		if (event.key === '@' && variables.length > 0 && !open) {
+			setOpen(true);
+			return;
+		}
+		
 		if (event.key === "ArrowDown") {
 			event.preventDefault();
 			setActiveIndex((prevIndex) =>
@@ -131,7 +166,8 @@ function MarkdownFileList(props: {
 		} else if (event.key === "Enter") {
 			event.preventDefault();
 			if (activeIndex >= 0 && activeIndex < items.length) {
-				onChange(items[activeIndex].value);
+				const selectedItem = items[activeIndex];
+				onChange(selectedItem.value);
 			}
 			setOpen(false);
 		}
@@ -177,7 +213,7 @@ function MarkdownFileList(props: {
 							return (
 								<div
 									key={item.id}
-									className="form--FormFilePathSuggestItem"
+									className={`form--FormFilePathSuggestItem ${item.type === 'variable' ? 'form--FormFilePathSuggestItem--variable' : ''}`}
 									data-highlighted={
 										activeIndex === index ? "true" : "false"
 									}
@@ -187,6 +223,7 @@ function MarkdownFileList(props: {
 										setOpen(false);
 									}}
 								>
+									{item.type === 'variable' && <span className="form--VariableIcon">@</span>}
 									{item.label}
 								</div>
 							);

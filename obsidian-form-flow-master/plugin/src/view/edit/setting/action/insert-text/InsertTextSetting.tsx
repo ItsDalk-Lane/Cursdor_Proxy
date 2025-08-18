@@ -48,8 +48,9 @@ export function InsertTextSetting(props: {
 			) : (
 				<>
 					<FilePathFormItem
-						label={""}
+						label=""
 						value={targetFilePath}
+						actionId={action.id}
 						onChange={(value) => {
 							const newAction = {
 								...action,
@@ -78,6 +79,7 @@ export function InsertTextSetting(props: {
 				<FilePathFormItem
 					label={localInstance.create_from_template}
 					value={action.newFileTemplate || ""}
+					actionId={action.id}
 					placeholder={
 						localInstance.select_template +
 						`(${localInstance.optional})`

@@ -150,7 +150,7 @@ export function CpsFormFieldControl(props: {
 		);
 	}
 
-	if (field.type === FormFieldType.PROPERTY_VALUE_SUGGESTION) {
+	if (field.type === FormFieldType.PROPERTY_VALUE) {
 		const propertyValueField = field as IPropertyValueField;
 		const propertyName = Strings.defaultIfBlank(
 			propertyValueField.propertyName,

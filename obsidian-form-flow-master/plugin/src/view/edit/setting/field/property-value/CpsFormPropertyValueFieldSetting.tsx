@@ -10,7 +10,7 @@ export default function (props: {
 	onChange: (field: IFormField) => void;
 }) {
 	const { field, onChange } = props;
-	if (field.type !== FormFieldType.PROPERTY_VALUE_SUGGESTION) {
+	if (field.type !== FormFieldType.PROPERTY_VALUE) {
 		return null;
 	}
 	const textAreaField = field as IPropertyValueField;
@@ -18,7 +18,7 @@ export default function (props: {
 		<CpsFormItem label={localInstance.property_name}>
 			<PropertyNameSuggestInput
 				placeholder={field.label}
-				value={textAreaField.propertyName}
+				value={textAreaField.propertyName || ""}
 				onChange={(value) => {
 					const newField = {
 						...textAreaField,

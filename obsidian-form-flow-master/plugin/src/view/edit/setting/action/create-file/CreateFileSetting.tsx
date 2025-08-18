@@ -36,6 +36,7 @@ export function CreateFileSetting(props: {
 			<FilePathFormItem
 				label={localInstance.file_path}
 				value={targetFilePath}
+				actionId={action.id}
 				onChange={(value) => {
 					const newAction = {
 						...action,
@@ -63,8 +64,9 @@ export function CreateFileSetting(props: {
 
 			{action.contentTemplateSource === ContentTemplateSource.FILE ? (
 				<FilePathFormItem
-					label={""}
+					label={localInstance.select_template}
 					value={action.templateFile}
+					actionId={action.id}
 					onChange={(value) => {
 						const newAction = {
 							...action,

@@ -36,7 +36,7 @@ export async function getFilePathFromAction(formAction: Action, context: ActionC
 async function resolveFilePath(formAction: CreateFileFormAction | InsertTextFormAction | UpdateFrontmatterFormAction, context: ActionContext) {
     const engine = new FormTemplateProcessEngine();
     const path = getFilePathCompatible(formAction);
-    let filePath = await engine.process(path, context.state, context.app);
+    let filePath = await engine.process(path, context.state, context.app, context.config);
     filePath = normalizePath(filePath);
     return filePath;
 }
