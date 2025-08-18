@@ -1,0 +1,47 @@
+name: Release Obsidian plugin
+
+on:
+  push:
+    tags:
+      - "*"
+
+permissions:
+  contents: write
+  discussions: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "23.x"
+          cache: 'npm'
+          cache-dependency-path: 'plugin/package-lock.json'
+
+      - name: Build plugin
+        run: |
+          cd plugin
+          npm install
+          npm run build
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: ${{ github.ref_name }}
+          draft: false
+          generate_release_notes: true
+          discussion_category_name: "Announcements"
+          files: |
+            plugin/main.js
+            plugin/manifest.json
+            plugin/styles.css
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
