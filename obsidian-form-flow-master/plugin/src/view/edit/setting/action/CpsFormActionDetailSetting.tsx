@@ -7,6 +7,9 @@ import { InsertTextSetting } from "./insert-text/InsertTextSetting";
 import { RunScriptSetting } from "./run-script/RunScriptSetting";
 import { SuggestModalSetting } from "./suggest-modal/SuggestModalSetting";
 import { UpdateFrontmatterSetting } from "./update-frontmatter/UpdateFrontmatterSetting";
+import { OpenFileActionSetting } from "./open-file/OpenFileActionSetting";
+import { OpenLinkActionSetting } from "./open-link/OpenLinkActionSetting";
+import { ExecuteCommandActionSetting } from "./execute-command/ExecuteCommandActionSetting";
 
 export default function (props: {
 	value: IFormAction;
@@ -22,6 +25,9 @@ export default function (props: {
 			<RunScriptSetting value={value} onChange={onChange} />
 			<SuggestModalSetting value={value} onChange={onChange} />
 			<GenerateFormSetting value={value} onChange={onChange} />
+			<OpenFileActionSetting value={value} onChange={onChange} />
+			<OpenLinkActionSetting value={value} onChange={onChange} />
+			<ExecuteCommandActionSetting value={value} onChange={onChange} />
 		</CpsForm>
 	);
 }

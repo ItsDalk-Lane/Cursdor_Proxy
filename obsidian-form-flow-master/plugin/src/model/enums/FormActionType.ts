@@ -5,4 +5,7 @@ export enum FormActionType {
     UPDATE_FRONTMATTER = "updateFrontmatter",
     SUGGEST_MODAL = "suggestModal",
     GENERATE_FORM = "generateForm",
+    OPEN_FILE = "openFile",
+    OPEN_LINK = "openLink",
+    EXECUTE_COMMAND = "executeCommand",
 }

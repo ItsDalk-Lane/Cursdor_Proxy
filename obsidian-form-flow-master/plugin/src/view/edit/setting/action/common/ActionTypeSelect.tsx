@@ -1,4 +1,4 @@
-import { Code, File, FileJson, MessageSquare, Text } from "lucide-react";
+import { Code, File, FileJson, MessageSquare, Text, ExternalLink, Link, Command } from "lucide-react";
 import { localInstance } from "src/i18n/locals";
 import { FormActionType } from "src/model/enums/FormActionType";
 import { FormTypeSelect } from "src/view/shared/select/FormTypeSelect";
@@ -53,5 +53,20 @@ export const formActionTypeOptions = [
 		value: FormActionType.RUN_SCRIPT,
 		label: localInstance.run_script,
 		icon: <Code />,
+	},
+	{
+		value: FormActionType.OPEN_FILE,
+		label: localInstance.open_file,
+		icon: <ExternalLink />,
+	},
+	{
+		value: FormActionType.OPEN_LINK,
+		label: localInstance.open_link,
+		icon: <Link />,
+	},
+	{
+		value: FormActionType.EXECUTE_COMMAND,
+		label: localInstance.execute_command,
+		icon: <Command />,
 	},
 ];

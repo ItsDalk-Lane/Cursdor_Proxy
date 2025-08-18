@@ -208,6 +208,4 @@ export class Zh implements Local {
 	visibility_condition = "显示条件";
 	command_id = "命令名称";
 	execute_condition = "执行条件";
-	show_submit_message = "显示提交信息";
-	show_submit_message_description = "表单提交成功或失败后是否显示通知消息";
 }

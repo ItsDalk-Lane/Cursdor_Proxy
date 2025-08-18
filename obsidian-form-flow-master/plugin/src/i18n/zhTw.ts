@@ -200,4 +200,14 @@ export class ZhTw implements Local {
 	update_property = "更新屬性";
 	value = "值";
 	visibility_condition = "顯示條件";
+	form_open_file = "打開文件";
+	form_open_link = "打開鏈接";
+	form_execute_command = "執行命令";
+	open_file = "打開文件";
+	open_link = "打開鏈接";
+	execute_command = "執行命令";
+	link_url = "鏈接地址";
+	command_id = "命令名稱";
+	show_submit_message = "顯示提交信息";
+	show_submit_message_description = "表單提交成功或失敗後是否顯示通知消息";
 }

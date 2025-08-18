@@ -175,6 +175,21 @@ export default function (props: {
 										}}
 									/>
 								</CpsFormItem>
+								<CpsFormItem label={localInstance.show_submit_message}>
+									<span className="form--FormFieldLabelDescription">
+										{localInstance.show_submit_message_description}
+									</span>
+									<ToggleControl
+										value={formConfig.showSubmitMessage !== false}
+										onValueChange={(v) => {
+											const newConfig = {
+												...formConfig,
+												showSubmitMessage: v,
+											};
+											onChange(newConfig);
+										}}
+									/>
+								</CpsFormItem>
 							</CpsFormSettingGroup>
 						</CpsForm>
 					),

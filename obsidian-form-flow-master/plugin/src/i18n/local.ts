@@ -69,6 +69,14 @@ export interface Local {
 	form_description: string;
 	form_fields_setting: string;
 	form_insert_text: string;
+	form_open_file: string;
+	form_open_link: string;
+	form_execute_command: string;
+	open_file: string;
+	open_link: string;
+	execute_command: string;
+	link_url: string;
+	command_id: string;
 	form_run_script: string;
 	form_variable_usage: string;
 	form_variables: string;
@@ -188,4 +196,6 @@ export interface Local {
 	update_property: string;
 	value: string;
 	visibility_condition: string;
+	show_submit_message: string;
+	show_submit_message_description: string;
 }

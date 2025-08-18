@@ -4,6 +4,7 @@ import { useAutoFocus } from "src/hooks/useAutoFocus";
 import { SubmitState } from "src/hooks/useSubmitForm";
 import { localInstance } from "src/i18n/locals";
 import { IFormField } from "src/model/field/IFormField";
+import { FormConfig } from "src/model/FormConfig";
 import { FormVisibilies } from "src/service/condition/FormVisibilies";
 import { FormIdValues } from "src/service/FormValues";
 import { resolveDefaultFormIdValues } from "src/utils/resolveDefaultFormIdValues";
@@ -16,13 +17,18 @@ import CpsFormButtonLoading from "./animation/CpsFormButtonLoading";
 import CalloutBlock from "src/component/callout-block/CalloutBlock";
 
 type Props = {
-	fields: IFormField[];
+	fields?: IFormField[]; // 保持向后兼容
+	formConfig?: FormConfig; // 新增：完整的表单配置
 	onSubmit: (values: FormIdValues) => Promise<void>;
 	afterSubmit?: (values: FormIdValues) => void;
 } & Omit<HTMLAttributes<HTMLDivElement>, "defaultValue">;
 
 export function CpsFormRenderView(props: Props) {
-	const { fields, onSubmit, afterSubmit, className, ...rest } = props;
+	const { fields: propsFields, formConfig, onSubmit, afterSubmit, className, ...rest } = props;
+	
+	// 从formConfig或props中获取fields
+	const fields = formConfig?.fields || propsFields || [];
+	
 	const [formIdValues, setFormIdValues] = useState<FormIdValues>(
 		resolveDefaultFormIdValues(fields)
 	);
@@ -63,7 +69,12 @@ export function CpsFormRenderView(props: Props) {
 			return;
 		}
 		afterSubmit?.(formIdValues);
-		ToastManager.success(localInstance.submit_success);
+		
+		// 根据配置决定是否显示成功消息
+		if (formConfig?.showSubmitMessage !== false) {
+			ToastManager.success(localInstance.submit_success);
+		}
+		
 		setFormIdValues(resolveDefaultFormIdValues(fields));
 	};
 

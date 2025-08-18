@@ -1,0 +1,358 @@
+{
+  "components": [
+    {
+      "id": "b73aaeeb-33ca-40c3-bf34-9318872c7842",
+      "type": "multi",
+      "titleAlign": "center",
+      "tabTitle": "",
+      "maxWidthRatio": -1,
+      "showBorder": true,
+      "showShadow": false,
+      "createAt": "2025-08-18T08:37:50.754Z",
+      "updateAt": "2025-08-18T08:37:50.755Z",
+      "components": [
+        {
+          "componentId": "0538da0d-efd3-48a6-8a12-a22d192ac67a",
+          "layout": {
+            "mobile": {
+              "x": 0,
+              "y": 0,
+              "w": 4,
+              "h": 4
+            },
+            "laptop": {
+              "x": 0,
+              "y": 0,
+              "w": 2,
+              "h": 4
+            }
+          }
+        },
+        {
+          "componentId": "f397f23a-54f9-443c-8434-1f2125078ece",
+          "layout": {
+            "mobile": {
+              "x": 0,
+              "y": 0,
+              "w": 4,
+              "h": 4
+            },
+            "laptop": {
+              "x": 8,
+              "y": 0,
+              "w": 2,
+              "h": 4
+            }
+          }
+        },
+        {
+          "componentId": "b7af5122-6205-4ac3-9349-120dba4bb642",
+          "layout": {
+            "mobile": {
+              "x": 0,
+              "y": 0,
+              "w": 4,
+              "h": 4
+            },
+            "laptop": {
+              "x": 10,
+              "y": 0,
+              "w": 2,
+              "h": 4
+            }
+          }
+        },
+        {
+          "componentId": "ac537834-97fc-44b2-8ae5-051840b91bc0",
+          "layout": {
+            "mobile": {
+              "x": 0,
+              "y": 0,
+              "w": 4,
+              "h": 4
+            },
+            "laptop": {
+              "x": 2,
+              "y": 0,
+              "w": 2,
+              "h": 4
+            }
+          }
+        },
+        {
+          "componentId": "e8f69244-7896-400f-8c82-1b6f7485a9ee",
+          "layout": {
+            "mobile": {
+              "x": 0,
+              "y": 0,
+              "w": 4,
+              "h": 4
+            },
+            "laptop": {
+              "x": 4,
+              "y": 0,
+              "w": 2,
+              "h": 4
+            }
+          }
+        },
+        {
+          "componentId": "c76f3adc-8249-431f-a6eb-a225ab2786ea",
+          "layout": {
+            "mobile": {
+              "x": 0,
+              "y": 0,
+              "w": 4,
+              "h": 4
+            },
+            "laptop": {
+              "x": 6,
+              "y": 0,
+              "w": 2,
+              "h": 4
+            }
+          }
+        },
+        {
+          "componentId": "b901ae99-f480-4027-9a9b-c5ac808687ca",
+          "layout": {
+            "mobile": {
+              "x": 0,
+              "y": 0,
+              "w": 4,
+              "h": 4
+            },
+            "laptop": {
+              "x": 0,
+              "y": 4,
+              "w": 12,
+              "h": 21
+            }
+          }
+        }
+      ],
+      "layoutType": "grid",
+      "locked": false,
+      "layoutOptions": {}
+    },
+    {
+      "id": "0538da0d-efd3-48a6-8a12-a22d192ac67a",
+      "type": "card",
+      "titleAlign": "center",
+      "tabTitle": "",
+      "maxWidthRatio": -1,
+      "showBorder": true,
+      "showShadow": false,
+      "createAt": "2025-08-18T08:38:09.267Z",
+      "updateAt": "2025-08-18T08:38:09.267Z",
+      "title": "创建文件",
+      "description": "",
+      "coverFit": "cover",
+      "coverPosition": "left",
+      "clickAction": {
+        "type": "CreateFile",
+        "id": "9302c676-54fb-47b6-acff-9207c1224178",
+        "options": {
+          "templateFilePath": "System/Template/000.md",
+          "targetFolder": "收件箱",
+          "openPageIn": "modal"
+        }
+      }
+    },
+    {
+      "id": "f397f23a-54f9-443c-8434-1f2125078ece",
+      "type": "card",
+      "titleAlign": "center",
+      "tabTitle": "",
+      "maxWidthRatio": -1,
+      "showBorder": true,
+      "showShadow": false,
+      "createAt": "2025-08-18T08:38:09.267Z",
+      "updateAt": "2025-08-18T08:38:09.267Z",
+      "title": "打开表单",
+      "description": "",
+      "coverFit": "cover",
+      "coverPosition": "left",
+      "clickAction": {
+        "type": "OpenFile",
+        "id": "9302c676-54fb-47b6-acff-9207c1224178",
+        "options": {
+          "filePath": "System/Component/表单.components",
+          "fileName": "表单.components",
+          "openPageIn": "tab"
+        }
+      }
+    },
+    {
+      "id": "b7af5122-6205-4ac3-9349-120dba4bb642",
+      "type": "card",
+      "titleAlign": "center",
+      "tabTitle": "",
+      "maxWidthRatio": -1,
+      "showBorder": true,
+      "showShadow": false,
+      "createAt": "2025-08-18T08:38:09.267Z",
+      "updateAt": "2025-08-18T08:38:09.267Z",
+      "title": "执行命令",
+      "description": "",
+      "coverFit": "cover",
+      "coverPosition": "left",
+      "clickAction": {
+        "type": "CallCommand",
+        "id": "9302c676-54fb-47b6-acff-9207c1224178",
+        "options": {}
+      }
+    },
+    {
+      "id": "ac537834-97fc-44b2-8ae5-051840b91bc0",
+      "type": "card",
+      "titleAlign": "center",
+      "tabTitle": "",
+      "maxWidthRatio": -1,
+      "showBorder": true,
+      "showShadow": false,
+      "createAt": "2025-08-18T08:38:09.267Z",
+      "updateAt": "2025-08-18T08:38:09.267Z",
+      "title": "创建组件",
+      "description": "",
+      "coverFit": "cover",
+      "coverPosition": "left",
+      "clickAction": {
+        "type": "CallCommand",
+        "id": "9302c676-54fb-47b6-acff-9207c1224178",
+        "options": {
+          "commandId": "components:create-component",
+          "commandName": "Components: 创建组件"
+        }
+      }
+    },
+    {
+      "id": "e8f69244-7896-400f-8c82-1b6f7485a9ee",
+      "type": "card",
+      "titleAlign": "center",
+      "tabTitle": "",
+      "maxWidthRatio": -1,
+      "showBorder": true,
+      "showShadow": false,
+      "createAt": "2025-08-18T08:38:09.267Z",
+      "updateAt": "2025-08-18T08:38:09.267Z",
+      "title": "创建表单",
+      "description": "",
+      "coverFit": "cover",
+      "coverPosition": "left",
+      "clickAction": {
+        "type": "CallCommand",
+        "id": "9302c676-54fb-47b6-acff-9207c1224178",
+        "options": {
+          "commandId": "form-flow:create-form",
+          "commandName": "Form Flow: 创建表单"
+        }
+      }
+    },
+    {
+      "id": "c76f3adc-8249-431f-a6eb-a225ab2786ea",
+      "type": "card",
+      "titleAlign": "center",
+      "tabTitle": "",
+      "maxWidthRatio": -1,
+      "showBorder": true,
+      "showShadow": false,
+      "createAt": "2025-08-18T08:38:09.267Z",
+      "updateAt": "2025-08-18T08:38:09.267Z",
+      "title": "打开组件",
+      "description": "",
+      "coverFit": "cover",
+      "coverPosition": "left",
+      "clickAction": {
+        "type": "OpenFile",
+        "id": "9302c676-54fb-47b6-acff-9207c1224178",
+        "options": {
+          "openPageIn": "modal",
+          "filePath": "System/Component/组件.components",
+          "fileName": "组件.components"
+        }
+      }
+    },
+    {
+      "id": "b901ae99-f480-4027-9a9b-c5ac808687ca",
+      "type": "dynamicDataView",
+      "titleAlign": "center",
+      "tabTitle": "",
+      "maxWidthRatio": -1,
+      "showBorder": false,
+      "showShadow": false,
+      "createAt": "2025-08-18T08:38:40.150Z",
+      "updateAt": "2025-08-18T08:38:40.150Z",
+      "viewType": "table",
+      "newPageNameFormat": "{{date:YYYYMMDDHHmmss}} ",
+      "properties": [
+        {
+          "id": "__componentsTitleProperty_0x7c00",
+          "name": "文件名",
+          "type": "text",
+          "isShow": true,
+          "wrap": false,
+          "options": {
+            "width": "224"
+          }
+        },
+        {
+          "id": "f05a38f3-05a6-4dce-8425-9e2d64b04f67",
+          "name": "${file.ctime}",
+          "isShow": true,
+          "type": "datetime",
+          "options": {
+            "width": "144"
+          }
+        },
+        {
+          "id": "5aba6fd4-32f3-4e69-ac01-93e64b0479ba",
+          "name": "${file.mtime}",
+          "isShow": true,
+          "type": "datetime",
+          "options": {
+            "width": "139"
+          }
+        },
+        {
+          "id": "f87d598f-b80f-4777-bbff-dba9b9da6350",
+          "name": "${file.path}",
+          "isShow": true,
+          "type": "text",
+          "options": {}
+        }
+      ],
+      "templates": [],
+      "groups": [],
+      "colorfulGroups": false,
+      "viewOptions": {
+        "openPageIn": "tab",
+        "openPageAfterCreate": true,
+        "items": [],
+        "pinFiltersToMenuBar": false,
+        "showGrid": false,
+        "heightType": "auto",
+        "heightValue": 600
+      },
+      "groupStates": {
+        "sort": "nameAsc",
+        "statics": [],
+        "orders": [],
+        "hiddens": [],
+        "collapseds": []
+      },
+      "sort": {
+        "orders": [
+          {
+            "id": "6e60f44c-ae4d-4c44-b5ef-d5614a88023a",
+            "property": "${file.ctime}",
+            "direction": "desc",
+            "disabled": false
+          }
+        ]
+      },
+      "loadLimitPerPage": 10
+    }
+  ],
+  "rootComponentId": "b73aaeeb-33ca-40c3-bf34-9318872c7842"
+}

@@ -43,13 +43,19 @@ export class FormService {
                 app: app,
             };
             const promise = this.submit(formIdValues, formConfig, context);
-            showPromiseToast(promise, {
-                loadingMessage: localInstance.handling,
-                successMessage: localInstance.submit_success,
-                successDuration: 3000
-            });
+            
+            // 根据配置决定是否显示提交信息
+            if (formConfig.showSubmitMessage !== false) {
+                showPromiseToast(promise, {
+                    loadingMessage: localInstance.handling,
+                    successMessage: localInstance.submit_success,
+                    successDuration: 3000
+                });
+            }
+            
             return promise;
         } catch (e) {
+            // 错误信息始终显示，因为这很重要
             ToastManager.error(e.message || localInstance.unknown_error, 5000);
         }
     }

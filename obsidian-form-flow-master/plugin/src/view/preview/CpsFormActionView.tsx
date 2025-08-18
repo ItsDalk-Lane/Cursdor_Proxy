@@ -26,7 +26,7 @@ export default function (props: Props) {
 
 	return (
 		<CpsFormRenderView
-			fields={formConfig.fields}
+			formConfig={formConfig}
 			onSubmit={onSubmit}
 			afterSubmit={(state) => {
 				viewOptions.afterSubmit?.(state);

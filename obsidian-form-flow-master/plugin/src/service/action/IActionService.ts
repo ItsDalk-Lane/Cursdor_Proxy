@@ -8,6 +8,9 @@ import InsertTextActionService from "./insert-text/InsertTextActionService";
 import RunScriptActionService from "./run-script/RunScriptActionService";
 import SuggestModalActionService from "./suggest-modal/SuggestModalActionService";
 import UpdateFrontmatterActionService from "./update-frontmatter/UpdateFrontmatterActionService";
+import OpenFileActionService from "./open-file/OpenFileActionService";
+import OpenLinkActionService from "./open-link/OpenLinkActionService";
+import ExecuteCommandActionService from "./execute-command/ExecuteCommandActionService";
 import { hasConditions } from "./util/hasConditions";
 import { FilterService } from "../filter/FilterService";
 
@@ -35,6 +38,9 @@ export class ActionChain {
         new SuggestModalActionService(),
         new UpdateFrontmatterActionService(),
         new GenerateFormActionService(),
+        new OpenFileActionService(),
+        new OpenLinkActionService(),
+        new ExecuteCommandActionService(),
     ]
 
     constructor(actions: IFormAction[]) {

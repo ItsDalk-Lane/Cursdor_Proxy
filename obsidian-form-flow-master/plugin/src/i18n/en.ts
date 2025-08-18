@@ -200,4 +200,14 @@ export class En implements Local {
 	update_property = "Update Property";
 	value = "Value";
 	visibility_condition = "Visibility Condition";
+	form_open_file = "Open File";
+	form_open_link = "Open Link";
+	form_execute_command = "Execute Command";
+	open_file = "Open File";
+	open_link = "Open Link";
+	execute_command = "Execute Command";
+	link_url = "Link URL";
+	command_id = "Command ID";
+	show_submit_message = "Show Submit Message";
+	show_submit_message_description = "Whether to show notification messages after form submission succeeds or fails";
 }

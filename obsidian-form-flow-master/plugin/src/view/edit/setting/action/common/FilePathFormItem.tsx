@@ -47,7 +47,7 @@ export function FilePathFormItem(props: {
 
 	return (
 		<CpsFormItem label={props.label}>
-			<MarkdownFileList
+			<AllFilesList
 				value={value}
 				actionId={actionId}
 				onChange={(value) => {
@@ -67,7 +67,7 @@ export function FilePathFormItem(props: {
 	);
 }
 
-function MarkdownFileList(props: {
+function AllFilesList(props: {
 	value: string;
 	onChange: (value: string) => void;
 	placeholder?: string;
@@ -85,7 +85,8 @@ function MarkdownFileList(props: {
 	const variables = actionId ? usePathVariables(actionId, formConfig) : [];
 	
 	const items = useMemo(() => {
-		const files = app.vault.getMarkdownFiles();
+		// 获取所有文件，包括各种扩展名的文件
+		const files = app.vault.getFiles();
 		const fileOptions = files
 			.filter((f) => {
 				if (value === "") {
