@@ -1,6 +1,8 @@
 import { localInstance } from "src/i18n/locals";
 import { IFormAction } from "src/model/action/IFormAction";
+import { ContentTemplateSource } from "src/model/action/CreateFileFormAction";
 import { FormActionType } from "src/model/enums/FormActionType";
+import { OpenPageInType } from "src/model/enums/OpenPageInType";
 import { FormConfig } from "src/model/FormConfig";
 import { getActionsCompatible } from "src/utils/getActionsCompatible";
 import { v4 } from "uuid";
@@ -32,6 +34,10 @@ export function CpsFormActions(props: {
 			targetFolder: "",
 			fileName: "",
 			id: v4(),
+			contentTemplateSource: ContentTemplateSource.TEXT,
+			content: "",
+			templateFile: "",
+			openPageIn: OpenPageInType.none,
 		};
 		const newActions = [...actions, newAction];
 		saveAction(newActions);

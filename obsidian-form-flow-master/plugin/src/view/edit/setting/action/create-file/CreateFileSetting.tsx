@@ -65,7 +65,7 @@ export function CreateFileSetting(props: {
 			{action.contentTemplateSource === ContentTemplateSource.FILE ? (
 				<FilePathFormItem
 					label={localInstance.select_template}
-					value={action.templateFile}
+					value={action.templateFile || ""}
 					actionId={action.id}
 					onChange={(value) => {
 						const newAction = {
@@ -78,7 +78,7 @@ export function CreateFileSetting(props: {
 			) : (
 				<TextAreaContentSetting
 					actionId={action.id}
-					content={action.content}
+					content={action.content || ""}
 					onChange={(value) => {
 						const newAction = { ...action, content: value };
 						props.onChange(newAction);

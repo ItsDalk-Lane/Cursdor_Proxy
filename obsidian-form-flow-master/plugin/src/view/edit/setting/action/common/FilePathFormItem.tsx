@@ -13,7 +13,7 @@ import { usePathVariables } from "src/hooks/usePathVariables";
 
 export function FilePathFormItem(props: {
 	label: string;
-	value: string;
+	value: string | undefined;
 	placeholder?: string;
 	onChange: (value: string) => void;
 	actionId?: string; // 新增，用于获取表单变量
@@ -25,7 +25,7 @@ export function FilePathFormItem(props: {
 		if (Strings.isBlank(value)) {
 			return false;
 		}
-		const file = app.vault.getAbstractFileByPath(value);
+		const file = app.vault.getAbstractFileByPath(value || "");
 		if (file instanceof TFile) {
 			return true;
 		}
@@ -48,7 +48,7 @@ export function FilePathFormItem(props: {
 	return (
 		<CpsFormItem label={props.label}>
 			<AllFilesList
-				value={value}
+				value={value || ""}
 				actionId={actionId}
 				onChange={(value) => {
 					onChange(value);
@@ -57,7 +57,7 @@ export function FilePathFormItem(props: {
 			{exists && (
 				<button
 					onClick={() => {
-						openFile(value);
+						openFile(value || "");
 					}}
 				>
 					<FileEdit size={16} />
@@ -107,9 +107,10 @@ function AllFilesList(props: {
 			});
 
 		// 如果输入内容以 @ 开头，显示变量选项
-		const isVariableMode = value.trim().startsWith('@') || value.includes('{{@');
+		const safeValue = value || "";
+		const isVariableMode = safeValue.trim().startsWith('@') || safeValue.includes('{{@');
 		if (isVariableMode && variables.length > 0) {
-			const searchText = value.trim().replace('@', '').toLowerCase();
+			const searchText = safeValue.trim().replace('@', '').toLowerCase();
 			const variableOptions = variables
 				.filter(v => v.label.toLowerCase().includes(searchText))
 				.map(v => ({

@@ -41,7 +41,7 @@ export function VariableAwareFilePathInput(props: {
 	}, [fieldNames]);
 
 	const handleChange = (newValue: string) => {
-		let processedValue = newValue;
+		let processedValue = newValue || "";
 		
 		// 如果启用了自动添加.md后缀，且输入的是纯文件名（不包含路径分隔符和扩展名）
 		if (autoAddMdExtension && processedValue.trim()) {

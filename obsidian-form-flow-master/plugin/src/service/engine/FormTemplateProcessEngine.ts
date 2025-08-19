@@ -176,6 +176,11 @@ export class FormTemplateProcessEngine {
 
     private async readFileContent(app: App, filePath: string): Promise<string> {
         try {
+            // 检查输入参数
+            if (!filePath || typeof filePath !== 'string') {
+                return '[文件路径无效]';
+            }
+            
             // 清理文件路径
             let cleanPath = filePath.trim();
             
@@ -209,6 +214,11 @@ export class FormTemplateProcessEngine {
     }
 
     private cleanFilePath(filePath: string): string {
+        // 检查输入参数
+        if (!filePath || typeof filePath !== 'string') {
+            return '';
+        }
+        
         // 清理内链格式，提取文件名
         let cleanPath = filePath.replace(/^\[\[/, '').replace(/\]\]$/, '');
         
