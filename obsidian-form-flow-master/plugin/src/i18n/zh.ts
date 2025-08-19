@@ -46,6 +46,7 @@ export class Zh implements Local {
 	default_location_for_form_placeholder = "form/forms";
 	default_value = "默认值";
 	delete = "删除";
+	edit = "编辑";
 	description = "描述";
 	do_not_open = "不打开";
 	drag_and_drop_to_reorder = "拖拽图标可以重新排序";
@@ -210,4 +211,48 @@ export class Zh implements Local {
 	execute_condition = "执行条件";
 	show_submit_message = "显示提交信息";
 	show_submit_message_description = "表单提交成功或失败后是否显示通知消息";
+	
+	// AI相关
+	ai_model_management = "AI模型管理";
+	ai_add_model = "添加AI模型";
+	ai_model_list = "模型列表";
+	ai_prompt_template_folder = "提示模板加载目录";
+	ai_prompt_template_folder_desc = "AI提示词模板文件的存放目录";
+	ai_prompt_template_folder_placeholder = "form/prompts";
+	ai_user_system_prompt = "用户系统提示";
+	ai_user_system_prompt_desc = "启用后会在调用AI时添加系统提示词";
+	ai_system_prompt_placeholder = "您是一个有用的AI助手，请提供准确和有帮助的回答...";
+	ai_model_display_name = "显示名称";
+	ai_model_name = "模型型号";
+	ai_provider = "AI提供商";
+	ai_base_url = "基础URL";
+	ai_api_key = "API密钥";
+	ai_max_context_length = "最大上下文长度";
+	ai_max_output_tokens = "最大输出令牌数";
+	ai_advanced_settings = "高级设置";
+	ai_temperature = "温度";
+	ai_top_p = "最高概率值";
+	ai_top_k = "最高采样数";
+	ai_frequency_penalty = "频率惩罚";
+	ai_presence_penalty = "存在惩罚";
+	
+	// AI字段设置
+	show_provider = "显示提供商";
+	show_custom_fields = "显示自定义字段";
+	auto_select_first = "自动选择第一个";
+	no_ai_models_available = "暂无可用的AI模型";
+	select_ai_model = "选择AI模型";
+	
+	ai_verify_model = "验证模型";
+	ai_model_verified = "模型已验证";
+	ai_model_verification_failed = "模型验证失败";
+	ai_reasoning_capability = "推理能力";
+	ai_web_search_capability = "网络搜索";
+	ai_call_action = "调用AI";
+	ai_prompt_setting = "提示词设置";
+	ai_builtin_template = "内置模板";
+	ai_custom_prompt = "自定义提示";
+	ai_output_variable_name = "输出变量名称";
+	ai_template_file = "模板文件";
+	ai_custom_content = "自定义内容";
 }

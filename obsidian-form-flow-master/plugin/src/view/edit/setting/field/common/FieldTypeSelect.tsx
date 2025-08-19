@@ -1,4 +1,5 @@
 import {
+	Bot,
 	Calendar,
 	CalendarClock,
 	CircleDot,
@@ -96,6 +97,11 @@ export const fieldTypeOptions = [
 		icon: <FileCode size={14} />,
 		value: FormFieldType.PROPERTY_VALUE,
 		label: localInstance.property_value_suggestions,
+	},
+	{
+		icon: <Bot size={14} />,
+		value: FormFieldType.AI_MODEL_LIST,
+		label: localInstance.ai_model_list,
 	},
 ].map((opt) => {
 	return {

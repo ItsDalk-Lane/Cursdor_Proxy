@@ -8,4 +8,5 @@ export enum FormActionType {
     OPEN_FILE = "openFile",
     OPEN_LINK = "openLink",
     EXECUTE_COMMAND = "executeCommand",
+    AI_CALL = "aiCall",
 }

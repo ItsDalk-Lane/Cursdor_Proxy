@@ -210,4 +210,49 @@ export class En implements Local {
 	command_id = "Command ID";
 	show_submit_message = "Show Submit Message";
 	show_submit_message_description = "Whether to show notification messages after form submission succeeds or fails";
+	
+	// AI related
+	ai_model_management = "AI Model Management";
+	ai_add_model = "Add AI Model";
+	ai_model_list = "Model List";
+	ai_prompt_template_folder = "Prompt Template Folder";
+	ai_prompt_template_folder_desc = "Directory for AI prompt template files";
+	ai_prompt_template_folder_placeholder = "form/prompts";
+	ai_user_system_prompt = "User System Prompt";
+	ai_user_system_prompt_desc = "Enable to add system prompt when calling AI";
+	ai_system_prompt_placeholder = "You are a helpful AI assistant, please provide accurate and helpful answers...";
+	ai_model_display_name = "Display Name";
+	ai_model_name = "Model Name";
+	ai_provider = "AI Provider";
+	ai_base_url = "Base URL";
+	ai_api_key = "API Key";
+	ai_max_context_length = "Max Context Length";
+	ai_max_output_tokens = "Max Output Tokens";
+	ai_advanced_settings = "Advanced Settings";
+	ai_temperature = "Temperature";
+	ai_top_p = "Top P";
+	ai_top_k = "Top K";
+	ai_frequency_penalty = "Frequency Penalty";
+	ai_presence_penalty = "Presence Penalty";
+	
+	// AI field settings
+	show_provider = "Show Provider";
+	show_custom_fields = "Show Custom Fields";
+	auto_select_first = "Auto Select First";
+	no_ai_models_available = "No AI models available";
+	select_ai_model = "Select AI model";
+	
+	ai_verify_model = "Verify Model";
+	ai_model_verified = "Model Verified";
+	ai_model_verification_failed = "Model Verification Failed";
+	ai_reasoning_capability = "Reasoning Capability";
+	ai_web_search_capability = "Web Search";
+	ai_call_action = "Call AI";
+	ai_prompt_setting = "Prompt Setting";
+	ai_builtin_template = "Built-in Template";
+	ai_custom_prompt = "Custom Prompt";
+	ai_output_variable_name = "Output Variable Name";
+	ai_template_file = "Template File";
+	ai_custom_content = "Custom Content";
+	edit = "Edit";
 }

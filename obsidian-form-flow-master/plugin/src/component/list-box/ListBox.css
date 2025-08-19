@@ -84,7 +84,7 @@ button.form--ListBoxOptionsHeaderButton:hover {
 
 .form--ListBoxOptions {
 	position: absolute;
-	z-index: var(--form--modal-layer);
+	z-index: 99999;
 	margin-top: 4px;
 	max-height: 300px;
 	min-width: 160px;

@@ -11,6 +11,7 @@ import UpdateFrontmatterActionService from "./update-frontmatter/UpdateFrontmatt
 import OpenFileActionService from "./open-file/OpenFileActionService";
 import OpenLinkActionService from "./open-link/OpenLinkActionService";
 import ExecuteCommandActionService from "./execute-command/ExecuteCommandActionService";
+import AICallActionService from "./AICallActionService";
 import { hasConditions } from "./util/hasConditions";
 import { FilterService } from "../filter/FilterService";
 
@@ -41,6 +42,7 @@ export class ActionChain {
         new OpenFileActionService(),
         new OpenLinkActionService(),
         new ExecuteCommandActionService(),
+        new AICallActionService(),
     ]
 
     constructor(actions: IFormAction[]) {

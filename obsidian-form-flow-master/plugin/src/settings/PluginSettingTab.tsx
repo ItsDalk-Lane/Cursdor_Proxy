@@ -6,6 +6,7 @@ import { ObsidianAppContext } from "src/context/obsidianAppContext";
 import { localInstance } from "src/i18n/locals";
 import FormPlugin from "src/main";
 import { GeneralSettingTabItem } from "./GeneralSettingTabItem";
+import { AISettingTabItem } from "./ai/AISettingTabItem";
 
 export class PluginSettingTab extends ObPluginSettingTab {
 	plugin: FormPlugin;
@@ -29,6 +30,15 @@ export class PluginSettingTab extends ObPluginSettingTab {
 								title: localInstance.general_setting,
 								content: (
 									<GeneralSettingTabItem
+										plugin={this.plugin}
+									/>
+								),
+							},
+							{
+								id: "ai_setting",
+								title: localInstance.ai_model_management,
+								content: (
+									<AISettingTabItem
 										plugin={this.plugin}
 									/>
 								),

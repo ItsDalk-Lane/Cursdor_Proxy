@@ -53,6 +53,15 @@ export class FormTemplateProcessEngine {
         let res = text;
         res = await this.compileWithFileContent(res, state, app, config);
 
+        // 处理输出变量 {{output:variableName}}
+        if (state.outputVariables) {
+            Object.entries(state.outputVariables).forEach(([varName, value]) => {
+                const regex = new RegExp(`\\{\\{\\s*output\\s*:\\s*${this.escapeRegex(varName)}\\s*\\}\\}`, 'g');
+                const strValue = String(value);
+                res = res.replace(regex, strValue);
+            });
+        }
+
         // handle {{selection}}
         const selectionVariable = "{{selection}}";
         if (res.includes(selectionVariable)) {
@@ -228,5 +237,12 @@ export class FormTemplateProcessEngine {
         }
         
         return cleanPath.trim();
+    }
+
+    /**
+     * 转义正则表达式特殊字符
+     */
+    private escapeRegex(str: string): string {
+        return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     }
 }

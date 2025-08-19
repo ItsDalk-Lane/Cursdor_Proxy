@@ -198,4 +198,49 @@ export interface Local {
 	visibility_condition: string;
 	show_submit_message: string;
 	show_submit_message_description: string;
+	
+	// AI相关
+	ai_model_management: string;
+	ai_add_model: string;
+	ai_model_list: string;
+	ai_prompt_template_folder: string;
+	ai_prompt_template_folder_desc: string;
+	ai_prompt_template_folder_placeholder: string;
+	ai_user_system_prompt: string;
+	ai_user_system_prompt_desc: string;
+	ai_system_prompt_placeholder: string;
+	ai_model_display_name: string;
+	ai_model_name: string;
+	ai_provider: string;
+	ai_base_url: string;
+	ai_api_key: string;
+	ai_max_context_length: string;
+	ai_max_output_tokens: string;
+	ai_advanced_settings: string;
+	ai_temperature: string;
+	ai_top_p: string;
+	ai_top_k: string;
+	ai_frequency_penalty: string;
+	ai_presence_penalty: string;
+	
+	// AI字段设置
+	show_provider: string;
+	show_custom_fields: string;
+	auto_select_first: string;
+	no_ai_models_available: string;
+	select_ai_model: string;
+	ai_verify_model: string;
+	ai_model_verified: string;
+	ai_model_verification_failed: string;
+	ai_reasoning_capability: string;
+	ai_web_search_capability: string;
+	ai_call_action: string;
+	ai_prompt_setting: string;
+	ai_builtin_template: string;
+	ai_custom_prompt: string;
+	ai_output_variable_name: string;
+	ai_template_file: string;
+	ai_custom_content: string;
+	edit: string;
+	save: string;
 }

@@ -32,11 +32,14 @@ export default class FormPlugin extends Plugin {
 	}
 
 	async loadSettings() {
+		// 加载主插件设置
 		this.settings = Object.assign(
 			{},
 			DEFAULT_SETTINGS,
 			await this.loadData()
 		);
+
+		console.log('主插件设置已加载:', this.settings);
 	}
 
 	async replaceSettings(value: Partial<PluginSettings>) {

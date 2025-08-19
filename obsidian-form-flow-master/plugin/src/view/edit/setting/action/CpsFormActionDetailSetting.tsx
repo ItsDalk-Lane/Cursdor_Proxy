@@ -10,12 +10,15 @@ import { UpdateFrontmatterSetting } from "./update-frontmatter/UpdateFrontmatter
 import { OpenFileActionSetting } from "./open-file/OpenFileActionSetting";
 import { OpenLinkActionSetting } from "./open-link/OpenLinkActionSetting";
 import { ExecuteCommandActionSetting } from "./execute-command/ExecuteCommandActionSetting";
+import { AICallActionSetting } from "./AICallActionSetting";
+import useFormConfig from "src/hooks/useFormConfig";
 
 export default function (props: {
 	value: IFormAction;
 	onChange: (value: IFormAction) => void;
 }) {
 	const { value, onChange } = props;
+	const formConfig = useFormConfig();
 
 	return (
 		<CpsForm layout="horizontal">
@@ -28,6 +31,11 @@ export default function (props: {
 			<OpenFileActionSetting value={value} onChange={onChange} />
 			<OpenLinkActionSetting value={value} onChange={onChange} />
 			<ExecuteCommandActionSetting value={value} onChange={onChange} />
+			<AICallActionSetting 
+				value={value} 
+				config={formConfig}
+				onChange={onChange} 
+			/>
 		</CpsForm>
 	);
 }

@@ -1,0 +1,81 @@
+.ai-progress-timer,
+.ai-timer-global-container .ai-progress-timer {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: var(--background-primary);
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 8px;
+    padding: 12px 16px;
+    box-shadow: var(--shadow-l);
+    z-index: 9999; /* 确保在最顶层 */
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: var(--font-ui-smaller);
+    color: var(--text-normal);
+    min-width: 200px;
+    animation: ai-timer-fade-in 0.3s ease-out;
+}
+
+.ai-timer-global-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    pointer-events: none; /* 不阻挡其他元素的点击 */
+    z-index: 9999;
+}
+
+.ai-timer-global-container .ai-progress-timer {
+    pointer-events: auto; /* 计时器本身可以交互 */
+}
+
+.ai-progress-timer__icon {
+    display: flex;
+    align-items: center;
+    color: var(--text-accent);
+    animation: ai-timer-pulse 2s infinite;
+}
+
+.ai-progress-timer__text {
+    flex: 1;
+    font-weight: 500;
+}
+
+.ai-progress-timer__time {
+    font-family: var(--font-monospace);
+    font-weight: 600;
+    color: var(--text-accent);
+    font-size: 1.1em;
+}
+
+@keyframes ai-timer-fade-in {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes ai-timer-pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.6;
+    }
+}
+
+/* 适配移动端 */
+@media (max-width: 768px) {
+    .ai-progress-timer {
+        top: 10px;
+        right: 10px;
+        left: 10px;
+        min-width: auto;
+        font-size: var(--font-ui-small);
+    }
+}

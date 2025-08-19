@@ -14,4 +14,5 @@ export enum FormFieldType {
     SELECT2 = "select2",
     PROPERTY_VALUE = "property_value",
     FILE_LIST = "file_list",
+    AI_MODEL_LIST = "ai_model_list",
 }

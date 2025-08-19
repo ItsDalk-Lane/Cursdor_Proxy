@@ -10,6 +10,7 @@ import { FileListControl } from "./FileListControl";
 import RadioControl from "./RadioControl";
 import SelectControl from "./SelectControl";
 import ToggleControl from "./ToggleControl";
+import AIModelListControl from "./AIModelListControl";
 
 export function CpsFormFieldControl(props: {
 	field: IFormField;
@@ -144,6 +145,17 @@ export function CpsFormFieldControl(props: {
 			<FileListControl
 				field={field}
 				value={actualValue}
+				onValueChange={onValueChange}
+				autoFocus={autoFocus}
+			/>
+		);
+	}
+
+	if (field.type === FormFieldType.AI_MODEL_LIST) {
+		return (
+			<AIModelListControl
+				field={field}
+				value={value}
 				onValueChange={onValueChange}
 				autoFocus={autoFocus}
 			/>

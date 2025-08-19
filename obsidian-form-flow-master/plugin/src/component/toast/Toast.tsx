@@ -31,7 +31,7 @@ export class Toast {
 	}
 
 	private open() {
-		const doc = window.activeWindow.activeDocument;
+		const doc = document; // 直接使用 document 而不是 activeWindow.activeDocument
 		this.container = doc.createElement("div");
 		this.container.className = `form--Toast ${this.type} visible`;
 		this.container.id = this.toastId;

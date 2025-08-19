@@ -3,11 +3,59 @@ import { Local } from "./local";
 export class ZhTw implements Local {
 	action_type = "執行動作";
 	add = "添加";
+	add_list_item = "新增清單項目";
 	add_action = "添加動作";
 	add_condition = "添加條件";
 	add_condition_group = "添加條件組";
 	add_field = "添加欄位";
-	add_list_item = "添加列表項";
+	command_id = "指令 ID";
+	show_submit_message = "顯示提交訊息";
+	show_submit_message_description = "是否在表單提交成功或失敗後顯示通知訊息";
+	
+	// AI 相關
+	ai_model_management = "AI 模型管理";
+	ai_add_model = "新增 AI 模型";
+	ai_model_list = "模型清單";
+	ai_prompt_template_folder = "提示範本資料夾";
+	ai_prompt_template_folder_desc = "AI 提示範本檔案目錄";
+	ai_prompt_template_folder_placeholder = "form/prompts";
+	ai_user_system_prompt = "使用者系統提示";
+	ai_user_system_prompt_desc = "啟用後在呼叫 AI 時會加入系統提示";
+	ai_system_prompt_placeholder = "您是一個有用的 AI 助手，請提供準確且有用的答案...";
+	ai_model_display_name = "顯示名稱";
+	ai_model_name = "模型名稱";
+	ai_provider = "AI 提供商";
+	ai_base_url = "基礎 URL";
+	ai_api_key = "API 金鑰";
+	ai_max_context_length = "最大上下文長度";
+	ai_max_output_tokens = "最大輸出令牌";
+	ai_advanced_settings = "進階設定";
+	ai_temperature = "溫度";
+	ai_top_p = "Top P";
+	ai_top_k = "Top K";
+	ai_frequency_penalty = "頻率懲罰";
+	ai_presence_penalty = "存在懲罰";
+	
+	// AI 欄位設定
+	show_provider = "顯示提供商";
+	show_custom_fields = "顯示自訂欄位";
+	auto_select_first = "自動選擇第一個";
+	no_ai_models_available = "無可用的 AI 模型";
+	select_ai_model = "選擇 AI 模型";
+	
+	ai_verify_model = "驗證模型";
+	ai_model_verified = "模型已驗證";
+	ai_model_verification_failed = "模型驗證失敗";
+	ai_reasoning_capability = "推理能力";
+	ai_web_search_capability = "網路搜尋";
+	ai_call_action = "呼叫 AI";
+	ai_prompt_setting = "提示設定";
+	ai_builtin_template = "內建範本";
+	ai_custom_prompt = "自訂提示";
+	ai_output_variable_name = "輸出變數名稱";
+	ai_template_file = "範本檔案";
+	ai_custom_content = "自訂內容";
+	edit = "編輯";list_item = "添加列表項";
 	all = "全部";
 	at_cursor = "當前游標處";
 	auto_submit = "自動提交";
@@ -207,7 +255,4 @@ export class ZhTw implements Local {
 	open_link = "打開鏈接";
 	execute_command = "執行命令";
 	link_url = "鏈接地址";
-	command_id = "命令名稱";
-	show_submit_message = "顯示提交信息";
-	show_submit_message_description = "表單提交成功或失敗後是否顯示通知消息";
 }

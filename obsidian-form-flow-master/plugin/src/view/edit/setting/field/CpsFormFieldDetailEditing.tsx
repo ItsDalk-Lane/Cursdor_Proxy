@@ -13,6 +13,7 @@ import { FormFieldTypeSelect } from "./common/FormFieldTypeSelect";
 import { DateFieldDefaultValueControl } from "./default-value/DateFieldDefaultValueControl";
 import CpsFormPropertyValueFieldSetting from "./property-value/CpsFormPropertyValueFieldSetting";
 import CpsFormTextAreaFieldSetting from "./textarea/CpsFormTextAreaFieldSetting";
+import CpsFormAIModelListFieldSetting from "./ai-model-list/CpsFormAIModelListFieldSetting";
 import CpsFormItem from "src/view/shared/CpsFormItem";
 
 export function CpsFormFieldDetailEditing(props: {
@@ -111,6 +112,7 @@ export function CpsFormFieldDetailEditing(props: {
 				onChange={setField}
 			/>
 			<CpsFormTextAreaFieldSetting field={field} onChange={setField} />
+			<CpsFormAIModelListFieldSetting field={field} onChange={setField} />
 
 			{field.type === FormFieldType.FILE_LIST && (
 				<>
