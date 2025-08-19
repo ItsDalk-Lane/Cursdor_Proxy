@@ -66,9 +66,13 @@ export function AISettingTabItem(props: { plugin: FormPlugin }) {
                 cb.setValue(promptTemplateFolder);
                 cb.setPlaceholder(localInstance.ai_prompt_template_folder_placeholder);
                 cb.onChange(async (v) => {
+                    console.log('提示模板目录输入框值变更:', v);
                     setPromptTemplateFolder(v);
                     try {
                         await aiSettingsService.updatePromptTemplateFolder(v);
+                        // 立即更新插件本地状态以确保同步
+                        plugin.settings.aiSettings.promptTemplateFolder = v;
+                        await plugin.saveSettings();
                         console.log('提示模板目录已更新为:', v);
                     } catch (error) {
                         console.error('更新提示模板目录失败:', error);
@@ -77,10 +81,14 @@ export function AISettingTabItem(props: { plugin: FormPlugin }) {
 
                 const suggest = new FolderSuggest(plugin.app, cb.inputEl);
                 suggest.onSelect(async (folder) => {
+                    console.log('文件夹选择器选择:', folder.path);
                     cb.setValue(folder.path);
                     setPromptTemplateFolder(folder.path);
                     try {
                         await aiSettingsService.updatePromptTemplateFolder(folder.path);
+                        // 立即更新插件本地状态以确保同步
+                        plugin.settings.aiSettings.promptTemplateFolder = folder.path;
+                        await plugin.saveSettings();
                         console.log('提示模板目录已更新为:', folder.path);
                     } catch (error) {
                         console.error('更新提示模板目录失败:', error);

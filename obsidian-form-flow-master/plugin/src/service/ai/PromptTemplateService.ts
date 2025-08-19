@@ -63,13 +63,41 @@ export class PromptTemplateService {
     processTemplate(template: string, context: VariableContext): string {
         let processed = template;
 
-        // 替换表单变量 {{fieldName}}
+        // 替换表单变量 {{@fieldName}}
         if (context.formValues) {
-            Object.entries(context.formValues).forEach(([fieldName, value]) => {
-                const regex = new RegExp(`\\{\\{\\s*${this.escapeRegex(fieldName)}\\s*\\}\\}`, 'g');
+            Object.entries(context.formValues).forEach(([fieldId, value]) => {
+                // 首先尝试通过字段ID匹配
+                const idRegex = new RegExp(`\\{\\{\\@${this.escapeRegex(fieldId)}\\}\\}`, 'g');
                 const strValue = this.formatValue(value);
-                processed = processed.replace(regex, strValue);
+                processed = processed.replace(idRegex, strValue);
             });
+        }
+
+        // 如果还有未替换的 {{@fieldName}} 变量，尝试通过字段标签匹配
+        if (context.formValues) {
+            const fieldIdToLabelMap: Record<string, any> = {};
+            
+            // 需要从上下文中获取字段标签映射关系
+            // 这个需要传入完整的FormState，暂时使用现有逻辑
+            Object.entries(context.formValues).forEach(([fieldId, value]) => {
+                fieldIdToLabelMap[fieldId] = value;
+            });
+
+            // 匹配任何 {{@变量名}} 格式
+            const fieldVarPattern = /\{\{\@([^}]+)\}\}/g;
+            let match;
+            while ((match = fieldVarPattern.exec(processed)) !== null) {
+                const fieldName = match[1].trim();
+                const fullMatch = match[0];
+                
+                // 在表单值中查找对应的值
+                let replacement = '';
+                if (context.formValues[fieldName]) {
+                    replacement = this.formatValue(context.formValues[fieldName]);
+                }
+                
+                processed = processed.replace(fullMatch, replacement);
+            }
         }
 
         // 替换输出变量 {{output:variableName}}

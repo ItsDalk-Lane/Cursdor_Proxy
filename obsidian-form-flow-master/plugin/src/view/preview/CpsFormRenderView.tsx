@@ -4,7 +4,9 @@ import { useAutoFocus } from "src/hooks/useAutoFocus";
 import { SubmitState } from "src/hooks/useSubmitForm";
 import { localInstance } from "src/i18n/locals";
 import { IFormField } from "src/model/field/IFormField";
+import { TemplateListField } from "src/model/field/TemplateListField";
 import { FormConfig } from "src/model/FormConfig";
+import { FormFieldType } from "src/model/enums/FormFieldType";
 import { FormVisibilies } from "src/service/condition/FormVisibilies";
 import { FormIdValues } from "src/service/FormValues";
 import { resolveDefaultFormIdValues } from "src/utils/resolveDefaultFormIdValues";
@@ -87,9 +89,77 @@ export function CpsFormRenderView(props: Props) {
 	);
 	useAutoFocus(formRef);
 
+	/**
+	 * 检查字段是否有固定值（与FormService中的逻辑保持一致）
+	 */
+	const fieldHasFixedValue = (field: IFormField): boolean => {
+		switch (field.type) {
+			case FormFieldType.TEXT:
+			case FormFieldType.TEXTAREA:
+			case FormFieldType.PASSWORD:
+				return !!(field.defaultValue && field.defaultValue.trim());
+			
+			case FormFieldType.NUMBER:
+				return field.defaultValue !== undefined && field.defaultValue !== null;
+			
+			case FormFieldType.CHECKBOX:
+				return field.defaultValue !== undefined;
+			
+			case FormFieldType.RADIO:
+			case FormFieldType.SELECT:
+				return !!(field.defaultValue && field.defaultValue.trim());
+			
+			case FormFieldType.DATE:
+			case FormFieldType.TIME:
+			case FormFieldType.DATETIME:
+				return !!(field.defaultValue && field.defaultValue.trim());
+			
+			case FormFieldType.FILE_LIST:
+				return !!(field.defaultValue && 
+					((Array.isArray(field.defaultValue) && field.defaultValue.length > 0) ||
+					 (typeof field.defaultValue === 'string' && field.defaultValue.trim())));
+			
+            case FormFieldType.AI_MODEL_LIST:
+                // AI模型字段如果有预选择的模型ID或自动选择第一个，则认为有固定值
+                const aiField = field as any;
+                console.log('检查AI模型字段固定值:', {
+                    fieldId: field.id,
+                    fieldType: field.type,
+                    selectedModelId: aiField.selectedModelId,
+                    autoSelectFirst: aiField.autoSelectFirst,
+                    hasFixedValue: !!(aiField.selectedModelId || aiField.autoSelectFirst)
+                });
+                return !!(aiField.selectedModelId || aiField.autoSelectFirst);
+            
+            case FormFieldType.TEMPLATE_LIST:
+                // 模板列表字段如果有预选择的模板文件或自动选择第一个，则认为有固定值
+                const templateField = field as any;
+                console.log('检查模板列表字段固定值:', {
+                    fieldId: field.id,
+                    fieldType: field.type,
+                    selectedTemplateFile: templateField.selectedTemplateFile,
+                    autoSelectFirst: templateField.autoSelectFirst,
+                    hasFixedValue: !!(templateField.selectedTemplateFile || templateField.autoSelectFirst)
+                });
+                return !!(templateField.selectedTemplateFile || templateField.autoSelectFirst);
+			
+			default:
+				// 其他类型字段，检查是否有默认值
+				return !!(field.defaultValue !== undefined && field.defaultValue !== null && 
+					(typeof field.defaultValue !== 'string' || field.defaultValue.trim()));
+		}
+	};
+
 	const visibleFields = useMemo(() => {
-		const newFields = FormVisibilies.visibleFields(fields, formIdValues);
-		return newFields;
+		// 首先获取可见字段
+		const allVisibleFields = FormVisibilies.visibleFields(fields, formIdValues);
+		
+		// 然后过滤出需要用户输入的字段（没有固定值的字段）
+		const fieldsNeedingInput = allVisibleFields.filter(field => {
+			return !fieldHasFixedValue(field);
+		});
+		
+		return fieldsNeedingInput;
 	}, [fields, formIdValues]);
 
 	return (

@@ -15,4 +15,5 @@ export enum FormFieldType {
     PROPERTY_VALUE = "property_value",
     FILE_LIST = "file_list",
     AI_MODEL_LIST = "ai_model_list",
+    TEMPLATE_LIST = "template_list",
 }

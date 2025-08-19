@@ -93,7 +93,7 @@ export default function AIModelListControl(props: {
             }}
             autoFocus={autoFocus}
         >
-            <option value="" disabled hidden>
+            <option value="">
                 {localInstance.please_select_option}
             </option>
             {aiModels.map((model) => (

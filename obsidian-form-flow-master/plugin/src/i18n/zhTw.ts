@@ -16,6 +16,7 @@ export class ZhTw implements Local {
 	ai_model_management = "AI 模型管理";
 	ai_add_model = "新增 AI 模型";
 	ai_model_list = "模型清單";
+	template_list = "範本清單";
 	ai_prompt_template_folder = "提示範本資料夾";
 	ai_prompt_template_folder_desc = "AI 提示範本檔案目錄";
 	ai_prompt_template_folder_placeholder = "form/prompts";

@@ -5,6 +5,7 @@ import { showPromiseToast } from "../component/toast/PromiseToast";
 import { ToastManager } from "../component/toast/ToastManager";
 import { FormConfig } from "../model/FormConfig";
 import { FormActionType } from "../model/enums/FormActionType";
+import { FormFieldType } from "../model/enums/FormFieldType";
 import { getActionsCompatible } from "../utils/getActionsCompatible";
 import { resolveDefaultFormIdValues } from "../utils/resolveDefaultFormIdValues";
 import { ActionChain, ActionContext } from "./action/IActionService";
@@ -81,26 +82,102 @@ export class FormService {
 
     async open(file: TFile, app: App) {
         const form = await app.vault.readJson(file.path) as FormConfig;
-        if (form.autoSubmit === true) {
+        await this.openForm(form, app);
+    }
+
+    async openForm(formConfig: FormConfig, app: App) {
+        // 检查是否需要显示表单界面
+        const shouldShowForm = this.shouldShowFormInterface(formConfig);
+        
+        if (!shouldShowForm) {
+            // 直接提交表单
             const formService = new FormService();
-            await formService.submitDirectly(form, app);
+            await formService.submitDirectly(formConfig, app);
         } else {
+            // 显示表单界面
             const m = new FormViewModal2(app, {
-                formFilePath: file.path,
+                formConfig: formConfig,
             });
             m.open();
         }
     }
 
-    async openForm(formConfig: FormConfig, app: App) {
-        if (formConfig.autoSubmit === true) {
-            const formService = new FormService();
-            await formService.submitDirectly(formConfig, app);
-        } else {
-            const m = new FormViewModal2(app, {
-                formConfig: formConfig,
-            });
-            m.open();
+    /**
+     * 判断是否需要显示表单界面
+     * 规则：
+     * 1. 如果启用了自动提交且所有字段都有固定值，则不显示表单
+     * 2. 如果有任何字段需要用户输入，则显示表单
+     * 3. 如果没有启用自动提交，则始终显示表单（除非所有字段都有固定值）
+     */
+    private shouldShowFormInterface(formConfig: FormConfig): boolean {
+        // 如果没有字段，直接执行
+        if (!formConfig.fields || formConfig.fields.length === 0) {
+            return false;
+        }
+
+        // 检查每个字段是否有固定值
+        const fieldsNeedingInput: any[] = [];
+        
+        for (const field of formConfig.fields) {
+            const hasFixedValue = this.fieldHasFixedValue(field);
+            if (!hasFixedValue) {
+                fieldsNeedingInput.push(field);
+            }
+        }
+
+        // 如果所有字段都有固定值，不显示表单界面
+        if (fieldsNeedingInput.length === 0) {
+            return false;
+        }
+
+        // 如果启用了自动提交但还有字段需要输入，这种情况下显示表单
+        // 因为用户需要填写这些字段
+        return true;
+    }
+
+    /**
+     * 检查字段是否有固定值
+     */
+    private fieldHasFixedValue(field: any): boolean {
+        // 根据不同字段类型检查是否有默认值或固定值
+        switch (field.type) {
+            case FormFieldType.TEXT:
+            case FormFieldType.TEXTAREA:
+            case FormFieldType.PASSWORD:
+                return !!(field.defaultValue && field.defaultValue.trim());
+            
+            case FormFieldType.NUMBER:
+                return field.defaultValue !== undefined && field.defaultValue !== null;
+            
+            case FormFieldType.CHECKBOX:
+                return field.defaultValue !== undefined;
+            
+            case FormFieldType.RADIO:
+            case FormFieldType.SELECT:
+                return !!(field.defaultValue && field.defaultValue.trim());
+            
+            case FormFieldType.DATE:
+            case FormFieldType.TIME:
+            case FormFieldType.DATETIME:
+                return !!(field.defaultValue && field.defaultValue.trim());
+            
+            case FormFieldType.FILE_LIST:
+                return !!(field.defaultValue && 
+                    ((Array.isArray(field.defaultValue) && field.defaultValue.length > 0) ||
+                     (typeof field.defaultValue === 'string' && field.defaultValue.trim())));
+            
+            case FormFieldType.AI_MODEL_LIST:
+                // AI模型字段如果有预选择的模型ID或自动选择第一个，则认为有固定值
+                return !!(field.selectedModelId || field.autoSelectFirst);
+            
+            case FormFieldType.TEMPLATE_LIST:
+                // 模板列表字段如果有预选择的模板文件或自动选择第一个，则认为有固定值
+                return !!(field.selectedTemplateFile || field.autoSelectFirst);
+            
+            default:
+                // 其他类型字段，检查是否有默认值
+                return !!(field.defaultValue !== undefined && field.defaultValue !== null && 
+                    (typeof field.defaultValue !== 'string' || field.defaultValue.trim()));
         }
     }
 }

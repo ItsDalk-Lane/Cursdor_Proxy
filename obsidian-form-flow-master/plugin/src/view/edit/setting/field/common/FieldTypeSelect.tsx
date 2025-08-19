@@ -103,6 +103,11 @@ export const fieldTypeOptions = [
 		value: FormFieldType.AI_MODEL_LIST,
 		label: localInstance.ai_model_list,
 	},
+	{
+		icon: <FileText size={14} />,
+		value: FormFieldType.TEMPLATE_LIST,
+		label: localInstance.template_list,
+	},
 ].map((opt) => {
 	return {
 		...opt,

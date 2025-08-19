@@ -9,6 +9,7 @@ import { AISettingsService } from "../ai/AISettingsService";
 import { IAIModelConfig } from "../../model/ai/AIModelConfig";
 import { FormFieldType } from "../../model/enums/FormFieldType";
 import { AIModelListField } from "../../model/field/AIModelListField";
+import { TemplateListField } from "../../model/field/TemplateListField";
 
 export default class AICallActionService implements IActionService {
 
@@ -186,13 +187,37 @@ export default class AICallActionService implements IActionService {
     private static async preparePrompt(action: AICallFormAction, context: ActionContext): Promise<string> {
         let promptContent = '';
 
-        if (action.promptSource === PromptSourceType.BUILTIN_TEMPLATE && action.templateFile) {
-            // 从模板文件加载
-            const aiSettingsService = new AISettingsService(context.app);
-            const aiSettings = await aiSettingsService.loadSettings();
-            const templateService = new PromptTemplateService(context.app, aiSettings.promptTemplateFolder);
-            
-            promptContent = await templateService.loadTemplate(action.templateFile);
+        if (action.promptSource === PromptSourceType.BUILTIN_TEMPLATE) {
+            // 检查是否有模板列表字段
+            if (action.templateFieldName) {
+                const templateField = context.config.fields.find(
+                    field => field.label === action.templateFieldName && field.type === FormFieldType.TEMPLATE_LIST
+                );
+
+                if (templateField) {
+                    // 从表单值中获取选择的模板文件
+                    const selectedTemplateFile = context.state.idValues[templateField.id];
+                    if (selectedTemplateFile) {
+                        const aiSettingsService = new AISettingsService(context.app);
+                        const aiSettings = await aiSettingsService.loadSettings();
+                        const templateService = new PromptTemplateService(context.app, aiSettings.promptTemplateFolder);
+                        promptContent = await templateService.loadTemplate(selectedTemplateFile);
+                    } else {
+                        throw new Error(`模板列表字段 "${action.templateFieldName}" 未选择模板文件`);
+                    }
+                } else {
+                    throw new Error(`未找到模板列表字段: ${action.templateFieldName}`);
+                }
+            } else if (action.templateFile) {
+                // 直接从指定的模板文件加载
+                const aiSettingsService = new AISettingsService(context.app);
+                const aiSettings = await aiSettingsService.loadSettings();
+                const templateService = new PromptTemplateService(context.app, aiSettings.promptTemplateFolder);
+                
+                promptContent = await templateService.loadTemplate(action.templateFile);
+            } else {
+                throw new Error('内置模板模式下必须指定模板文件或模板列表字段');
+            }
         } else if (action.promptSource === PromptSourceType.CUSTOM && action.customPrompt) {
             // 使用自定义提示词
             promptContent = action.customPrompt;
@@ -200,18 +225,18 @@ export default class AICallActionService implements IActionService {
             throw new Error('未配置有效的提示词来源');
         }
 
-        // 处理变量替换
-        const variableContext: VariableContext = {
-            formValues: context.state.idValues,
-            outputVariables: this.getOutputVariables(context),
-            internalVariables: this.getInternalVariables(context)
+        // 使用FormTemplateProcessEngine来处理变量替换，确保与其他地方的处理一致
+        const { FormTemplateProcessEngine } = await import('../engine/FormTemplateProcessEngine');
+        const templateEngine = new FormTemplateProcessEngine();
+        
+        // 构建FormState对象
+        const formState = {
+            values: context.state.values, // 这是FormLabelValues，使用字段标签作为键
+            idValues: context.state.idValues,
+            outputVariables: context.state.outputVariables || {}
         };
 
-        const aiSettingsService = new AISettingsService(context.app);
-        const aiSettings = await aiSettingsService.loadSettings();
-        const templateService = new PromptTemplateService(context.app, aiSettings.promptTemplateFolder);
-        
-        return templateService.processTemplate(promptContent, variableContext);
+        return templateEngine.process(promptContent, formState, context.app, context.config);
     }
 
     /**
@@ -295,8 +320,9 @@ export default class AICallActionService implements IActionService {
 
         // 检查提示词配置
         if (action.promptSource === PromptSourceType.BUILTIN_TEMPLATE) {
-            if (!action.templateFile || !action.templateFile.trim()) {
-                errors.push('选择内置模板时必须指定模板文件');
+            // 检查是否配置了模板来源（模板字段或直接模板文件）
+            if (!action.templateFieldName && (!action.templateFile || !action.templateFile.trim())) {
+                errors.push('选择内置模板时必须指定模板文件或选择模板列表字段');
             }
         } else if (action.promptSource === PromptSourceType.CUSTOM) {
             if (!action.customPrompt || !action.customPrompt.trim()) {

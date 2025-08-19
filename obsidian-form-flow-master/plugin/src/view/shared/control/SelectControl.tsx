@@ -44,7 +44,7 @@ export default function (props: {
 			onChange={(e) => onValueChange(e.target.value)}
 			autoFocus={autoFocus}
 		>
-			<option value="" disabled hidden>
+			<option value="">
 				{localInstance.please_select_option}
 			</option>
 			{userOptions.map((option) => {

@@ -215,6 +215,7 @@ export class En implements Local {
 	ai_model_management = "AI Model Management";
 	ai_add_model = "Add AI Model";
 	ai_model_list = "Model List";
+	template_list = "Template List";
 	ai_prompt_template_folder = "Prompt Template Folder";
 	ai_prompt_template_folder_desc = "Directory for AI prompt template files";
 	ai_prompt_template_folder_placeholder = "form/prompts";

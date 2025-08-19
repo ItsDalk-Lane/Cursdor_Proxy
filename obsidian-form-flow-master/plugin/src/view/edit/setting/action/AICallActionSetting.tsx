@@ -30,9 +30,12 @@ export function AICallActionSetting({ value, config, onChange }: AICallActionSet
     const [customPrompt, setCustomPrompt] = useState(aiAction.customPrompt || "");
     const [outputVariableName, setOutputVariableName] = useState(aiAction.outputVariableName || "");
     const [modelFieldName, setModelFieldName] = useState(aiAction.modelFieldName || "");
+    const [templateFieldName, setTemplateFieldName] = useState(aiAction.templateFieldName || "");
 
     // 获取表单中的AI模型字段
     const aiModelFields = config.fields.filter(field => field.type === "ai_model_list");
+    // 获取表单中的模板列表字段
+    const templateListFields = config.fields.filter(field => field.type === "template_list");
 
     useEffect(() => {
         const updatedAction: AICallFormAction = {
@@ -41,10 +44,11 @@ export function AICallActionSetting({ value, config, onChange }: AICallActionSet
             templateFile: promptSource === PromptSourceType.BUILTIN_TEMPLATE ? templateFile : undefined,
             customPrompt: promptSource === PromptSourceType.CUSTOM ? customPrompt : undefined,
             outputVariableName,
-            modelFieldName
+            modelFieldName,
+            templateFieldName
         };
         onChange(updatedAction);
-    }, [promptSource, templateFile, customPrompt, outputVariableName, modelFieldName]);
+    }, [promptSource, templateFile, customPrompt, outputVariableName, modelFieldName, templateFieldName]);
 
     return (
         <div className="ai-call-action-setting">
@@ -107,19 +111,62 @@ export function AICallActionSetting({ value, config, onChange }: AICallActionSet
 
             {/* 模板文件选择 */}
             {promptSource === PromptSourceType.BUILTIN_TEMPLATE && (
-                <div className="setting-item" style={{ position: "relative", zIndex: 1000 }}>
+                <div className="setting-item" style={{ position: "relative", zIndex: 1 }}>
                     <div className="setting-item-info">
-                        <div className="setting-item-name">{localInstance.ai_template_file}</div>
+                        <div className="setting-item-name">
+                            {templateListFields.length > 0 && promptSource === PromptSourceType.BUILTIN_TEMPLATE ? "提示模板字段" : localInstance.ai_template_file}
+                        </div>
                         <div className="setting-item-description">
-                            从提示模板目录中选择模板文件
+                            {templateListFields.length > 0 && promptSource === PromptSourceType.BUILTIN_TEMPLATE
+                                ? "选择表单中的模板列表字段，或直接选择模板文件" 
+                                : "从提示模板目录中选择模板文件"
+                            }
                         </div>
                     </div>
-                    <div className="setting-item-control" style={{ position: "relative", zIndex: 1001 }}>
-                        <TemplateFileSelect
-                            value={templateFile}
-                            onChange={setTemplateFile}
-                            placeholder="选择模板文件..."
-                        />
+                    <div className="setting-item-control" style={{ position: "relative", zIndex: 2 }}>
+                        {templateListFields.length > 0 && (
+                            <div style={{ marginBottom: "8px" }}>
+                                <select
+                                    value={templateFieldName}
+                                    onChange={(e) => {
+                                        setTemplateFieldName(e.target.value);
+                                        if (e.target.value) {
+                                            setTemplateFile(""); // 清空直接选择的模板文件
+                                        }
+                                    }}
+                                    style={{ width: "100%", marginBottom: "4px" }}
+                                >
+                                    <option value="">{localInstance.please_select_option}</option>
+                                    {templateListFields.map(field => (
+                                        <option key={field.id} value={field.label}>
+                                            {field.label}
+                                        </option>
+                                    ))}
+                                </select>
+                                <div style={{ fontSize: "0.9em", color: "var(--text-muted)" }}>
+                                    使用表单中的模板列表字段
+                                </div>
+                            </div>
+                        )}
+                        {(!templateFieldName || templateListFields.length === 0) && (
+                            <div>
+                                <TemplateFileSelect
+                                    value={templateFile}
+                                    onChange={(value) => {
+                                        setTemplateFile(value);
+                                        if (value) {
+                                            setTemplateFieldName(""); // 清空模板字段选择
+                                        }
+                                    }}
+                                    placeholder="选择模板文件..."
+                                />
+                                {templateListFields.length > 0 && (
+                                    <div style={{ fontSize: "0.9em", color: "var(--text-muted)", marginTop: "4px" }}>
+                                        直接选择模板文件
+                                    </div>
+                                )}
+                            </div>
+                        )}
                     </div>
                 </div>
             )}

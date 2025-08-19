@@ -11,6 +11,7 @@ import RadioControl from "./RadioControl";
 import SelectControl from "./SelectControl";
 import ToggleControl from "./ToggleControl";
 import AIModelListControl from "./AIModelListControl";
+import { TemplateListControl } from "./TemplateListControl";
 
 export function CpsFormFieldControl(props: {
 	field: IFormField;
@@ -157,6 +158,17 @@ export function CpsFormFieldControl(props: {
 				field={field}
 				value={value}
 				onValueChange={onValueChange}
+				autoFocus={autoFocus}
+			/>
+		);
+	}
+
+	if (field.type === FormFieldType.TEMPLATE_LIST) {
+		return (
+			<TemplateListControl
+				field={field as any}
+				value={value}
+				onChange={onValueChange}
 				autoFocus={autoFocus}
 			/>
 		);

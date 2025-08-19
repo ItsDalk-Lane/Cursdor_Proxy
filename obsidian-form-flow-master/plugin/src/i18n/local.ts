@@ -203,6 +203,7 @@ export interface Local {
 	ai_model_management: string;
 	ai_add_model: string;
 	ai_model_list: string;
+	template_list: string;
 	ai_prompt_template_folder: string;
 	ai_prompt_template_folder_desc: string;
 	ai_prompt_template_folder_placeholder: string;

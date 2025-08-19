@@ -12,6 +12,7 @@ import { ITextField } from "./ITextField";
 import { IToggleField } from "./IToggleField";
 import { IFileListField } from "./IFileListField";
 import { AIModelListField } from "./AIModelListField";
+import { TemplateListField } from "./TemplateListField";
 import { Filter } from "../filter/Filter";
 
 export interface IFormField {
@@ -41,3 +42,4 @@ export type FormField =
     | IPropertyValueField
     | IFileListField
     | AIModelListField
+    | TemplateListField

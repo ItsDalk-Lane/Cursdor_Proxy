@@ -216,6 +216,7 @@ export class Zh implements Local {
 	ai_model_management = "AI模型管理";
 	ai_add_model = "添加AI模型";
 	ai_model_list = "模型列表";
+	template_list = "模板列表";
 	ai_prompt_template_folder = "提示模板加载目录";
 	ai_prompt_template_folder_desc = "AI提示词模板文件的存放目录";
 	ai_prompt_template_folder_placeholder = "form/prompts";
