@@ -20,7 +20,7 @@ class AITimerManager {
             return; // 已经在运行，不重复启动
         }
 
-        console.log('AI计时器启动');
+
         this.isRunning = true;
         this.createTimerElement();
     }
@@ -30,7 +30,7 @@ class AITimerManager {
             return; // 未在运行，无需停止
         }
 
-        console.log('AI计时器停止');
+
         this.isRunning = false;
         this.updateTimer();
 
@@ -65,7 +65,7 @@ class AITimerManager {
             React.createElement(AIProgressTimer, {
                 isRunning: this.isRunning,
                 onComplete: () => {
-                    console.log('AI计时器完成回调');
+        
                 }
             })
         );

@@ -66,7 +66,11 @@ export function getFieldDefaultValue(
         if (aiField.selectedModelId) {
             return aiField.selectedModelId;
         }
-        // 如果启用了自动选择第一个，这里返回undefined，实际选择在控件中处理
+        // 如果启用了自动选择第一个，返回空值
+        // 固定值检查逻辑在 fieldHasFixedValue 函数中处理
+        if (aiField.autoSelectFirst) {
+            return "";
+        }
         return aiField.defaultValue;
     }
 
@@ -77,7 +81,11 @@ export function getFieldDefaultValue(
         if (templateField.selectedTemplateFile) {
             return templateField.selectedTemplateFile;
         }
-        // 如果启用了自动选择第一个，这里返回undefined，实际选择在控件中处理
+        // 如果启用了自动选择第一个，返回空值
+        // 固定值检查逻辑在 fieldHasFixedValue 函数中处理
+        if (templateField.autoSelectFirst) {
+            return "";
+        }
         return templateField.defaultValue;
     }
 

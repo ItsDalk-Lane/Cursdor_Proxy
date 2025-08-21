@@ -1,0 +1,32 @@
+{
+  "aiSettings": {
+    "models": [
+      {
+        "id": "gemini-test-model",
+        "displayName": "Google Gemini Pro",
+        "modelName": "gemini-pro",
+        "provider": "gemini",
+        "baseUrl": "https://generativelanguage.googleapis.com/v1beta",
+        "apiKey": "YOUR_GEMINI_API_KEY",
+        "maxContextLength": 32768,
+        "maxOutputTokens": 8192,
+        "advancedSettings": {
+          "temperature": 0.7,
+          "topP": 0.9,
+          "frequencyPenalty": 0.0,
+          "presencePenalty": 0.0
+        },
+        "capabilities": {
+          "reasoning": true,
+          "webSearch": false
+        },
+        "verified": false,
+        "createdAt": 1718937600000,
+        "updatedAt": 1718937600000
+      }
+    ],
+    "promptTemplateFolder": "form/prompts",
+    "enableSystemPrompt": false,
+    "systemPrompt": "You are a helpful AI assistant. Please provide accurate and helpful responses."
+  }
+}

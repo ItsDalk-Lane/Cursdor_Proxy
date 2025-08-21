@@ -44,8 +44,13 @@ var DEFAULT_PLUGIN_DATA = {
     showNotifications: true,
     batchProcessingEnabled: true,
     batchSizeLimitMB: 10,
-    debugMode: false
+    debugMode: false,
     // 默认关闭调试模式
+    // 新增默认值：定时自动提交设置
+    timedAutoCommit: false,
+    autoCommitInterval: 30,
+    enableEditingDelay: false,
+    editingDelayMinutes: 5
   },
   models: {
     configs: [],
@@ -2303,7 +2308,181 @@ var GitCommitView = class extends import_obsidian3.ItemView {
 
 // main.ts
 var execAsync = (0, import_util.promisify)(import_child_process.exec);
+var TimedAutoCommitManager = class {
+  constructor(plugin) {
+    this.intervalTimer = null;
+    this.editingDelayTimer = null;
+    this.lastCommitTime = 0;
+    this.lastEditTime = 0;
+    this.isEditing = false;
+    this.startTime = 0;
+    this.plugin = plugin;
+    this.startTime = Date.now();
+    this.lastCommitTime = Date.now();
+    this.plugin.debugLog("\u5B9A\u65F6\u81EA\u52A8\u63D0\u4EA4\u7BA1\u7406\u5668\u5DF2\u521D\u59CB\u5316");
+  }
+  /**
+   * 启动定时自动提交
+   */
+  start() {
+    if (!this.plugin.settings.timedAutoCommit) {
+      this.plugin.debugLog("\u5B9A\u65F6\u81EA\u52A8\u63D0\u4EA4\u672A\u542F\u7528\uFF0C\u8DF3\u8FC7\u542F\u52A8");
+      return;
+    }
+    this.stop();
+    const intervalMs = this.plugin.settings.autoCommitInterval * 60 * 1e3;
+    this.plugin.debugLog(`\u542F\u52A8\u5B9A\u65F6\u81EA\u52A8\u63D0\u4EA4\uFF0C\u95F4\u9694: ${this.plugin.settings.autoCommitInterval}\u5206\u949F`);
+    this.intervalTimer = setInterval(() => {
+      this.checkAndExecuteAutoCommit();
+    }, intervalMs);
+    setTimeout(() => {
+      this.checkAndExecuteAutoCommit();
+    }, 1e3);
+  }
+  /**
+   * 停止定时自动提交
+   */
+  stop() {
+    if (this.intervalTimer) {
+      clearInterval(this.intervalTimer);
+      this.intervalTimer = null;
+      this.plugin.debugLog("\u5B9A\u65F6\u81EA\u52A8\u63D0\u4EA4\u5DF2\u505C\u6B62");
+    }
+    if (this.editingDelayTimer) {
+      clearTimeout(this.editingDelayTimer);
+      this.editingDelayTimer = null;
+      this.plugin.debugLog("\u7F16\u8F91\u5EF6\u8FDF\u5B9A\u65F6\u5668\u5DF2\u6E05\u9664");
+    }
+  }
+  /**
+   * 重启定时器（用于设置更改后）
+   */
+  restart() {
+    this.plugin.debugLog("\u91CD\u542F\u5B9A\u65F6\u81EA\u52A8\u63D0\u4EA4");
+    this.start();
+  }
+  /**
+   * 通知文件编辑活动
+   */
+  notifyEditingActivity() {
+    this.lastEditTime = Date.now();
+    this.isEditing = true;
+    if (this.editingDelayTimer) {
+      clearTimeout(this.editingDelayTimer);
+    }
+    if (this.plugin.settings.enableEditingDelay) {
+      const delayMs = this.plugin.settings.editingDelayMinutes * 60 * 1e3;
+      this.editingDelayTimer = setTimeout(() => {
+        this.isEditing = false;
+        this.plugin.debugLog("\u7F16\u8F91\u6D3B\u52A8\u505C\u6B62\uFF0C\u6807\u8BB0\u4E3A\u975E\u7F16\u8F91\u72B6\u6001");
+      }, delayMs);
+    }
+    this.plugin.debugLog("\u68C0\u6D4B\u5230\u6587\u4EF6\u7F16\u8F91\u6D3B\u52A8");
+  }
+  /**
+   * 检查并执行自动提交
+   */
+  async checkAndExecuteAutoCommit() {
+    try {
+      this.plugin.debugLog("=== \u68C0\u67E5\u81EA\u52A8\u63D0\u4EA4\u6761\u4EF6 ===");
+      if (!this.plugin.settings.timedAutoCommit) {
+        this.plugin.debugLog("\u5B9A\u65F6\u81EA\u52A8\u63D0\u4EA4\u5DF2\u7981\u7528\uFF0C\u8DF3\u8FC7");
+        return;
+      }
+      if (this.plugin.settings.enableEditingDelay && this.isEditing) {
+        this.plugin.debugLog("\u5F53\u524D\u6B63\u5728\u7F16\u8F91\u6587\u4EF6\u4E14\u542F\u7528\u4E86\u7F16\u8F91\u5EF6\u8FDF\uFF0C\u8DF3\u8FC7\u81EA\u52A8\u63D0\u4EA4");
+        return;
+      }
+      const now = Date.now();
+      const timeSinceLastCommit = now - this.lastCommitTime;
+      const timeSinceStart = now - this.startTime;
+      const intervalMs = this.plugin.settings.autoCommitInterval * 60 * 1e3;
+      const shouldCommitByInterval = Math.min(timeSinceLastCommit, timeSinceStart) >= intervalMs;
+      this.plugin.debugLog(`\u65F6\u95F4\u68C0\u67E5: \u8DDD\u79BB\u4E0A\u6B21\u63D0\u4EA4${Math.round(timeSinceLastCommit / 1e3 / 60)}\u5206\u949F, \u8DDD\u79BB\u542F\u52A8${Math.round(timeSinceStart / 1e3 / 60)}\u5206\u949F, \u9700\u8981\u95F4\u9694${this.plugin.settings.autoCommitInterval}\u5206\u949F`);
+      if (!shouldCommitByInterval) {
+        this.plugin.debugLog("\u672A\u8FBE\u5230\u63D0\u4EA4\u95F4\u9694\u65F6\u95F4\uFF0C\u8DF3\u8FC7");
+        return;
+      }
+      const changes = await this.plugin.getGitChanges();
+      if (changes.length === 0) {
+        this.plugin.debugLog("\u6CA1\u6709\u6587\u4EF6\u53D8\u66F4\uFF0C\u8DF3\u8FC7\u81EA\u52A8\u63D0\u4EA4");
+        return;
+      }
+      this.plugin.debugLog(`\u68C0\u6D4B\u5230 ${changes.length} \u4E2A\u6587\u4EF6\u53D8\u66F4\uFF0C\u5F00\u59CB\u6267\u884C\u81EA\u52A8\u63D0\u4EA4`);
+      await this.executeAutoCommit(changes);
+    } catch (error) {
+      this.plugin.debugError("\u81EA\u52A8\u63D0\u4EA4\u68C0\u67E5\u8FC7\u7A0B\u4E2D\u53D1\u751F\u9519\u8BEF:", error);
+      if (this.plugin.settings.showNotifications) {
+        new import_obsidian4.Notice(`\u26A0\uFE0F \u81EA\u52A8\u63D0\u4EA4\u68C0\u67E5\u5931\u8D25: ${error.message}`);
+      }
+    }
+  }
+  /**
+   * 执行自动提交的核心逻辑
+   */
+  async executeAutoCommit(changes) {
+    try {
+      this.plugin.debugLog("=== \u5F00\u59CB\u6267\u884C\u81EA\u52A8\u63D0\u4EA4 ===");
+      const unstagedFiles = changes.filter((change) => !change.isStaged).map((change) => change.filePath);
+      if (unstagedFiles.length > 0) {
+        this.plugin.debugLog(`\u6682\u5B58 ${unstagedFiles.length} \u4E2A\u672A\u6682\u5B58\u6587\u4EF6`);
+        await this.plugin.stageFiles(unstagedFiles);
+      }
+      const allFiles = changes.map((change) => change.filePath);
+      this.plugin.debugLog("\u4F7F\u7528AI\u751F\u6210\u63D0\u4EA4\u4FE1\u606F");
+      const commitMessage = await this.plugin.generateCommitMessageWithAI(allFiles);
+      this.plugin.debugLog(`\u6267\u884C\u63D0\u4EA4\uFF0C\u6587\u4EF6\u6570: ${allFiles.length}`);
+      await this.plugin.performActualCommit(allFiles, commitMessage);
+      if (this.plugin.settings.pushToRemote) {
+        this.plugin.debugLog("\u63A8\u9001\u5230\u8FDC\u7A0B\u4ED3\u5E93");
+        await this.plugin.pushToRemoteRepository();
+      }
+      this.lastCommitTime = Date.now();
+      this.plugin.debugLog("=== \u81EA\u52A8\u63D0\u4EA4\u5B8C\u6210 ===");
+      if (this.plugin.settings.showNotifications) {
+        new import_obsidian4.Notice(`\u2705 \u81EA\u52A8\u63D0\u4EA4\u5B8C\u6210: ${allFiles.length} \u4E2A\u6587\u4EF6`);
+      }
+    } catch (error) {
+      this.plugin.debugError("\u81EA\u52A8\u63D0\u4EA4\u6267\u884C\u8FC7\u7A0B\u4E2D\u53D1\u751F\u9519\u8BEF:", error);
+      if (this.plugin.settings.showNotifications) {
+        new import_obsidian4.Notice(`\u274C \u81EA\u52A8\u63D0\u4EA4\u5931\u8D25: ${error.message}`);
+      }
+      throw error;
+    }
+  }
+  /**
+   * 获取当前状态信息
+   */
+  getStatus() {
+    if (!this.plugin.settings.timedAutoCommit) {
+      return "\u274C \u672A\u542F\u7528";
+    }
+    const now = Date.now();
+    const timeSinceLastCommit = Math.round((now - this.lastCommitTime) / 1e3 / 60);
+    const timeSinceStart = Math.round((now - this.startTime) / 1e3 / 60);
+    const intervalMinutes = this.plugin.settings.autoCommitInterval;
+    const nextCommitIn = intervalMinutes - Math.min(timeSinceLastCommit, timeSinceStart);
+    let status = `\u2705 \u8FD0\u884C\u4E2D | \u95F4\u9694: ${intervalMinutes}\u5206\u949F`;
+    if (nextCommitIn > 0) {
+      status += ` | \u4E0B\u6B21\u68C0\u67E5: ${nextCommitIn}\u5206\u949F\u540E`;
+    } else {
+      status += ` | \u4E0B\u6B21\u68C0\u67E5: \u5373\u5C06\u6267\u884C`;
+    }
+    if (this.plugin.settings.enableEditingDelay) {
+      status += ` | \u7F16\u8F91\u5EF6\u8FDF: ${this.isEditing ? "\u7F16\u8F91\u4E2D" : "\u7A7A\u95F2"}`;
+    }
+    return status;
+  }
+  /**
+   * 更新最后提交时间（外部调用）
+   */
+  updateLastCommitTime() {
+    this.lastCommitTime = Date.now();
+    this.plugin.debugLog("\u66F4\u65B0\u6700\u540E\u63D0\u4EA4\u65F6\u95F4");
+  }
+};
 var GitAutoCommitPlugin = class extends import_obsidian4.Plugin {
+  // 定时自动提交管理器
   // 统一的调试日志方法
   debugLog(...args) {
     var _a;
@@ -2386,6 +2565,9 @@ var GitAutoCommitPlugin = class extends import_obsidian4.Plugin {
       }
     });
     this.addSettingTab(new GitAutoCommitSettingTab(this.app, this));
+    this.timedAutoCommitManager = new TimedAutoCommitManager(this);
+    this.timedAutoCommitManager.start();
+    this.registerFileEditingListeners();
     this.debugLog("\u63D2\u4EF6\u5DF2\u52A0\u8F7D");
   }
   async activateGitCommitView() {
@@ -2404,13 +2586,59 @@ var GitAutoCommitPlugin = class extends import_obsidian4.Plugin {
     this.app.workspace.revealLeaf(leaf);
   }
   onunload() {
+    if (this.timedAutoCommitManager) {
+      this.timedAutoCommitManager.stop();
+    }
     this.debugLog("\u63D2\u4EF6\u5DF2\u5378\u8F7D");
+  }
+  /**
+   * 注册文件编辑监听器
+   * 监听文件修改、创建、删除等操作，通知定时器管理器
+   */
+  registerFileEditingListeners() {
+    this.debugLog("\u6CE8\u518C\u6587\u4EF6\u7F16\u8F91\u76D1\u542C\u5668");
+    this.registerEvent(
+      this.app.vault.on("modify", (file) => {
+        if (this.timedAutoCommitManager && this.settings.timedAutoCommit) {
+          this.debugLog(`\u6587\u4EF6\u4FEE\u6539: ${file.path}`);
+          this.timedAutoCommitManager.notifyEditingActivity();
+        }
+      })
+    );
+    this.registerEvent(
+      this.app.vault.on("create", (file) => {
+        if (this.timedAutoCommitManager && this.settings.timedAutoCommit) {
+          this.debugLog(`\u6587\u4EF6\u521B\u5EFA: ${file.path}`);
+          this.timedAutoCommitManager.notifyEditingActivity();
+        }
+      })
+    );
+    this.registerEvent(
+      this.app.vault.on("delete", (file) => {
+        if (this.timedAutoCommitManager && this.settings.timedAutoCommit) {
+          this.debugLog(`\u6587\u4EF6\u5220\u9664: ${file.path}`);
+          this.timedAutoCommitManager.notifyEditingActivity();
+        }
+      })
+    );
+    this.registerEvent(
+      this.app.vault.on("rename", (file, oldPath) => {
+        if (this.timedAutoCommitManager && this.settings.timedAutoCommit) {
+          this.debugLog(`\u6587\u4EF6\u91CD\u547D\u540D: ${oldPath} -> ${file.path}`);
+          this.timedAutoCommitManager.notifyEditingActivity();
+        }
+      })
+    );
   }
   async loadSettings() {
     this.settings = this.dataManager.getSettings();
   }
   async saveSettings() {
     await this.dataManager.updateSettings(this.settings);
+    if (this.timedAutoCommitManager) {
+      this.timedAutoCommitManager.restart();
+    }
+    this.debugLog("\u8BBE\u7F6E\u5DF2\u4FDD\u5B58\uFF0C\u5B9A\u65F6\u5668\u5DF2\u91CD\u542F");
   }
   async performGitCommit(scope) {
     try {
@@ -2802,6 +3030,10 @@ var GitAutoCommitPlugin = class extends import_obsidian4.Plugin {
       }
       if (this.settings.showNotifications) {
         new import_obsidian4.Notice("\u2705 \u63D0\u4EA4\u6210\u529F\uFF01");
+      }
+      if (this.timedAutoCommitManager) {
+        this.timedAutoCommitManager.updateLastCommitTime();
+        this.debugLog("\u5DF2\u66F4\u65B0\u5B9A\u65F6\u81EA\u52A8\u63D0\u4EA4\u7684\u6700\u540E\u63D0\u4EA4\u65F6\u95F4");
       }
     } catch (error) {
       this.debugError("Git\u63D0\u4EA4\u5931\u8D25:", error);
@@ -4230,6 +4462,39 @@ ${batch.files.slice(0, 10).map((f) => `- ${f}`).join("\n")}${batch.files.length 
       new import_obsidian4.Notice(`\u274C \u91CD\u7F6E\u5931\u8D25: ${error.message}`);
     }
   }
+  /**
+   * 启动定时自动提交
+   */
+  startTimedAutoCommit() {
+    if (this.timedAutoCommitManager) {
+      this.timedAutoCommitManager.start();
+    }
+  }
+  /**
+   * 停止定时自动提交
+   */
+  stopTimedAutoCommit() {
+    if (this.timedAutoCommitManager) {
+      this.timedAutoCommitManager.stop();
+    }
+  }
+  /**
+   * 重启定时自动提交
+   */
+  restartTimedAutoCommit() {
+    if (this.timedAutoCommitManager) {
+      this.timedAutoCommitManager.restart();
+    }
+  }
+  /**
+   * 获取定时自动提交状态
+   */
+  getTimedCommitStatus() {
+    if (this.timedAutoCommitManager) {
+      return this.timedAutoCommitManager.getStatus();
+    }
+    return "\u5B9A\u65F6\u81EA\u52A8\u63D0\u4EA4\u7BA1\u7406\u5668\u672A\u521D\u59CB\u5316";
+  }
 };
 var FileSelectionModal = class extends import_obsidian4.Modal {
   constructor(app, files, onSelect) {
@@ -4387,6 +4652,57 @@ var GitAutoCommitSettingTab = class extends import_obsidian4.PluginSettingTab {
         8e3
       );
     }));
+    containerEl.createEl("h3", { text: "\u23F0 \u5B9A\u65F6\u81EA\u52A8\u63D0\u4EA4" });
+    new import_obsidian4.Setting(containerEl).setName("\u542F\u7528\u5B9A\u65F6\u81EA\u52A8\u63D0\u4EA4").setDesc("\u5F00\u542F\u540E\u5C06\u6309\u8BBE\u5B9A\u95F4\u9694\u81EA\u52A8\u6267\u884C\u63D0\u4EA4\u64CD\u4F5C").addToggle((toggle) => toggle.setValue(this.plugin.settings.timedAutoCommit).onChange(async (value) => {
+      this.plugin.settings.timedAutoCommit = value;
+      await this.plugin.saveSettings();
+      this.display();
+      if (value) {
+        new import_obsidian4.Notice("\u2705 \u5B9A\u65F6\u81EA\u52A8\u63D0\u4EA4\u5DF2\u542F\u7528");
+        this.plugin.startTimedAutoCommit();
+      } else {
+        new import_obsidian4.Notice("\u{1F4F4} \u5B9A\u65F6\u81EA\u52A8\u63D0\u4EA4\u5DF2\u5173\u95ED");
+        this.plugin.stopTimedAutoCommit();
+      }
+    }));
+    if (this.plugin.settings.timedAutoCommit) {
+      new import_obsidian4.Setting(containerEl).setName("\u81EA\u52A8\u63D0\u4EA4\u95F4\u9694\uFF08\u5206\u949F\uFF09").setDesc("\u8BBE\u7F6E\u81EA\u52A8\u63D0\u4EA4\u7684\u65F6\u95F4\u95F4\u9694\uFF0C\u5EFA\u8BAE\u4E0D\u5C11\u4E8E5\u5206\u949F").addSlider((slider) => slider.setLimits(5, 120, 5).setValue(this.plugin.settings.autoCommitInterval).setDynamicTooltip().onChange(async (value) => {
+        this.plugin.settings.autoCommitInterval = value;
+        await this.plugin.saveSettings();
+        this.plugin.restartTimedAutoCommit();
+      })).addExtraButton((button) => button.setIcon("info").setTooltip("\u95F4\u9694\u65F6\u95F4\u8BF4\u660E").onClick(() => {
+        new import_obsidian4.Notice(
+          "\u23F0 \u81EA\u52A8\u63D0\u4EA4\u95F4\u9694\u8BF4\u660E:\n\u2022 \u95F4\u9694\u65F6\u95F4\u4ECE\u4E0A\u6B21\u63D0\u4EA4\u6216Obsidian\u542F\u52A8\u65F6\u5F00\u59CB\u8BA1\u7B97\n\u2022 \u5EFA\u8BAE\u8BBE\u7F6E\u4E0D\u5C11\u4E8E5\u5206\u949F\uFF0C\u907F\u514D\u9891\u7E41\u63D0\u4EA4\n\u2022 \u8F83\u957F\u95F4\u9694\u53EF\u51CF\u5C11\u4ED3\u5E93\u5386\u53F2\u8BB0\u5F55\u7684\u788E\u7247\u5316\n\u2022 \u4FEE\u6539\u95F4\u9694\u540E\u4F1A\u7ACB\u5373\u91CD\u542F\u5B9A\u65F6\u5668",
+          6e3
+        );
+      }));
+      new import_obsidian4.Setting(containerEl).setName("\u542F\u7528\u7F16\u8F91\u5EF6\u8FDF\u63D0\u4EA4").setDesc("\u5F00\u542F\u540E\uFF0C\u5728\u505C\u6B62\u6587\u4EF6\u7F16\u8F91\u4E00\u6BB5\u65F6\u95F4\u540E\u624D\u6267\u884C\u81EA\u52A8\u63D0\u4EA4").addToggle((toggle) => toggle.setValue(this.plugin.settings.enableEditingDelay).onChange(async (value) => {
+        this.plugin.settings.enableEditingDelay = value;
+        await this.plugin.saveSettings();
+        this.display();
+      }));
+      if (this.plugin.settings.enableEditingDelay) {
+        new import_obsidian4.Setting(containerEl).setName("\u505C\u6B62\u7F16\u8F91\u540E\u5EF6\u8FDF\u65F6\u95F4\uFF08\u5206\u949F\uFF09").setDesc("\u505C\u6B62\u7F16\u8F91\u6587\u4EF6\u540E\u7B49\u5F85\u591A\u957F\u65F6\u95F4\u518D\u6267\u884C\u81EA\u52A8\u63D0\u4EA4").addSlider((slider) => slider.setLimits(1, 30, 1).setValue(this.plugin.settings.editingDelayMinutes).setDynamicTooltip().onChange(async (value) => {
+          this.plugin.settings.editingDelayMinutes = value;
+          await this.plugin.saveSettings();
+        })).addExtraButton((button) => button.setIcon("info").setTooltip("\u7F16\u8F91\u5EF6\u8FDF\u8BF4\u660E").onClick(() => {
+          new import_obsidian4.Notice(
+            "\u270F\uFE0F \u7F16\u8F91\u5EF6\u8FDF\u529F\u80FD\u8BF4\u660E:\n\u2022 \u68C0\u6D4B\u5230\u6587\u4EF6\u7F16\u8F91\u6D3B\u52A8\u65F6\u4F1A\u5EF6\u8FDF\u81EA\u52A8\u63D0\u4EA4\n\u2022 \u907F\u514D\u5728\u7F16\u8F91\u8FC7\u7A0B\u4E2D\u610F\u5916\u89E6\u53D1\u63D0\u4EA4\n\u2022 \u505C\u6B62\u7F16\u8F91\u540E\u7B49\u5F85\u8BBE\u5B9A\u65F6\u95F4\u518D\u6267\u884C\u63D0\u4EA4\n\u2022 \u5982\u679C\u5173\u95ED\u6B64\u529F\u80FD\uFF0C\u5C06\u4E25\u683C\u6309\u95F4\u9694\u65F6\u95F4\u63D0\u4EA4",
+            6e3
+          );
+        }));
+      }
+      const statusSetting = new import_obsidian4.Setting(containerEl).setName("\u5F53\u524D\u72B6\u6001").setDesc("\u663E\u793A\u5B9A\u65F6\u81EA\u52A8\u63D0\u4EA4\u7684\u5F53\u524D\u8FD0\u884C\u72B6\u6001");
+      const statusEl = statusSetting.controlEl.createEl("div", {
+        cls: "timed-commit-status",
+        text: this.plugin.getTimedCommitStatus()
+      });
+      statusEl.style.padding = "8px 12px";
+      statusEl.style.backgroundColor = "var(--background-secondary)";
+      statusEl.style.borderRadius = "4px";
+      statusEl.style.fontFamily = "var(--font-monospace)";
+      statusEl.style.fontSize = "0.9em";
+    }
     containerEl.createEl("h3", { text: "\u{1F527} \u8C03\u8BD5\u8BBE\u7F6E" });
     new import_obsidian4.Setting(containerEl).setName("\u542F\u7528\u8C03\u8BD5\u6A21\u5F0F").setDesc("\u5F00\u542F\u540E\u4F1A\u5728\u6D4F\u89C8\u5668\u63A7\u5236\u53F0\u663E\u793A\u8BE6\u7EC6\u7684\u8C03\u8BD5\u4FE1\u606F\uFF0C\u5305\u62ECGit\u64CD\u4F5C\u3001AI\u751F\u6210\u3001\u6309\u94AE\u72B6\u6001\u7B49").addToggle((toggle) => toggle.setValue(this.plugin.settings.debugMode).onChange(async (value) => {
       this.plugin.settings.debugMode = value;

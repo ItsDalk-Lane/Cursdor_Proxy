@@ -5,7 +5,6 @@ import {
 	ChevronRight,
 	Copy,
 	Trash2,
-	Network,
 } from "lucide-react";
 import { useState, useMemo } from "react";
 import { useActionTitle } from "src/hooks/useActionTitle";
@@ -54,16 +53,6 @@ export default function (props: {
 		operator: OperatorType.And,
 		conditions: [],
 	};
-
-	const fieldConditionLength = useMemo(() => {
-		if (!value.condition) {
-			return 0;
-		}
-		if (!value.condition.conditions) {
-			return 0;
-		}
-		return value.condition.conditions.length;
-	}, [value.condition]);
 	return (
 		<div
 			className="form--CpsFormActionSetting"
@@ -86,25 +75,12 @@ export default function (props: {
 				onDuplicate={onDuplicate}
 				setDragHandleRef={setDragHandleRef}
 			/>
-			<div className="form--CpsFormActionCondition">
-				<button
-					className="form--VisibilityConditionButton"
-					data-has-condition={fieldConditionLength > 0}
-					onClick={() => {
-						setOpenCondition(true);
-					}}
-				>
-					<Network size={14} />
-					{localInstance.execute_condition}
-					{fieldConditionLength > 0 && ` + ${fieldConditionLength}`}
-				</button>
-			</div>
-
 			{open && (
 				<div className="form--CpsFormActionContent">
 					<CpsFormActionDetailSetting
 						value={value}
 						onChange={saveAction}
+						onConditionClick={() => setOpenCondition(true)}
 					/>
 				</div>
 			)}

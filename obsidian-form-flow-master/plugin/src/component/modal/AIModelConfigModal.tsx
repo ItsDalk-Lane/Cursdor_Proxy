@@ -17,14 +17,14 @@ export function AIModelConfigModal({ model, onSave, onCancel }: AIModelConfigMod
     const [formData, setFormData] = useState<IAIModelConfig>(() => {
         if (model) {
             // 编辑模式：基于现有模型初始化
-            console.log('编辑模式初始化，原模型数据:', model);
+
             return {
                 ...model,
                 updatedAt: Date.now()
             };
         } else {
             // 新建模式：使用默认值
-            console.log('新建模式初始化');
+
             return {
                 id: uuidv4(),
                 displayName: "",
@@ -67,14 +67,14 @@ export function AIModelConfigModal({ model, onSave, onCancel }: AIModelConfigMod
     }, [formData.provider, isEditing]);
 
     const handleInputChange = (field: keyof IAIModelConfig, value: any) => {
-        console.log(`字段更新: ${String(field)} = ${value}`);
+
         setFormData(prev => {
             const newData = {
                 ...prev,
                 [field]: value,
                 updatedAt: Date.now()
             };
-            console.log('更新后的formData:', newData);
+    
             return newData;
         });
     };
@@ -110,7 +110,6 @@ export function AIModelConfigModal({ model, onSave, onCancel }: AIModelConfigMod
             
             if (!modelToVerify.apiKey.trim()) {
                 setVerificationResult("请先输入API密钥");
-                setVerifying(false);
                 return;
             }
             
@@ -139,10 +138,7 @@ export function AIModelConfigModal({ model, onSave, onCancel }: AIModelConfigMod
     };
 
     const handleSave = async () => {
-        console.log('=== 开始保存模型配置 ===');
-        console.log('isEditing:', isEditing);
-        console.log('原始model:', model);
-        console.log('当前formData:', formData);
+
         
         // 基本验证
         if (!formData.displayName.trim()) {
@@ -164,7 +160,7 @@ export function AIModelConfigModal({ model, onSave, onCancel }: AIModelConfigMod
         // 对于编辑模式，如果API密钥为空但原模型有密钥，保持原有密钥
         if (isEditing && !finalData.apiKey.trim() && model?.apiKey) {
             finalData.apiKey = model.apiKey;
-            console.log('使用原有密钥');
+            
         }
         
         // 确保更新时间
@@ -175,8 +171,7 @@ export function AIModelConfigModal({ model, onSave, onCancel }: AIModelConfigMod
             finalData.createdAt = Date.now();
         }
 
-        console.log('=== 最终保存的数据 ===', finalData);
-        console.log('准备调用onSave函数');
+
         onSave(finalData);
     };
 

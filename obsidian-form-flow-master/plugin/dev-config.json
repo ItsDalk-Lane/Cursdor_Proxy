@@ -1,0 +1,24 @@
+{
+  "aiSettings": {
+    "providers": [
+      {
+        "id": "openai",
+        "name": "OpenAI",
+        "apiKey": "sk-test-key-not-base64", 
+        "baseUrl": "https://api.openai.com/v1",
+        "models": ["gpt-3.5-turbo", "gpt-4"]
+      },
+      {
+        "id": "anthropic",
+        "name": "Anthropic",
+        "apiKey": "sk-ant-test-key-plain-text",
+        "baseUrl": "https://api.anthropic.com",
+        "models": ["claude-3-haiku", "claude-3-sonnet"]
+      }
+    ]
+  },
+  "templateSettings": {
+    "folder": "提示词",
+    "extensions": [".md", ".txt"]
+  }
+}

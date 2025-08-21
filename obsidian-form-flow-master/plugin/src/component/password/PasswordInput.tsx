@@ -10,6 +10,8 @@ type PasswordInputProps = {
 	placeholder?: string;
 	autoFocus?: boolean;
 	required?: boolean;
+	onContextMenu?: (event: React.MouseEvent) => void;
+	className?: string;
 };
 
 export function PasswordInput(props: PasswordInputProps) {
@@ -29,7 +31,7 @@ export function PasswordInput(props: PasswordInputProps) {
 		<PasswordToggleField.Root>
 			<div
 				ref={containerRef}
-				className={`form--PasswordInputContainer`}
+				className={`form--PasswordInputContainer ${props.className || ''}`}
 				data-focused={isFocused}
 			>
 				<PasswordToggleField.Input
@@ -39,6 +41,7 @@ export function PasswordInput(props: PasswordInputProps) {
 					onChange={(e) => {
 						props.onChange(e.target.value);
 					}}
+					onContextMenu={props.onContextMenu}
 					onFocus={handleFocus}
 					onBlur={handleBlur}
 				/>

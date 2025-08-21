@@ -17,7 +17,7 @@ export class AISettingsService {
         } else {
             // 尝试从app实例获取插件
             this.plugin = (app as any).plugins?.getPlugin('form-flow') || null;
-            console.log('从App获取插件实例:', this.plugin ? '成功' : '失败');
+
         }
         this.masterPassword = EncryptionService.generateMasterPassword();
     }
@@ -33,7 +33,7 @@ export class AISettingsService {
             }
 
             const aiSettings = this.plugin.settings.aiSettings;
-            console.log('从主插件设置加载AI设置:', aiSettings);
+
 
             // 解密API密钥
             if (aiSettings.models && Array.isArray(aiSettings.models)) {
@@ -62,7 +62,7 @@ export class AISettingsService {
      * 保存AI设置（保存到主插件设置中）
      */
     async saveSettings(settings: IAISettings): Promise<void> {
-        console.log('开始保存AI设置到主插件设置:', settings);
+
         
         try {
             if (!this.plugin) {
@@ -73,7 +73,7 @@ export class AISettingsService {
             const encryptedSettings = {
                 ...settings,
                 models: settings.models.map(model => {
-                    console.log('加密模型API密钥:', model.displayName, '密钥长度:', model.apiKey.length);
+
                     return {
                         ...model,
                         apiKey: model.apiKey ? EncryptionService.encryptApiKey(model.apiKey, this.masterPassword) : ''
@@ -81,7 +81,7 @@ export class AISettingsService {
                 })
             };
 
-            console.log('加密后的设置:', encryptedSettings);
+
 
             // 更新主插件设置中的AI设置部分
             await this.plugin.replaceSettings({
@@ -89,7 +89,7 @@ export class AISettingsService {
                 aiSettings: encryptedSettings
             });
 
-            console.log('AI设置已保存到主插件设置');
+
         } catch (error) {
             console.error('保存AI设置失败:', error);
             new Notice('保存AI设置失败: ' + (error instanceof Error ? error.message : '未知错误'));
@@ -111,7 +111,7 @@ export class AISettingsService {
      * 添加AI模型
      */
     async addModel(model: Omit<IAIModelConfig, 'id' | 'createdAt' | 'updatedAt'>): Promise<IAIModelConfig> {
-        console.log('添加AI模型开始:', model);
+
         
         const newModel: IAIModelConfig = {
             ...model,
@@ -120,7 +120,7 @@ export class AISettingsService {
             updatedAt: Date.now()
         };
 
-        console.log('生成的新模型:', newModel);
+
 
         // 获取当前设置
         const currentSettings = await this.loadSettings();
@@ -129,12 +129,12 @@ export class AISettingsService {
             models: [...currentSettings.models, newModel]
         };
 
-        console.log('更新后的设置:', updatedSettings);
+
 
         // 保存设置
         try {
             await this.saveSettings(updatedSettings);
-            console.log('AI模型添加成功');
+
             return newModel;
         } catch (error) {
             console.error('保存新模型失败:', error);
@@ -146,7 +146,7 @@ export class AISettingsService {
      * 更新AI模型
      */
     async updateModel(modelId: string, updates: Partial<IAIModelConfig>): Promise<void> {
-        console.log('更新AI模型开始:', modelId, updates);
+
         
         // 获取当前设置
         const currentSettings = await this.loadSettings();
@@ -164,8 +164,7 @@ export class AISettingsService {
             updatedAt: Date.now()
         };
 
-        console.log('原模型:', originalModel);
-        console.log('更新后模型:', updatedModel);
+        
 
         const updatedModels = [...currentSettings.models];
         updatedModels[modelIndex] = updatedModel;
@@ -175,12 +174,12 @@ export class AISettingsService {
             models: updatedModels
         };
 
-        console.log('更新后的设置:', updatedSettings);
+
 
         // 保存设置
         try {
             await this.saveSettings(updatedSettings);
-            console.log('AI模型更新成功');
+    
         } catch (error) {
             console.error('保存更新模型失败:', error);
             throw error;
@@ -191,7 +190,7 @@ export class AISettingsService {
      * 删除AI模型
      */
     async deleteModel(modelId: string): Promise<void> {
-        console.log('删除AI模型:', modelId);
+
         
         // 获取当前设置
         const currentSettings = await this.loadSettings();
@@ -228,7 +227,7 @@ export class AISettingsService {
      * 更新提示模板目录
      */
     async updatePromptTemplateFolder(folder: string): Promise<void> {
-        console.log('更新提示模板目录:', folder);
+
         
         // 获取当前设置
         const currentSettings = await this.loadSettings();
@@ -245,7 +244,7 @@ export class AISettingsService {
      * 更新系统提示设置
      */
     async updateSystemPromptSettings(enabled: boolean, prompt?: string): Promise<void> {
-        console.log('更新系统提示设置:', enabled, prompt);
+
         
         // 获取当前设置
         const currentSettings = await this.loadSettings();

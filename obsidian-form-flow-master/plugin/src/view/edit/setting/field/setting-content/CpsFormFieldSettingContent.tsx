@@ -18,6 +18,7 @@ import { FormCondition } from "src/view/shared/filter-content/FormCondition";
 
 export function CpsFormFieldSettingContent(props: {
 	field: IFormField;
+	allFields: IFormField[];
 	onChange: (field: IFormField) => void;
 }) {
 	const { field, onChange } = props;

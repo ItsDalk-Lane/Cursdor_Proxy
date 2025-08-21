@@ -12,10 +12,28 @@ type Props = {
 	options?: {
 		afterSubmit?: (state: Record<string, any>) => void;
 	};
+	prefilledData?: Map<string, any>;
 } & React.HTMLAttributes<HTMLDivElement>;
 
 export default function (props: Props) {
-	const viewOptions = props.options || {};
+	// 调试信息：记录CpsFormActionView组件初始化
+	if ((window as any).FormFlowPlugin?.settings?.enableDebugLogging) {
+		console.log('[CpsFormActionView] 组件初始化');
+		console.log('[CpsFormActionView] props:', props);
+		console.log('[CpsFormActionView] formConfig:', props.formConfig);
+		console.log('[CpsFormActionView] prefilledData:', props.prefilledData);
+		console.log('[CpsFormActionView] prefilledData 是否存在:', !!props.prefilledData);
+		console.log('[CpsFormActionView] prefilledData 大小:', props.prefilledData ? props.prefilledData.size : 0);
+		if (props.prefilledData && props.prefilledData.size > 0) {
+			console.log('[CpsFormActionView] prefilledData 内容:');
+			props.prefilledData.forEach((value, key) => {
+				console.log(`  ${key}:`, value);
+			});
+		}
+	}
+	
+	const viewOptions = props.options ?? {};
+	const { prefilledData } = props;
 	const app = useObsidianApp();
 	const { formConfig } = props;
 	const [submitResult, setSubmitResult] = useState<ActionContext | null>(null);
@@ -63,6 +81,13 @@ export default function (props: Props) {
 		);
 	}
 
+	// 调试信息：记录传递给CpsFormRenderView的数据
+	if ((window as any).FormFlowPlugin?.settings?.enableDebugLogging) {
+		console.log('[CpsFormActionView] 传递给 CpsFormRenderView:');
+		console.log('[CpsFormActionView] formConfig:', formConfig);
+		console.log('[CpsFormActionView] prefilledData:', prefilledData);
+	}
+	
 	return (
 		<CpsFormRenderView
 			formConfig={formConfig}
@@ -70,6 +95,7 @@ export default function (props: Props) {
 			afterSubmit={(state) => {
 				viewOptions.afterSubmit?.(state);
 			}}
+			prefilledData={prefilledData}
 		/>
 	);
 }

@@ -10,8 +10,7 @@ export class Zh implements Local {
 	add_list_item = "添加列表项";
 	all = "全部";
 	at_cursor = "当前光标处";
-	auto_submit = "自动提交";
-	auto_submit_description = "通过命令打开表单时自动提交，不显示表单界面";
+
 	basic_setting = "基本设置";
 	bottom_below_title = "指定标题下最后一行";
 	brief_description = "简要描述";
@@ -158,6 +157,10 @@ export class Zh implements Local {
 	required = "必填";
 	reset_and_restart = "重置并重启";
 	reset_code = "重置代码";
+	right_click_submit = "右键提交";
+	right_click_submit_description = "启用后，可以通过右键菜单将选中内容或整个文件添加到此字段";
+	add_selection_to_field = "添加选中内容到字段";
+	add_file_content_to_field = "添加文件内容到字段";
 	run_extend_function_error = "运行扩展函数错误";
 	run_script = "运行脚本";
 	save = "保存";
@@ -183,6 +186,7 @@ export class Zh implements Local {
 	template_file_not_exists = "模板文件不存在";
 	text_content = "文本内容";
 	title = "标题";
+	action_title_placeholder = "请输入动作标题（可选）";
 	to_internal_link = "转为内链";
 	today = "今天";
 	top_below_title = "指定标题下首行";

@@ -7,8 +7,10 @@ export default function (props: {
 	required?: boolean;
 	id?: string;
 	autoFocus?: boolean;
+	disabled?: boolean;
+	title?: string;
 }) {
-	const { value, onValueChange, id } = props;
+	const { value, onValueChange, id, disabled, title } = props;
 	const containerRef = useRef<HTMLDivElement>(null);
 	const toggleRef = useRef<ToggleComponent | null>(null);
 	useLayoutEffect(() => {
@@ -21,13 +23,31 @@ export default function (props: {
 		el.toggleEl.id = id ?? "";
 		el.toggleEl.autofocus = props.autoFocus || false;
 		el.setValue(value);
-		el.onChange(onValueChange);
+		
+		// 设置禁用状态
+		if (disabled) {
+			// 检查元素类型并设置disabled属性
+			if (el.toggleEl instanceof HTMLInputElement) {
+				el.toggleEl.disabled = true;
+			}
+			el.toggleEl.style.opacity = '0.5';
+			el.toggleEl.style.cursor = 'not-allowed';
+			el.onChange(() => {}); // 禁用时不响应变化
+		} else {
+			el.onChange(onValueChange);
+		}
+		
+		// 设置提示文本
+		if (title) {
+			el.toggleEl.title = title;
+		}
+		
 		if (el.toggleEl instanceof HTMLInputElement) {
 			el.toggleEl.required = props.required || false;
 		}
 		toggleRef.current = el;
 		return () => {};
-	}, [props.autoFocus, id, props.required]);
+	}, [props.autoFocus, id, props.required, disabled, title]);
 
 	useEffect(() => {
 		if (toggleRef.current) {
@@ -36,9 +56,13 @@ export default function (props: {
 	}, [value]);
 	useEffect(() => {
 		if (toggleRef.current) {
-			toggleRef.current.onChange(onValueChange);
+			if (disabled) {
+				toggleRef.current.onChange(() => {}); // 禁用时不响应变化
+			} else {
+				toggleRef.current.onChange(onValueChange);
+			}
 		}
-	}, [props.onValueChange]);
+	}, [props.onValueChange, disabled]);
 
 	return <div ref={containerRef}></div>;
 }

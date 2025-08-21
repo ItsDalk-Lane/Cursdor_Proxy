@@ -8,6 +8,7 @@ import useSortableItem from "src/hooks/useSortableItem";
 export function CpsFormFieldItemEditing(props: {
 	index: number;
 	field: FormField;
+	allFields: IFormField[];
 	onDelete: (field: IFormField) => void;
 	onChange: (field: IFormField) => void;
 	onDuplicate: (field: IFormField) => void;
@@ -26,12 +27,13 @@ export function CpsFormFieldItemEditing(props: {
 			<div className="form--CpsFormFieldSetting" ref={setElRef}>
 				<FormFieldSettingHeader
 					field={field}
+					allFields={props.allFields}
 					onChange={props.onChange}
 					onDelete={props.onDelete}
 					onDuplicate={props.onDuplicate}
 					setDragHandleRef={setDragHandleRef}
 				></FormFieldSettingHeader>
-				<CpsFormFieldSettingContent field={field} onChange={onChange} />
+				<CpsFormFieldSettingContent field={field} allFields={props.allFields} onChange={onChange} />
 				{closestEdge && <DropIndicator edge={closestEdge} gap="1px" />}
 			</div>
 		</FormFieldContext.Provider>

@@ -15,6 +15,11 @@ export interface PluginData {
         batchProcessingEnabled: boolean;
         batchSizeLimitMB: number;
         debugMode: boolean; // 新增调试模式开关
+        // 新增：定时自动提交设置字段
+        timedAutoCommit: boolean; // 是否启用定时自动提交
+        autoCommitInterval: number; // 自动提交间隔（分钟）
+        enableEditingDelay: boolean; // 是否启用停止编辑后延迟提交
+        editingDelayMinutes: number; // 停止编辑后延迟提交时间（分钟）
     };
     
     // 模型配置数据
@@ -60,7 +65,12 @@ const DEFAULT_PLUGIN_DATA: PluginData = {
         showNotifications: true,
         batchProcessingEnabled: true,
         batchSizeLimitMB: 10,
-        debugMode: false // 默认关闭调试模式
+        debugMode: false, // 默认关闭调试模式
+        // 新增默认值：定时自动提交设置
+        timedAutoCommit: false,
+        autoCommitInterval: 30,
+        enableEditingDelay: false,
+        editingDelayMinutes: 5
     },
     models: {
         configs: [],

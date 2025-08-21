@@ -75,24 +75,25 @@ export default function (props: {
 	);
 
 	return (
-		<div className="form--CpsFormFieldsSetting">
-			{fields.map((field, index) => {
-				return (
-					<CpsFormFieldItemEditing
-						key={field.id}
-						index={index}
-						field={field as FormField}
-						onDelete={onFieldDeleted}
-						onChange={onFieldSave}
-						onDuplicate={onDuplicate}
-					/>
-				);
-			})}
-			<button className="form--AddButton" onClick={onFieldAdd}>
-				+{localInstance.add_field}
-			</button>
-		</div>
-	);
+			<div className="form--CpsFormFieldsSetting">
+				{fields.map((field, index) => {
+					return (
+						<CpsFormFieldItemEditing
+							key={field.id}
+							index={index}
+							field={field as FormField}
+							allFields={fields}
+							onDelete={onFieldDeleted}
+							onChange={onFieldSave}
+							onDuplicate={onDuplicate}
+						/>
+					);
+				})}
+				<button className="form--AddButton" onClick={onFieldAdd}>
+					+{localInstance.add_field}
+				</button>
+			</div>
+		);
 }
 
 function updateField(updated: IFormField, fields: IFormField[]) {

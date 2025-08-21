@@ -4,6 +4,7 @@ export enum AIProvider {
     TONGYI = "tongyi",
     SILICONFLOW = "siliconflow",
     OPENROUTER = "openrouter",
+    GEMINI = "gemini",
     CUSTOM = "custom"
 }
 
@@ -65,6 +66,11 @@ export const AI_PROVIDER_CONFIGS = {
         name: "Openrouter",
         baseUrl: "https://openrouter.ai/api",
         defaultModel: "anthropic/claude-3-haiku"
+    },
+    [AIProvider.GEMINI]: {
+        name: "Google Gemini",
+        baseUrl: "https://generativelanguage.googleapis.com/v1beta",
+        defaultModel: "gemini-pro"
     },
     [AIProvider.CUSTOM]: {
         name: "自定义模型",

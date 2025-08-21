@@ -22,21 +22,21 @@ export function TemplateListControl({ field, value, onChange, autoFocus = false 
     useEffect(() => {
         async function loadTemplateFiles() {
             try {
-                console.log('TemplateListControl - 开始加载模板文件');
+        
                 
                 // 获取AI设置中的模板目录
                 const settingsService = new AISettingsService(app);
                 const settings = await settingsService.loadSettings();
                 const folder = field.templateFolder || settings.promptTemplateFolder || "form/prompts";
                 
-                console.log('TemplateListControl - 模板目录:', folder);
+    
                 setTemplateFolder(folder);
                 
                 // 获取模板文件列表
                 const templateService = new PromptTemplateService(app, folder);
                 const files = await templateService.getTemplateFiles();
                 
-                console.log('TemplateListControl - 找到的模板文件:', files.map(f => f.path));
+    
                 setTemplateFiles(files);
             } catch (error) {
                 console.error("Failed to load template files:", error);
@@ -51,18 +51,18 @@ export function TemplateListControl({ field, value, onChange, autoFocus = false 
 
     // 自动选择逻辑
     useEffect(() => {
-        if (!loading && templateFiles.length > 0 && !value) {
+        if (!loading && templateFiles.length > 0) {
             // 如果有预选择的模板文件，使用它
             if (field.selectedTemplateFile) {
                 const selectedTemplate = templateFiles.find(file => file.path === field.selectedTemplateFile);
-                if (selectedTemplate) {
+                if (selectedTemplate && (!value || value === "__AUTO_SELECT_FIRST__")) {
                     onChange(selectedTemplate.path);
                     return;
                 }
             }
             
-            // 如果启用了自动选择第一个，选择第一个模板
-            if (field.autoSelectFirst) {
+            // 如果启用了自动选择第一个或值为特殊标记，选择第一个模板
+            if (field.autoSelectFirst || value === "__AUTO_SELECT_FIRST__") {
                 onChange(templateFiles[0].path);
                 return;
             }

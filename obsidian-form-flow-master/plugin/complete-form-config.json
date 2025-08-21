@@ -1,0 +1,56 @@
+{
+  "id": "ai-content-generator",
+  "title": "AI内容生成器",
+  "description": "使用AI模型和模板生成内容",
+  "formFolder": "System/forms",
+  "scriptFolder": "System/Script",
+  "fields": [
+    {
+      "id": "ai_model",
+      "type": "ai_model_list",
+      "label": "选择AI模型",
+      "autoSelectFirst": true,
+      "selectedModelId": "gpt-3.5-turbo",
+      "required": true,
+      "placeholder": "请选择AI模型"
+    },
+    {
+      "id": "template",
+      "type": "template_list",
+      "label": "选择提示词模板",
+      "autoSelectFirst": true,
+      "selectedTemplateFile": "提示词/小说家.md",
+      "required": true,
+      "placeholder": "请选择模板",
+      "templateFolder": "提示词"
+    },
+    {
+      "id": "content_prompt",
+      "type": "textarea",
+      "label": "内容提示",
+      "required": true,
+      "placeholder": "请输入您想要生成的内容描述...",
+      "rows": 4
+    },
+    {
+      "id": "output_filename",
+      "type": "text",
+      "label": "输出文件名",
+      "required": false,
+      "placeholder": "生成的文件名（留空自动生成）",
+      "defaultValue": "{{@ai_model}}_{{@template}}_{{date}}.md"
+    }
+  ],
+  "actions": [
+    {
+      "type": "create_file",
+      "title": "生成内容",
+      "description": "使用选中的AI模型和模板生成内容",
+      "targetFolder": "Generated",
+      "fileName": "{{@output_filename}}"
+    }
+  ],
+
+  "showSubmitMessage": true,
+  "submitButtonText": "开始生成"
+}

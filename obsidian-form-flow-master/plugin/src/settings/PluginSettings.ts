@@ -9,6 +9,8 @@ export interface PluginSettings {
     formIntegrations: FormIntegration;
 
     aiSettings: IAISettings;
+
+    enableDebugLogging: boolean; // 新增：调试日志开关
 }
 
 export interface FormIntegration {
@@ -23,4 +25,5 @@ export const DEFAULT_SETTINGS: PluginSettings = {
     scriptFolder: "form/scripts",
     formIntegrations: {},
     aiSettings: DEFAULT_AI_SETTINGS,
+    enableDebugLogging: false, // 默认关闭调试日志
 };

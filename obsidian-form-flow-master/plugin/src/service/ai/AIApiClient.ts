@@ -73,16 +73,6 @@ export class AIApiClient {
      * 构建请求体
      */
     private buildRequestBody(request: AIRequest): any {
-        const baseBody = {
-            model: this.model.modelName,
-            messages: request.messages,
-            max_tokens: Math.min(request.maxTokens || this.model.maxOutputTokens, this.model.maxOutputTokens),
-            temperature: request.temperature || this.model.advancedSettings?.temperature || 0.7,
-            top_p: request.topP || this.model.advancedSettings?.topP || 0.9,
-            frequency_penalty: request.frequencyPenalty || this.model.advancedSettings?.frequencyPenalty || 0.0,
-            presence_penalty: request.presencePenalty || this.model.advancedSettings?.presencePenalty || 0.0
-        };
-
         // 针对不同提供商的特殊处理
         switch (this.model.provider) {
             case AIProvider.TONGYI:
@@ -92,18 +82,47 @@ export class AIApiClient {
                         messages: request.messages
                     },
                     parameters: {
-                        max_tokens: baseBody.max_tokens,
-                        temperature: baseBody.temperature,
-                        top_p: baseBody.top_p
+                        max_tokens: Math.min(request.maxTokens || this.model.maxOutputTokens, this.model.maxOutputTokens),
+                        temperature: request.temperature || this.model.advancedSettings?.temperature || 0.7,
+                        top_p: request.topP || this.model.advancedSettings?.topP || 0.9
                     }
                 };
             case AIProvider.ZHIPU:
                 return {
-                    ...baseBody,
+                    model: this.model.modelName,
+                    messages: request.messages,
+                    max_tokens: Math.min(request.maxTokens || this.model.maxOutputTokens, this.model.maxOutputTokens),
+                    temperature: request.temperature || this.model.advancedSettings?.temperature || 0.7,
+                    top_p: request.topP || this.model.advancedSettings?.topP || 0.9,
+                    frequency_penalty: request.frequencyPenalty || this.model.advancedSettings?.frequencyPenalty || 0.0,
+                    presence_penalty: request.presencePenalty || this.model.advancedSettings?.presencePenalty || 0.0,
                     stream: false
                 };
+            case AIProvider.GEMINI:
+                // Gemini API 请求格式
+                return {
+                    contents: request.messages.map(msg => ({
+                        role: msg.role === 'assistant' ? 'model' : msg.role,
+                        parts: [{
+                            text: msg.content
+                        }]
+                    })),
+                    generationConfig: {
+                        maxOutputTokens: Math.min(request.maxTokens || this.model.maxOutputTokens, this.model.maxOutputTokens),
+                        temperature: request.temperature || this.model.advancedSettings?.temperature || 0.7,
+                        topP: request.topP || this.model.advancedSettings?.topP || 0.9
+                    }
+                };
             default:
-                return baseBody;
+                return {
+                    model: this.model.modelName,
+                    messages: request.messages,
+                    max_tokens: Math.min(request.maxTokens || this.model.maxOutputTokens, this.model.maxOutputTokens),
+                    temperature: request.temperature || this.model.advancedSettings?.temperature || 0.7,
+                    top_p: request.topP || this.model.advancedSettings?.topP || 0.9,
+                    frequency_penalty: request.frequencyPenalty || this.model.advancedSettings?.frequencyPenalty || 0.0,
+                    presence_penalty: request.presencePenalty || this.model.advancedSettings?.presencePenalty || 0.0
+                };
         }
     }
 
@@ -128,6 +147,9 @@ export class AIApiClient {
             case AIProvider.TONGYI:
                 headers['Authorization'] = `Bearer ${this.model.apiKey}`;
                 headers['X-DashScope-SSE'] = 'disable';
+                break;
+            case AIProvider.GEMINI:
+                // Gemini使用URL参数认证，不需要设置header
                 break;
         }
 
@@ -154,13 +176,15 @@ export class AIApiClient {
             case AIProvider.DEEPSEEK:
                 return `${baseUrl}v1/chat/completions`;
             case AIProvider.ZHIPU:
-                return `${baseUrl}v4/chat/completions`;
+                return `${baseUrl}/v4/chat/completions`;
             case AIProvider.TONGYI:
-                return `${baseUrl}v1/services/aigc/text-generation/generation`;
+                return `${baseUrl}compatible-mode/v1/chat/completions`;
             case AIProvider.SILICONFLOW:
                 return `${baseUrl}v1/chat/completions`;
             case AIProvider.OPENROUTER:
                 return `${baseUrl}v1/chat/completions`;
+            case AIProvider.GEMINI:
+                return `${baseUrl}models/${this.model.modelName}:generateContent?key=${encodeURIComponent(this.model.apiKey)}`;
             case AIProvider.CUSTOM:
                 return `${baseUrl}v1/chat/completions`;
             default:
@@ -173,6 +197,23 @@ export class AIApiClient {
      */
     private parseResponse(data: any): AIResponse {
         try {
+            // Gemini 格式
+            if (data.candidates && data.candidates.length > 0) {
+                const candidate = data.candidates[0];
+                if (candidate.content && candidate.content.parts && candidate.content.parts.length > 0) {
+                    const content = candidate.content.parts[0].text || '';
+                    return {
+                        success: true,
+                        content,
+                        usage: data.usageMetadata ? {
+                            promptTokens: data.usageMetadata.promptTokenCount || 0,
+                            completionTokens: data.usageMetadata.candidateTokenCount || 0,
+                            totalTokens: (data.usageMetadata.promptTokenCount || 0) + (data.usageMetadata.candidateTokenCount || 0)
+                        } : undefined
+                    };
+                }
+            }
+
             // 标准OpenAI格式
             if (data.choices && data.choices.length > 0) {
                 const choice = data.choices[0];

@@ -66,14 +66,14 @@ export function AISettingTabItem(props: { plugin: FormPlugin }) {
                 cb.setValue(promptTemplateFolder);
                 cb.setPlaceholder(localInstance.ai_prompt_template_folder_placeholder);
                 cb.onChange(async (v) => {
-                    console.log('提示模板目录输入框值变更:', v);
+
                     setPromptTemplateFolder(v);
                     try {
                         await aiSettingsService.updatePromptTemplateFolder(v);
                         // 立即更新插件本地状态以确保同步
                         plugin.settings.aiSettings.promptTemplateFolder = v;
                         await plugin.saveSettings();
-                        console.log('提示模板目录已更新为:', v);
+
                     } catch (error) {
                         console.error('更新提示模板目录失败:', error);
                     }
@@ -81,7 +81,7 @@ export function AISettingTabItem(props: { plugin: FormPlugin }) {
 
                 const suggest = new FolderSuggest(plugin.app, cb.inputEl);
                 suggest.onSelect(async (folder) => {
-                    console.log('文件夹选择器选择:', folder.path);
+
                     cb.setValue(folder.path);
                     setPromptTemplateFolder(folder.path);
                     try {
@@ -89,7 +89,7 @@ export function AISettingTabItem(props: { plugin: FormPlugin }) {
                         // 立即更新插件本地状态以确保同步
                         plugin.settings.aiSettings.promptTemplateFolder = folder.path;
                         await plugin.saveSettings();
-                        console.log('提示模板目录已更新为:', folder.path);
+
                     } catch (error) {
                         console.error('更新提示模板目录失败:', error);
                     }
@@ -158,34 +158,32 @@ export function AISettingTabItem(props: { plugin: FormPlugin }) {
     };
 
     const handleSaveModel = async (model: IAIModelConfig) => {
-        console.log('AISettingTabItem - 开始保存模型:', model);
-        console.log('当前编辑模型:', editingModel);
-        console.log('当前模型列表:', models);
+
         
         try {
             if (editingModel) {
                 // 更新现有模型
-                console.log('更新现有模型, ID:', model.id);
+
                 await aiSettingsService.updateModel(model.id, model);
                 const updatedModels = models.map(m => m.id === model.id ? model : m);
                 setModels(updatedModels);
-                console.log('模型更新完成, 新列表:', updatedModels);
+
             } else {
                 // 添加新模型
-                console.log('添加新模型');
+
                 const newModel = await aiSettingsService.addModel(model);
                 const newModels = [...models, newModel];
                 setModels(newModels);
-                console.log('模型添加完成, 新列表:', newModels);
+
             }
             setShowModelConfigModal(false);
             setEditingModel(null);
             
             // 重新加载设置以确保同步
-            console.log('重新加载AI设置以确保同步');
+
             const settings = await aiSettingsService.loadSettings();
             setModels(settings.models);
-            console.log('重新加载后的模型列表:', settings.models);
+
         } catch (error) {
             console.error('保存模型失败:', error);
             new Notice('保存模型失败: ' + (error instanceof Error ? error.message : '未知错误'));

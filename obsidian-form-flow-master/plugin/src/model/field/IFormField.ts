@@ -25,6 +25,7 @@ export interface IFormField {
     required?: boolean;
     enableDescription?: boolean;
     condition?: Filter;
+    rightClickSubmit?: boolean; // 新增：是否启用右键提交功能
 }
 
 export type FormField =

@@ -8,10 +8,11 @@ type Props = {
 	options?: {
 		afterSubmit?: (state: Record<string, any>) => void;
 	};
+	prefilledData?: Map<string, any>;
 } & React.HTMLAttributes<HTMLDivElement>;
 
 export function CpsFormDataView(props: Props) {
-	const { options, className, formConfig, ...rest } = props;
+	const { options, className, formConfig, prefilledData, ...rest } = props;
 	return (
 		<FormConfigContext.Provider value={formConfig}>
 			<div
@@ -21,6 +22,7 @@ export function CpsFormDataView(props: Props) {
 				<CpsFormActionView
 					formConfig={formConfig}
 					options={props.options}
+					prefilledData={prefilledData}
 				/>
 			</div>
 		</FormConfigContext.Provider>

@@ -13,6 +13,7 @@ import "./FormFieldSettingHeader.css";
 export function FormFieldSettingHeader(props: {
 	children?: React.ReactNode;
 	field: IFormField;
+	allFields: IFormField[];
 	onChange: (field: IFormField) => void;
 	onDelete: (field: IFormField) => void;
 	onDuplicate: (field: IFormField) => void;
@@ -110,6 +111,7 @@ export function FormFieldSettingHeader(props: {
 							</div>
 							<CpsFormFieldDetailEditing
 								value={field}
+								allFields={props.allFields}
 								onChange={(field) => {
 									onChange(field);
 								}}

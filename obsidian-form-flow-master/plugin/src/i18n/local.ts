@@ -8,8 +8,7 @@ export interface Local {
 	add: string;
 	all: string;
 	at_cursor: string;
-	auto_submit_description: string;
-	auto_submit: string;
+
 	basic_setting: string;
 	bottom_below_title: string;
 	brief_description: string;
@@ -150,6 +149,10 @@ export interface Local {
 	required: string;
 	reset_and_restart: string;
 	reset_code: string;
+	right_click_submit: string;
+	right_click_submit_description: string;
+	add_selection_to_field: string;
+	add_file_content_to_field: string;
 	run_extend_function_error: string;
 	run_script: string;
 	save_license_to_vault: string;
@@ -173,6 +176,7 @@ export interface Local {
 	template_file_not_exists: string;
 	text_content: string;
 	title: string;
+	action_title_placeholder: string;
 	to_internal_link: string;
 	extract_file_content: string;
 	extract_file_content_description: string;

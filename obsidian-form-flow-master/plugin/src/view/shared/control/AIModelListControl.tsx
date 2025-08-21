@@ -29,11 +29,10 @@ export default function AIModelListControl(props: {
     useEffect(() => {
         async function loadModels() {
             try {
-                console.log('AIModelListControl - 开始加载AI模型列表');
+    
                 const settingsService = new AISettingsService(app);
                 const settings = await settingsService.loadSettings();
-                console.log('AIModelListControl - 加载到的AI设置:', settings);
-                console.log('AIModelListControl - AI模型列表:', settings.models);
+                //
                 setAiModels(settings.models || []);
             } catch (error) {
                 console.error("Failed to load AI models:", error);
@@ -58,10 +57,10 @@ export default function AIModelListControl(props: {
         }));
     }, [aiModels, aiField.showProvider]);
     
-    // 如果自动选择第一个且当前没有值
+    // 如果自动选择第一个且当前没有值或值为特殊标记
     useEffect(() => {
-        if (aiField.autoSelectFirst && !value && aiModels.length > 0 && !loading) {
-            console.log('AIModelListControl - 自动选择第一个模型:', aiModels[0].id);
+        if ((aiField.autoSelectFirst || value === "__AUTO_SELECT_FIRST__") && aiModels.length > 0 && !loading) {
+            
             onValueChange(aiModels[0].id);
         }
     }, [aiModels, value, aiField.autoSelectFirst, loading, onValueChange]);

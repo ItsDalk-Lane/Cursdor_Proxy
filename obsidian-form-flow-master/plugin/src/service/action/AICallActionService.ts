@@ -21,7 +21,7 @@ export default class AICallActionService implements IActionService {
         const aiAction = action as AICallFormAction;
         
         try {
-            console.log('AI调用开始:', aiAction);
+
             
             // 获取AI模型
             const model = await AICallActionService.getSelectedModel(aiAction, context);
@@ -29,7 +29,7 @@ export default class AICallActionService implements IActionService {
                 console.error('未找到有效的AI模型');
                 throw new Error('未找到有效的AI模型');
             }
-            console.log('选择的AI模型:', model);
+
 
             // 准备提示词
             const prompt = await AICallActionService.preparePrompt(aiAction, context);
@@ -37,27 +37,26 @@ export default class AICallActionService implements IActionService {
                 console.error('提示词内容为空');
                 throw new Error('提示词内容为空');
             }
-            console.log('准备的提示词:', prompt);
+
 
             // 准备消息
             const messages = await AICallActionService.prepareMessages(prompt, context);
-            console.log('准备的消息:', messages);
+
 
             // 创建AI客户端并调用
             const client = AIApiClient.create(model);
-            console.log('开始AI调用...');
+
             const response = await client.call({
                 messages,
                 maxTokens: model.maxOutputTokens
             });
-            console.log('AI调用响应:', response);
+
 
             if (response.success && response.content) {
                 // 存储结果到输出变量
                 if (aiAction.outputVariableName) {
                     AICallActionService.storeOutputVariable(aiAction.outputVariableName, response.content, context);
-                    console.log(`AI调用成功，结果已存储到变量 ${aiAction.outputVariableName}:`, response.content);
-                    console.log('当前输出变量状态:', context.state.outputVariables);
+
                 }
 
                 new Notice(`AI调用成功，结果已存储到变量 ${aiAction.outputVariableName}`);
@@ -140,7 +139,7 @@ export default class AICallActionService implements IActionService {
                 if (selectedModelId) {
                     const model = aiSettings.models.find((m: IAIModelConfig) => m.id === selectedModelId);
                     if (model) {
-                        console.log('使用用户选择的模型:', model.displayName);
+
                         return model;
                     }
                 }
@@ -149,7 +148,7 @@ export default class AICallActionService implements IActionService {
                 if (modelField.selectedModelId) {
                     const model = aiSettings.models.find((m: IAIModelConfig) => m.id === modelField.selectedModelId);
                     if (model) {
-                        console.log('使用字段默认模型:', model.displayName);
+
                         return model;
                     }
                 }
@@ -157,7 +156,7 @@ export default class AICallActionService implements IActionService {
                 // 如果字段设置了自动选择第一个模型
                 if (modelField.autoSelectFirst && aiSettings.models.length > 0) {
                     const firstModel = aiSettings.models[0];
-                    console.log('自动选择第一个模型:', firstModel.displayName);
+
                     return firstModel;
                 }
             }
@@ -166,14 +165,14 @@ export default class AICallActionService implements IActionService {
         // 如果没有指定模型字段或找不到模型，使用第一个可用的已验证模型
         const verifiedModel = aiSettings.models.find((m: IAIModelConfig) => m.verified);
         if (verifiedModel) {
-            console.log('使用第一个已验证模型:', verifiedModel.displayName);
+
             return verifiedModel;
         }
 
         // 最后尝试使用任何可用模型
         if (aiSettings.models.length > 0) {
             const firstAvailable = aiSettings.models[0];
-            console.log('使用第一个可用模型:', firstAvailable.displayName);
+
             return firstAvailable;
         }
 

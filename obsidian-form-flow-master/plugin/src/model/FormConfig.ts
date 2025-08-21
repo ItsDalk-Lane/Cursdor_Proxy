@@ -11,7 +11,7 @@ export class FormConfig {
      */
     action?: IFormAction;
     actions: IFormAction[];
-    autoSubmit: boolean;
+
     showSubmitMessage: boolean; // 新增：控制是否显示提交信息
 
     constructor(id: string) {
@@ -24,7 +24,7 @@ export class FormConfig {
             fileName: "",
         }
         this.actions = [createFileAction];
-        this.autoSubmit = false;
+
         this.showSubmitMessage = true; // 默认显示提交信息
     }
 }

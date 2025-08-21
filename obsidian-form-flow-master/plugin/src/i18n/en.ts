@@ -10,8 +10,7 @@ export class En implements Local {
 	add_list_item = "Add List Item";
 	all = "All";
 	at_cursor = "At Cursor";
-	auto_submit = "Auto Submit";
-	auto_submit_description = "Automatically submit the form without showing the UI when opened via command";
+
 	basic_setting = "Basic Settings";
 	bottom_below_title = "Bottom Below Title";
 	brief_description = "Brief Description";
@@ -211,6 +210,8 @@ export class En implements Local {
 	show_submit_message = "Show Submit Message";
 	show_submit_message_description = "Whether to show notification messages after form submission succeeds or fails";
 	
+	action_title_placeholder = "Enter action title (optional)";
+
 	// AI related
 	ai_model_management = "AI Model Management";
 	ai_add_model = "Add AI Model";
@@ -256,4 +257,10 @@ export class En implements Local {
 	ai_template_file = "Template File";
 	ai_custom_content = "Custom Content";
 	edit = "Edit";
+	
+	// 右键提交相关翻译
+	right_click_submit = "Right Click Submit";
+	right_click_submit_description = "Enable right-click to submit content to this field";
+	add_selection_to_field = "Add Selection to Field";
+	add_file_content_to_field = "Add File Content to Field";
 }

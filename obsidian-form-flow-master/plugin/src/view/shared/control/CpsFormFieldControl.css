@@ -1,0 +1,49 @@
+/* 右键提交字段的样式 */
+.form-field-right-click-enabled {
+	/* 添加边框颜色提示 */
+	border-color: var(--interactive-accent) !important;
+	border-width: 1px !important;
+	border-style: solid !important;
+	
+	/* 添加轻微的背景色提示 */
+	background-color: rgba(var(--interactive-accent-rgb), 0.05) !important;
+	
+	/* 鼠标悬停效果 */
+	transition: all 0.2s ease;
+}
+
+.form-field-right-click-enabled:hover {
+	/* 悬停时增强视觉效果 */
+	background-color: rgba(var(--interactive-accent-rgb), 0.1) !important;
+	box-shadow: 0 0 0 2px rgba(var(--interactive-accent-rgb), 0.2);
+}
+
+.form-field-right-click-enabled:focus {
+	/* 聚焦时的样式 */
+	outline: none;
+	box-shadow: 0 0 0 2px rgba(var(--interactive-accent-rgb), 0.3);
+}
+
+/* 为右键提交字段添加提示图标 */
+.form-field-right-click-enabled::after {
+	content: "🖱️";
+	position: absolute;
+	right: 8px;
+	top: 50%;
+	transform: translateY(-50%);
+	font-size: 12px;
+	opacity: 0.6;
+	pointer-events: none;
+	z-index: 1;
+}
+
+/* 为包含右键提交字段的容器添加相对定位 */
+.form-field-right-click-enabled {
+	position: relative;
+}
+
+/* 文本域的特殊处理 */
+textarea.form-field-right-click-enabled::after {
+	top: 12px;
+	transform: none;
+}

@@ -5,6 +5,7 @@ export interface IFormAction {
   id: string;
   type: FormActionType;
   condition?: Filter | null;
+  title?: string; // 自定义动作标题
 }
 
 

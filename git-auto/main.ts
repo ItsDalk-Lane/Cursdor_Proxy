@@ -11,17 +11,261 @@ import { GitChangeInfo, FileStatusResult, Status } from './git-types';
 
 const execAsync = promisify(exec);
 
+/**
+ * 定时自动提交管理器
+ * 负责管理定时器、文件编辑监听和自动提交逻辑
+ */
+class TimedAutoCommitManager {
+    private plugin: GitAutoCommitPlugin;
+    private intervalTimer: NodeJS.Timeout | null = null;
+    private editingDelayTimer: NodeJS.Timeout | null = null;
+    private lastCommitTime: number = 0;
+    private lastEditTime: number = 0;
+    private isEditing: boolean = false;
+    private startTime: number = 0;
+
+    constructor(plugin: GitAutoCommitPlugin) {
+        this.plugin = plugin;
+        this.startTime = Date.now();
+        this.lastCommitTime = Date.now();
+        this.plugin.debugLog('定时自动提交管理器已初始化');
+    }
+
+    /**
+     * 启动定时自动提交
+     */
+    start(): void {
+        if (!this.plugin.settings.timedAutoCommit) {
+            this.plugin.debugLog('定时自动提交未启用，跳过启动');
+            return;
+        }
+
+        this.stop(); // 先停止现有定时器
+        
+        const intervalMs = this.plugin.settings.autoCommitInterval * 60 * 1000;
+        this.plugin.debugLog(`启动定时自动提交，间隔: ${this.plugin.settings.autoCommitInterval}分钟`);
+        
+        this.intervalTimer = setInterval(() => {
+            this.checkAndExecuteAutoCommit();
+        }, intervalMs);
+
+        // 立即检查一次（如果距离上次提交或启动时间已经超过间隔）
+        setTimeout(() => {
+            this.checkAndExecuteAutoCommit();
+        }, 1000);
+    }
+
+    /**
+     * 停止定时自动提交
+     */
+    stop(): void {
+        if (this.intervalTimer) {
+            clearInterval(this.intervalTimer);
+            this.intervalTimer = null;
+            this.plugin.debugLog('定时自动提交已停止');
+        }
+        
+        if (this.editingDelayTimer) {
+            clearTimeout(this.editingDelayTimer);
+            this.editingDelayTimer = null;
+            this.plugin.debugLog('编辑延迟定时器已清除');
+        }
+    }
+
+    /**
+     * 重启定时器（用于设置更改后）
+     */
+    restart(): void {
+        this.plugin.debugLog('重启定时自动提交');
+        this.start();
+    }
+
+    /**
+     * 通知文件编辑活动
+     */
+    notifyEditingActivity(): void {
+        this.lastEditTime = Date.now();
+        this.isEditing = true;
+        
+        // 清除之前的编辑延迟定时器
+        if (this.editingDelayTimer) {
+            clearTimeout(this.editingDelayTimer);
+        }
+        
+        // 如果启用了编辑延迟，设置新的延迟定时器
+        if (this.plugin.settings.enableEditingDelay) {
+            const delayMs = this.plugin.settings.editingDelayMinutes * 60 * 1000;
+            this.editingDelayTimer = setTimeout(() => {
+                this.isEditing = false;
+                this.plugin.debugLog('编辑活动停止，标记为非编辑状态');
+            }, delayMs);
+        }
+        
+        this.plugin.debugLog('检测到文件编辑活动');
+    }
+
+    /**
+     * 检查并执行自动提交
+     */
+    private async checkAndExecuteAutoCommit(): Promise<void> {
+        try {
+            this.plugin.debugLog('=== 检查自动提交条件 ===');
+            
+            // 检查是否启用了定时自动提交
+            if (!this.plugin.settings.timedAutoCommit) {
+                this.plugin.debugLog('定时自动提交已禁用，跳过');
+                return;
+            }
+
+            // 检查是否正在编辑且启用了编辑延迟
+            if (this.plugin.settings.enableEditingDelay && this.isEditing) {
+                this.plugin.debugLog('当前正在编辑文件且启用了编辑延迟，跳过自动提交');
+                return;
+            }
+
+            // 检查时间间隔
+            const now = Date.now();
+            const timeSinceLastCommit = now - this.lastCommitTime;
+            const timeSinceStart = now - this.startTime;
+            const intervalMs = this.plugin.settings.autoCommitInterval * 60 * 1000;
+            
+            const shouldCommitByInterval = Math.min(timeSinceLastCommit, timeSinceStart) >= intervalMs;
+            
+            this.plugin.debugLog(`时间检查: 距离上次提交${Math.round(timeSinceLastCommit/1000/60)}分钟, 距离启动${Math.round(timeSinceStart/1000/60)}分钟, 需要间隔${this.plugin.settings.autoCommitInterval}分钟`);
+            
+            if (!shouldCommitByInterval) {
+                this.plugin.debugLog('未达到提交间隔时间，跳过');
+                return;
+            }
+
+            // 检查是否有文件变更
+            const changes = await this.plugin.getGitChanges();
+            if (changes.length === 0) {
+                this.plugin.debugLog('没有文件变更，跳过自动提交');
+                return;
+            }
+
+            this.plugin.debugLog(`检测到 ${changes.length} 个文件变更，开始执行自动提交`);
+            
+            // 执行自动提交
+            await this.executeAutoCommit(changes);
+            
+        } catch (error) {
+            this.plugin.debugError('自动提交检查过程中发生错误:', error);
+            if (this.plugin.settings.showNotifications) {
+                new Notice(`⚠️ 自动提交检查失败: ${error.message}`);
+            }
+        }
+    }
+
+    /**
+     * 执行自动提交的核心逻辑
+     */
+    private async executeAutoCommit(changes: GitChangeInfo[]): Promise<void> {
+        try {
+            this.plugin.debugLog('=== 开始执行自动提交 ===');
+            
+            // 1. 暂存所有未暂存的文件
+            const unstagedFiles = changes
+                .filter(change => !change.isStaged)
+                .map(change => change.filePath);
+            
+            if (unstagedFiles.length > 0) {
+                this.plugin.debugLog(`暂存 ${unstagedFiles.length} 个未暂存文件`);
+                await this.plugin.stageFiles(unstagedFiles);
+            }
+
+            // 2. 获取所有需要提交的文件
+            const allFiles = changes.map(change => change.filePath);
+            
+            // 3. 使用AI生成提交信息
+            this.plugin.debugLog('使用AI生成提交信息');
+            const commitMessage = await this.plugin.generateCommitMessageWithAI(allFiles);
+            
+            // 4. 执行提交
+            this.plugin.debugLog(`执行提交，文件数: ${allFiles.length}`);
+            await this.plugin.performActualCommit(allFiles, commitMessage);
+            
+            // 5. 推送到远程仓库（如果启用）
+            if (this.plugin.settings.pushToRemote) {
+                this.plugin.debugLog('推送到远程仓库');
+                await this.plugin.pushToRemoteRepository();
+            }
+            
+            // 更新最后提交时间
+            this.lastCommitTime = Date.now();
+            
+            this.plugin.debugLog('=== 自动提交完成 ===');
+            
+            if (this.plugin.settings.showNotifications) {
+                new Notice(`✅ 自动提交完成: ${allFiles.length} 个文件`);
+            }
+            
+        } catch (error) {
+            this.plugin.debugError('自动提交执行过程中发生错误:', error);
+            if (this.plugin.settings.showNotifications) {
+                new Notice(`❌ 自动提交失败: ${error.message}`);
+            }
+            throw error;
+        }
+    }
+
+    /**
+     * 获取当前状态信息
+     */
+    getStatus(): string {
+        if (!this.plugin.settings.timedAutoCommit) {
+            return '❌ 未启用';
+        }
+        
+        const now = Date.now();
+        const timeSinceLastCommit = Math.round((now - this.lastCommitTime) / 1000 / 60);
+        const timeSinceStart = Math.round((now - this.startTime) / 1000 / 60);
+        const intervalMinutes = this.plugin.settings.autoCommitInterval;
+        
+        const nextCommitIn = intervalMinutes - Math.min(timeSinceLastCommit, timeSinceStart);
+        
+        let status = `✅ 运行中 | 间隔: ${intervalMinutes}分钟`;
+        
+        if (nextCommitIn > 0) {
+            status += ` | 下次检查: ${nextCommitIn}分钟后`;
+        } else {
+            status += ` | 下次检查: 即将执行`;
+        }
+        
+        if (this.plugin.settings.enableEditingDelay) {
+            status += ` | 编辑延迟: ${this.isEditing ? '编辑中' : '空闲'}`;
+        }
+        
+        return status;
+    }
+
+    /**
+     * 更新最后提交时间（外部调用）
+     */
+    updateLastCommitTime(): void {
+        this.lastCommitTime = Date.now();
+        this.plugin.debugLog('更新最后提交时间');
+    }
+}
+
 interface GitAutoCommitSettings {
     defaultCommitScope: 'all' | 'single';
     defaultMessageType: 'ai' | 'manual';
     pushToRemote: boolean;
     remoteBranch: string;
     autoCommit: boolean;
+    includeFileTypes: string[]; // 新增：包含的文件类型，用于过滤需要提交的文件
     excludePatterns: string[];
     showNotifications: boolean;
     batchProcessingEnabled: boolean;
     batchSizeLimitMB: number;
     debugMode: boolean; // 新增调试模式开关
+    // 定时自动提交设置
+    timedAutoCommit: boolean; // 是否启用定时自动提交
+    autoCommitInterval: number; // 自动提交间隔（分钟）
+    enableEditingDelay: boolean; // 是否启用停止编辑后延迟提交
+    editingDelayMinutes: number; // 停止编辑后延迟提交时间（分钟）
 }
 
 const ENHANCED_SYSTEM_PROMPT = `你是一个专业的Git提交信息生成助手。请根据提供的git diff内容，生成符合Conventional Commits规范的详细提交信息。
@@ -79,17 +323,24 @@ const DEFAULT_SETTINGS: GitAutoCommitSettings = {
     pushToRemote: true,
     remoteBranch: 'main',
     autoCommit: false,
+    includeFileTypes: ['md', 'txt', 'json', 'js', 'ts', 'css', 'html'],
     excludePatterns: ['node_modules/', '.git/'],
     showNotifications: true,
     batchProcessingEnabled: true,
     batchSizeLimitMB: 10,
-    debugMode: false // 默认关闭调试模式
+    debugMode: false, // 默认关闭调试模式
+    // 定时自动提交默认设置
+    timedAutoCommit: false, // 默认关闭定时自动提交
+    autoCommitInterval: 30, // 默认30分钟间隔
+    enableEditingDelay: false, // 默认关闭编辑延迟
+    editingDelayMinutes: 5 // 默认停止编辑5分钟后提交
 };
 
 export default class GitAutoCommitPlugin extends Plugin {
     settings: GitAutoCommitSettings;
     dataManager: DataManager;
     modelManager: NewModelConfigManager;
+    timedAutoCommitManager: TimedAutoCommitManager; // 定时自动提交管理器
 
     // 统一的调试日志方法
     debugLog(...args: any[]): void {
@@ -195,6 +446,15 @@ export default class GitAutoCommitPlugin extends Plugin {
         // 添加设置选项卡
         this.addSettingTab(new GitAutoCommitSettingTab(this.app, this));
 
+        // 初始化定时自动提交管理器
+        this.timedAutoCommitManager = new TimedAutoCommitManager(this);
+        
+        // 启动定时自动提交（如果启用）
+        this.timedAutoCommitManager.start();
+        
+        // 注册文件编辑监听器
+        this.registerFileEditingListeners();
+
         this.debugLog('插件已加载');
     }
 
@@ -219,7 +479,59 @@ export default class GitAutoCommitPlugin extends Plugin {
     }
 
     onunload() {
+        // 停止定时自动提交管理器
+        if (this.timedAutoCommitManager) {
+            this.timedAutoCommitManager.stop();
+        }
         this.debugLog('插件已卸载');
+    }
+
+    /**
+     * 注册文件编辑监听器
+     * 监听文件修改、创建、删除等操作，通知定时器管理器
+     */
+    private registerFileEditingListeners(): void {
+        this.debugLog('注册文件编辑监听器');
+        
+        // 监听文件修改事件
+        this.registerEvent(
+            this.app.vault.on('modify', (file) => {
+                if (this.timedAutoCommitManager && this.settings.timedAutoCommit) {
+                    this.debugLog(`文件修改: ${file.path}`);
+                    this.timedAutoCommitManager.notifyEditingActivity();
+                }
+            })
+        );
+        
+        // 监听文件创建事件
+        this.registerEvent(
+            this.app.vault.on('create', (file) => {
+                if (this.timedAutoCommitManager && this.settings.timedAutoCommit) {
+                    this.debugLog(`文件创建: ${file.path}`);
+                    this.timedAutoCommitManager.notifyEditingActivity();
+                }
+            })
+        );
+        
+        // 监听文件删除事件
+        this.registerEvent(
+            this.app.vault.on('delete', (file) => {
+                if (this.timedAutoCommitManager && this.settings.timedAutoCommit) {
+                    this.debugLog(`文件删除: ${file.path}`);
+                    this.timedAutoCommitManager.notifyEditingActivity();
+                }
+            })
+        );
+        
+        // 监听文件重命名事件
+        this.registerEvent(
+            this.app.vault.on('rename', (file, oldPath) => {
+                if (this.timedAutoCommitManager && this.settings.timedAutoCommit) {
+                    this.debugLog(`文件重命名: ${oldPath} -> ${file.path}`);
+                    this.timedAutoCommitManager.notifyEditingActivity();
+                }
+            })
+        );
     }
 
     async loadSettings() {
@@ -230,6 +542,13 @@ export default class GitAutoCommitPlugin extends Plugin {
     async saveSettings() {
         // 通过数据管理器保存设置
         await this.dataManager.updateSettings(this.settings);
+        
+        // 重启定时自动提交管理器（如果设置发生变化）
+        if (this.timedAutoCommitManager) {
+            this.timedAutoCommitManager.restart();
+        }
+        
+        this.debugLog('设置已保存，定时器已重启');
     }
 
     async performGitCommit(scope?: 'all' | 'single' | 'current') {
@@ -713,6 +1032,12 @@ export default class GitAutoCommitPlugin extends Plugin {
 
             if (this.settings.showNotifications) {
                 new Notice('✅ 提交成功！');
+            }
+
+            // 更新定时自动提交管理器的最后提交时间
+            if (this.timedAutoCommitManager) {
+                this.timedAutoCommitManager.updateLastCommitTime();
+                this.debugLog('已更新定时自动提交的最后提交时间');
             }
 
         } catch (error) {
@@ -2564,6 +2889,42 @@ ${batch.files.slice(0, 10).map(f => `- ${f}`).join('\n')}${batch.files.length > 
         }
     }
 
+    /**
+     * 启动定时自动提交
+     */
+    startTimedAutoCommit(): void {
+        if (this.timedAutoCommitManager) {
+            this.timedAutoCommitManager.start();
+        }
+    }
+
+    /**
+     * 停止定时自动提交
+     */
+    stopTimedAutoCommit(): void {
+        if (this.timedAutoCommitManager) {
+            this.timedAutoCommitManager.stop();
+        }
+    }
+
+    /**
+     * 重启定时自动提交
+     */
+    restartTimedAutoCommit(): void {
+        if (this.timedAutoCommitManager) {
+            this.timedAutoCommitManager.restart();
+        }
+    }
+
+    /**
+     * 获取定时自动提交状态
+     */
+    getTimedCommitStatus(): string {
+        if (this.timedAutoCommitManager) {
+            return this.timedAutoCommitManager.getStatus();
+        }
+        return '定时自动提交管理器未初始化';
+    }
 
 }
 
@@ -2846,6 +3207,115 @@ class GitAutoCommitSettingTab extends PluginSettingTab {
                         8000
                     );
                 }));
+
+        // 定时自动提交设置
+        containerEl.createEl('h3', { text: '⏰ 定时自动提交' });
+
+        new Setting(containerEl)
+            .setName('启用定时自动提交')
+            .setDesc('开启后将按设定间隔自动执行提交操作')
+            .addToggle(toggle => toggle
+                .setValue(this.plugin.settings.timedAutoCommit)
+                .onChange(async (value) => {
+                    this.plugin.settings.timedAutoCommit = value;
+                    await this.plugin.saveSettings();
+                    // 刷新界面以显示/隐藏相关设置
+                    this.display();
+                    if (value) {
+                        new Notice('✅ 定时自动提交已启用');
+                        // 启动定时器
+                        this.plugin.startTimedAutoCommit();
+                    } else {
+                        new Notice('📴 定时自动提交已关闭');
+                        // 停止定时器
+                        this.plugin.stopTimedAutoCommit();
+                    }
+                }));
+
+        // 只有启用定时自动提交时才显示相关设置
+        if (this.plugin.settings.timedAutoCommit) {
+            new Setting(containerEl)
+                .setName('自动提交间隔（分钟）')
+                .setDesc('设置自动提交的时间间隔，建议不少于5分钟')
+                .addSlider(slider => slider
+                    .setLimits(5, 120, 5)
+                    .setValue(this.plugin.settings.autoCommitInterval)
+                    .setDynamicTooltip()
+                    .onChange(async (value) => {
+                        this.plugin.settings.autoCommitInterval = value;
+                        await this.plugin.saveSettings();
+                        // 重启定时器以应用新间隔
+                        this.plugin.restartTimedAutoCommit();
+                    }))
+                .addExtraButton(button => button
+                    .setIcon('info')
+                    .setTooltip('间隔时间说明')
+                    .onClick(() => {
+                        new Notice(
+                            '⏰ 自动提交间隔说明:\n' +
+                            '• 间隔时间从上次提交或Obsidian启动时开始计算\n' +
+                            '• 建议设置不少于5分钟，避免频繁提交\n' +
+                            '• 较长间隔可减少仓库历史记录的碎片化\n' +
+                            '• 修改间隔后会立即重启定时器', 
+                            6000
+                        );
+                    }));
+
+            new Setting(containerEl)
+                .setName('启用编辑延迟提交')
+                .setDesc('开启后，在停止文件编辑一段时间后才执行自动提交')
+                .addToggle(toggle => toggle
+                    .setValue(this.plugin.settings.enableEditingDelay)
+                    .onChange(async (value) => {
+                        this.plugin.settings.enableEditingDelay = value;
+                        await this.plugin.saveSettings();
+                        // 刷新界面以显示/隐藏延迟时间设置
+                        this.display();
+                    }));
+
+            // 只有启用编辑延迟时才显示延迟时间设置
+            if (this.plugin.settings.enableEditingDelay) {
+                new Setting(containerEl)
+                    .setName('停止编辑后延迟时间（分钟）')
+                    .setDesc('停止编辑文件后等待多长时间再执行自动提交')
+                    .addSlider(slider => slider
+                        .setLimits(1, 30, 1)
+                        .setValue(this.plugin.settings.editingDelayMinutes)
+                        .setDynamicTooltip()
+                        .onChange(async (value) => {
+                            this.plugin.settings.editingDelayMinutes = value;
+                            await this.plugin.saveSettings();
+                        }))
+                    .addExtraButton(button => button
+                        .setIcon('info')
+                        .setTooltip('编辑延迟说明')
+                        .onClick(() => {
+                            new Notice(
+                                '✏️ 编辑延迟功能说明:\n' +
+                                '• 检测到文件编辑活动时会延迟自动提交\n' +
+                                '• 避免在编辑过程中意外触发提交\n' +
+                                '• 停止编辑后等待设定时间再执行提交\n' +
+                                '• 如果关闭此功能，将严格按间隔时间提交', 
+                                6000
+                            );
+                        }));
+            }
+
+            // 添加状态显示
+            const statusSetting = new Setting(containerEl)
+                .setName('当前状态')
+                .setDesc('显示定时自动提交的当前运行状态');
+            
+            const statusEl = statusSetting.controlEl.createEl('div', {
+                cls: 'timed-commit-status',
+                text: this.plugin.getTimedCommitStatus()
+            });
+            statusEl.style.padding = '8px 12px';
+            statusEl.style.backgroundColor = 'var(--background-secondary)';
+            statusEl.style.borderRadius = '4px';
+            statusEl.style.fontFamily = 'var(--font-monospace)';
+            statusEl.style.fontSize = '0.9em';
+        }
 
         // 调试设置
         containerEl.createEl('h3', { text: '🔧 调试设置' });

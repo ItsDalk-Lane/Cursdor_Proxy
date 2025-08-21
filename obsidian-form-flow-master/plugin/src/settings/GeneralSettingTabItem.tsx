@@ -93,6 +93,26 @@ export function GeneralSettingTabItem(props: { plugin: FormPlugin }) {
 				});
 			});
 
+		// 调试日志开关设置
+		new Setting(el)
+			.setName(localInstance.right_click_submit + " - " + "调试日志")
+			.setDesc("启用后将在控制台输出详细的调试信息，用于问题排查")
+			.addToggle((cb) => {
+				cb.setValue(settingsValue.enableDebugLogging);
+				cb.onChange((value) => {
+					setSettingsValue((prev) => {
+						return {
+							...prev,
+							enableDebugLogging: value,
+						};
+					});
+					// 更新右键菜单服务的调试设置
+					if (plugin.contextMenuService) {
+						plugin.contextMenuService.updateDebugSetting(value);
+					}
+				});
+			});
+
 		return () => {
 			el.empty();
 		};

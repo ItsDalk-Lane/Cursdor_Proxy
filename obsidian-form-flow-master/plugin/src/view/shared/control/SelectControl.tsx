@@ -9,6 +9,8 @@ export default function (props: {
 	value: any;
 	onValueChange: (value: any) => void;
 	autoFocus?: boolean;
+	onContextMenu?: (event: React.MouseEvent) => void;
+	className?: string;
 }) {
 	const { value, field, onValueChange, autoFocus } = props;
 	const f = field as ISelectField;
@@ -38,10 +40,11 @@ export default function (props: {
 		<select
 			id={field.id}
 			data-name={field.label}
-			className="dropdown"
+			className={`dropdown ${props.className || ''}`}
 			value={hasMatchValue ? value ?? "" : ""}
 			required={field.required}
 			onChange={(e) => onValueChange(e.target.value)}
+			onContextMenu={props.onContextMenu}
 			autoFocus={autoFocus}
 		>
 			<option value="">

@@ -5,6 +5,7 @@ import { ObsidianAppContext } from "src/context/obsidianAppContext";
 import { FormConfig } from "src/model/FormConfig";
 import { CpsFormDataView } from "src/view/preview/CpsFormDataView";
 import { CpsFormFileView } from "src/view/preview/CpsFormFileView";
+import { FormStateManager } from "src/service/FormStateManager";
 import Dialog2 from "../dialog/Dialog2";
 import "./FormViewModal.css";
 
@@ -14,6 +15,7 @@ export default class FormViewModal2 {
 	private source: {
 		formFilePath?: string;
 		formConfig?: FormConfig;
+		prefilledData?: Map<string, any>;
 	};
 
 	constructor(
@@ -21,9 +23,26 @@ export default class FormViewModal2 {
 		source: {
 			formFilePath?: string;
 			formConfig?: FormConfig;
+			prefilledData?: Map<string, any>;
 		}
 	) {
 		this.source = source;
+		
+		// 调试信息：记录FormViewModal2构造函数参数
+		if ((window as any).FormFlowPlugin?.settings?.enableDebugLogging) {
+			console.log('[FormViewModal2] 构造函数调用');
+			console.log('[FormViewModal2] formFilePath:', source.formFilePath);
+			console.log('[FormViewModal2] formConfig:', source.formConfig);
+			console.log('[FormViewModal2] prefilledData:', source.prefilledData);
+			console.log('[FormViewModal2] prefilledData 是否存在:', !!source.prefilledData);
+			console.log('[FormViewModal2] prefilledData 大小:', source.prefilledData ? source.prefilledData.size : 0);
+			if (source.prefilledData && source.prefilledData.size > 0) {
+				console.log('[FormViewModal2] prefilledData 内容:');
+				source.prefilledData.forEach((value, key) => {
+					console.log(`  ${key}:`, value);
+				});
+			}
+		}
 	}
 
 	async open() {
@@ -46,6 +65,8 @@ export default class FormViewModal2 {
 					source={this.source}
 					onClose={() => {
 						this.isOpen = false;
+						// 清除表单状态
+						FormStateManager.getInstance().clearCurrentForm();
 						setTimeout(() => {
 							root.unmount();
 							this.containerEl?.remove();
@@ -77,9 +98,17 @@ function FormModalContent({
 	source: {
 		formFilePath?: string;
 		formConfig?: FormConfig;
+		prefilledData?: Map<string, any>;
 	};
 	onClose: () => void;
 }) {
+	// 调试信息：记录FormModalContent组件初始化
+	if ((window as any).FormFlowPlugin?.settings?.enableDebugLogging) {
+		console.log('[FormModalContent] 组件初始化');
+		console.log('[FormModalContent] source:', source);
+		console.log('[FormModalContent] prefilledData:', source.prefilledData);
+	}
+	
 	const [open, setOpen] = useState(true);
 	const [title, setTitle] = useState<string | undefined>(undefined);
 	const [formConfig, setFormConfig] = useState<FormConfig | undefined>(
@@ -103,6 +132,9 @@ function FormModalContent({
 				if (jsonObj) {
 					const config = jsonObj as FormConfig;
 					setFormConfig(config);
+					
+					// 设置当前活动表单到状态管理器
+					FormStateManager.getInstance().setCurrentForm(config);
 
 					// Set title based on file name
 					const fileBaseName = source.formFilePath.split("/").pop();
@@ -118,10 +150,25 @@ function FormModalContent({
 		}
 	}, [source.formFilePath, formConfig]);
 
+	// 设置表单配置到状态管理器
+	useEffect(() => {
+		if (formConfig) {
+			FormStateManager.getInstance().setCurrentForm(formConfig);
+		}
+	}, [formConfig]);
+
 	if (!formConfig && !source.formFilePath) {
 		return null;
 	}
 
+	// 调试信息：记录渲染前的状态
+	if ((window as any).FormFlowPlugin?.settings?.enableDebugLogging) {
+		console.log('[FormModalContent] 准备渲染');
+		console.log('[FormModalContent] formConfig:', formConfig);
+		console.log('[FormModalContent] 将使用的视图:', source.formFilePath && title && formConfig ? 'CpsFormFileView' : formConfig ? 'CpsFormDataView' : 'null');
+		console.log('[FormModalContent] 传递给子组件的 prefilledData:', source.prefilledData);
+	}
+	
 	return (
 		<Dialog2
 			open={open}
@@ -137,6 +184,7 @@ function FormModalContent({
 								className="form--CpsFormModalContent"
 								filePath={source.formFilePath}
 								formConfig={formConfig}
+								prefilledData={source.prefilledData}
 								options={{
 									hideHeader: true,
 									showFilePath: true,
@@ -148,6 +196,7 @@ function FormModalContent({
 						<CpsFormDataView
 							className="form--CpsFormModalContent"
 							formConfig={formConfig}
+							prefilledData={source.prefilledData}
 							options={{
 								afterSubmit: () => close(),
 							}}

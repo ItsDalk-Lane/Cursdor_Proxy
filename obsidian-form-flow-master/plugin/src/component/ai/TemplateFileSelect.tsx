@@ -20,21 +20,21 @@ export function TemplateFileSelect({ value, onChange, placeholder = "选择模�
     useEffect(() => {
         async function loadTemplateFiles() {
             try {
-                console.log('TemplateFileSelect - 开始加载模板文件');
+        
                 
                 // 获取AI设置中的模板目录
                 const settingsService = new AISettingsService(app);
                 const settings = await settingsService.loadSettings();
                 const folder = settings.promptTemplateFolder || "form/prompts";
                 
-                console.log('TemplateFileSelect - 模板目录:', folder);
+    
                 setTemplateFolder(folder);
                 
                 // 获取模板文件列表
                 const templateService = new PromptTemplateService(app, folder);
                 const files = await templateService.getTemplateFiles();
                 
-                console.log('TemplateFileSelect - 找到的模板文件:', files.map(f => f.path));
+    
                 setTemplateFiles(files);
             } catch (error) {
                 console.error("Failed to load template files:", error);

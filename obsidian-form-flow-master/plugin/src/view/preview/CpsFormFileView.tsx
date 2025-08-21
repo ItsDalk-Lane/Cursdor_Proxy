@@ -11,6 +11,7 @@ import { localInstance } from "src/i18n/locals";
 type Props = {
 	filePath: string;
 	formConfig: FormConfig;
+	prefilledData?: Map<string, any>;
 	options?: {
 		hideHeader?: boolean;
 		showFilePath?: boolean;
@@ -19,9 +20,20 @@ type Props = {
 } & React.HTMLAttributes<HTMLDivElement>;
 
 export function CpsFormFileView(props: Props) {
+	// 调试信息：记录CpsFormFileView组件初始化
+	if ((window as any).FormFlowPlugin?.settings?.enableDebugLogging) {
+		console.log('[CpsFormFileView] 组件初始化');
+		console.log('[CpsFormFileView] props:', props);
+		console.log('[CpsFormFileView] filePath:', props.filePath);
+		console.log('[CpsFormFileView] formConfig:', props.formConfig);
+		console.log('[CpsFormFileView] prefilledData:', props.prefilledData);
+		console.log('[CpsFormFileView] prefilledData 是否存在:', !!props.prefilledData);
+		console.log('[CpsFormFileView] prefilledData 大小:', props.prefilledData ? props.prefilledData.size : 0);
+	}
+	
 	const viewOptions = props.options || {};
 	const [inEditing, setInEditing] = useState<boolean>(false);
-	const { filePath, options, className, formConfig: config, ...rest } = props;
+	const { filePath, options, className, formConfig: config, prefilledData, ...rest } = props;
 	const { formConfig, formFile } = useForm(filePath, props.formConfig);
 	const fileName = formFile.split("/").pop() || "";
 	const fileBasename = fileName.split(".")[0] || "";
@@ -62,10 +74,21 @@ export function CpsFormFileView(props: Props) {
 						filePath={formFile}
 					/>
 				) : (
-					<CpsFormActionView
-						formConfig={formConfig}
-						options={props.options}
-					/>
+					<>
+						{/* 调试信息：记录传递给CpsFormActionView的数据 */}
+						{(window as any).FormFlowPlugin?.settings?.enableDebugLogging && (() => {
+							console.log('[CpsFormFileView] 传递给 CpsFormActionView:');
+							console.log('[CpsFormFileView] formConfig:', formConfig);
+							console.log('[CpsFormFileView] prefilledData:', prefilledData);
+							console.log('[CpsFormFileView] options:', props.options);
+							return null;
+						})()}
+						<CpsFormActionView
+							formConfig={formConfig}
+							prefilledData={prefilledData}
+							options={props.options}
+						/>
+					</>
 				)}
 			</div>
 		</FormConfigContext.Provider>

@@ -15,10 +15,12 @@ import CpsFormPropertyValueFieldSetting from "./property-value/CpsFormPropertyVa
 import CpsFormTextAreaFieldSetting from "./textarea/CpsFormTextAreaFieldSetting";
 import CpsFormAIModelListFieldSetting from "./ai-model-list/CpsFormAIModelListFieldSetting";
 import CpsFormItem from "src/view/shared/CpsFormItem";
+import { ToastManager } from "src/component/toast/ToastManager";
 
 export function CpsFormFieldDetailEditing(props: {
 	value: IFormField;
-	onChange: (formField: IFormField) => void;
+	allFields: IFormField[];
+	onChange: (field: IFormField) => void;
 }) {
 	const { value: field, onChange: setField } = props;
 	const selectTypes = [FormFieldType.RADIO, FormFieldType.SELECT];
@@ -103,6 +105,55 @@ export function CpsFormFieldDetailEditing(props: {
 					}}
 				/>
 			</CpsFormItem>
+			
+			{/* 只在文本和多行文本字段类型中显示右键提交选项 */}
+			{(field.type === FormFieldType.TEXT || field.type === FormFieldType.TEXTAREA) && (() => {
+				// 检查是否已有其他字段开启了右键提交
+				const otherRightClickField = props.allFields.find(
+					f => f.id !== field.id && f.rightClickSubmit === true
+				);
+				
+				// 当前字段是否已开启右键提交
+				const isCurrentFieldEnabled = field.rightClickSubmit === true;
+				
+				// 是否应该禁用按钮：有其他字段开启了右键提交且当前字段未开启
+				const shouldDisable = otherRightClickField && !isCurrentFieldEnabled;
+				
+				// 描述文本
+				const description = shouldDisable 
+					? `${localInstance.right_click_submit_description} (当前已有字段"${otherRightClickField.label}"开启了此功能，每个表单只能有一个字段开启右键提交)`
+					: localInstance.right_click_submit_description;
+				
+				// 提示文本
+				const tooltipText = shouldDisable 
+					? `每个表单只能设置一个字段开启右键提交功能。当前字段"${otherRightClickField.label}"已开启此功能，请先关闭该字段的右键提交功能后再开启此字段。`
+					: undefined;
+				
+				return (
+					<CpsFormItem 
+						label={localInstance.right_click_submit}
+						description={description}
+					>
+						<ToggleControl
+							value={isCurrentFieldEnabled}
+							disabled={shouldDisable}
+							title={tooltipText}
+							onValueChange={(value) => {
+								// 如果按钮被禁用，不执行任何操作
+								if (shouldDisable) {
+									return;
+								}
+								
+								setField({
+									...field,
+									rightClickSubmit: value,
+								});
+							}}
+						/>
+					</CpsFormItem>
+				);
+			})()}
+			
 			<CpsFormItem label={localInstance.default_value}>
 				{defaultValueEl}
 			</CpsFormItem>

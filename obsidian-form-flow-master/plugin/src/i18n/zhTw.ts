@@ -59,8 +59,7 @@ export class ZhTw implements Local {
 	edit = "編輯";list_item = "添加列表項";
 	all = "全部";
 	at_cursor = "當前游標處";
-	auto_submit = "自動提交";
-	auto_submit_description = "通過命令打開表單時自動提交，不顯示表單界面";
+
 	basic_setting = "基本設定";
 	bottom_below_title = "指定標題下最後一行";
 	brief_description = "簡要描述";
@@ -223,6 +222,7 @@ export class ZhTw implements Local {
 	template_file_not_exists = "模板檔案不存在";
 	text_content = "文字內容";
 	title = "標題";
+	action_title_placeholder = "請輸入動作標題（可選）";
 	to_internal_link = "轉為內鏈";
 	extract_file_content = "提取檔案內容";
 	extract_file_content_description = "開啟後，該欄位的變數會讀取檔案的實際內容而不是檔案路徑";
@@ -256,4 +256,10 @@ export class ZhTw implements Local {
 	open_link = "打開鏈接";
 	execute_command = "執行命令";
 	link_url = "鏈接地址";
+	
+	// 右鍵提交相關翻譯
+	right_click_submit = "右鍵提交";
+	right_click_submit_description = "啟用右鍵點擊向此欄位提交內容";
+	add_selection_to_field = "添加選中內容到欄位";
+	add_file_content_to_field = "添加檔案內容到欄位";
 }

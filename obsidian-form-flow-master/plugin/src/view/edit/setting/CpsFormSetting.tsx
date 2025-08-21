@@ -160,21 +160,7 @@ export default function (props: {
 										filePath={props.filePath}
 									/>
 								</CpsFormItem>
-								<CpsFormItem label={localInstance.auto_submit}>
-									<span className="form--FormFieldLabelDescription">
-										{localInstance.auto_submit_description}
-									</span>
-									<ToggleControl
-										value={formConfig.autoSubmit === true}
-										onValueChange={(v) => {
-											const newConfig = {
-												...formConfig,
-												autoSubmit: v,
-											};
-											onChange(newConfig);
-										}}
-									/>
-								</CpsFormItem>
+
 								<CpsFormItem label={localInstance.show_submit_message}>
 									<span className="form--FormFieldLabelDescription">
 										{localInstance.show_submit_message_description}
