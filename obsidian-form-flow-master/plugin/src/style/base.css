@@ -10,3 +10,156 @@ body {
 		rgba(0, 0, 0, 0.1) 0px 2px 4px 0px,
 		rgba(255, 255, 255, 0.05) 0px 0px 0px 1px inset;
 }
+
+/* Content Cleanup Setting Styles */
+.content-cleanup-list {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	width: 100%;
+	max-width: 100%;
+}
+
+.content-cleanup-item {
+	display: flex;
+	align-items: flex-start;
+	gap: 8px;
+	width: 100%;
+}
+
+.content-cleanup-file-input {
+	flex: 1;
+	min-width: 0;
+}
+
+/* 删除文件和删除文件夹选项的宽输入框 */
+.content-cleanup-file-input-wide {
+	flex: 1;
+	min-width: 0;
+	width: calc(100% - 36px); /* 减去删除按钮宽度和间距 */
+}
+
+
+
+.content-cleanup-remove-btn {
+	background: none;
+	border: none;
+	color: var(--text-muted);
+	cursor: pointer;
+	padding: 6px;
+	border-radius: 4px;
+	transition: color 0.2s ease;
+	flex-shrink: 0;
+	margin-top: 2px;
+	width: 28px;
+	height: 28px;
+}
+
+.content-cleanup-remove-btn:hover {
+	color: var(--text-error);
+	background-color: var(--background-modifier-hover);
+}
+
+/* 移除原来的add-row样式，现在添加按钮在content-cleanup-item中 */
+
+.content-cleanup-add-btn {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: none;
+	border: 1px dashed var(--background-modifier-border);
+	color: var(--text-muted);
+	cursor: pointer;
+	padding: 6px;
+	border-radius: 4px;
+	transition: all 0.2s ease;
+	font-size: var(--font-ui-small);
+	flex-shrink: 0;
+	margin-top: 2px;
+	width: 28px;
+	height: 28px;
+}
+
+.content-cleanup-add-btn:hover {
+	color: var(--text-normal);
+	border-color: var(--interactive-accent);
+	background-color: var(--background-modifier-hover);
+}
+
+/* 调试样式已移除 */
+
+/* 调整FilePathFormItem的建议列表样式 - 使用更高优先级 */
+.content-cleanup-file-input .form--FormFilePathSuggestContent,
+.content-cleanup-file-input-wide .form--FormFilePathSuggestContent,
+.content-cleanup-list .content-cleanup-file-input .form--FormFilePathSuggestContent,
+.content-cleanup-list .content-cleanup-file-input-wide .form--FormFilePathSuggestContent {
+	max-height: 200px !important;
+	min-width: 250px !important;
+	max-width: 400px !important;
+	width: 300px !important;
+}
+
+.content-cleanup-file-input .form--FormFilePathSuggestList,
+.content-cleanup-file-input-wide .form--FormFilePathSuggestList,
+.content-cleanup-list .content-cleanup-file-input .form--FormFilePathSuggestList,
+.content-cleanup-list .content-cleanup-file-input-wide .form--FormFilePathSuggestList {
+	max-height: 150px !important;
+	overflow-y: auto !important;
+}
+
+.content-cleanup-file-input .form--FormFilePathSuggestItem,
+.content-cleanup-file-input-wide .form--FormFilePathSuggestItem,
+.content-cleanup-list .content-cleanup-file-input .form--FormFilePathSuggestItem,
+.content-cleanup-list .content-cleanup-file-input-wide .form--FormFilePathSuggestItem {
+	padding: 6px 10px !important;
+	border-bottom: 1px solid var(--background-modifier-border-hover) !important;
+	cursor: pointer !important;
+	transition: background-color 0.15s ease !important;
+	font-size: var(--font-ui-small) !important;
+	color: var(--text-normal) !important;
+	border-radius: 4px !important;
+	margin-bottom: 1px !important;
+}
+
+.content-cleanup-file-input .form--FormFilePathSuggestItem:last-child,
+.content-cleanup-file-input-wide .form--FormFilePathSuggestItem:last-child,
+.content-cleanup-list .content-cleanup-file-input .form--FormFilePathSuggestItem:last-child,
+.content-cleanup-list .content-cleanup-file-input-wide .form--FormFilePathSuggestItem:last-child {
+	border-bottom: none !important;
+	margin-bottom: 0 !important;
+}
+
+.content-cleanup-file-input .form--FormFilePathSuggestItem:hover,
+.content-cleanup-file-input-wide .form--FormFilePathSuggestItem:hover,
+.content-cleanup-list .content-cleanup-file-input .form--FormFilePathSuggestItem:hover,
+.content-cleanup-list .content-cleanup-file-input-wide .form--FormFilePathSuggestItem:hover {
+	background-color: var(--background-modifier-hover) !important;
+}
+
+.content-cleanup-file-input .form--FormFilePathSuggestItem[data-highlighted="true"],
+.content-cleanup-file-input-wide .form--FormFilePathSuggestItem[data-highlighted="true"],
+.content-cleanup-list .content-cleanup-file-input .form--FormFilePathSuggestItem[data-highlighted="true"],
+.content-cleanup-list .content-cleanup-file-input-wide .form--FormFilePathSuggestItem[data-highlighted="true"] {
+	background-color: var(--interactive-accent) !important;
+	color: var(--text-on-accent) !important;
+}
+
+.content-cleanup-file-input .form--FormFilePathSuggestItem--variable,
+.content-cleanup-file-input-wide .form--FormFilePathSuggestItem--variable,
+.content-cleanup-list .content-cleanup-file-input .form--FormFilePathSuggestItem--variable,
+.content-cleanup-list .content-cleanup-file-input-wide .form--FormFilePathSuggestItem--variable {
+	background-color: var(--interactive-accent-hover) !important;
+	border-left: 3px solid var(--interactive-accent) !important;
+}
+
+.content-cleanup-file-input .form--FormFilePathSuggestItem--variable:hover,
+.content-cleanup-file-input .form--FormFilePathSuggestItem--variable[data-highlighted="true"],
+.content-cleanup-file-input-wide .form--FormFilePathSuggestItem--variable:hover,
+.content-cleanup-file-input-wide .form--FormFilePathSuggestItem--variable[data-highlighted="true"],
+.content-cleanup-list .content-cleanup-file-input .form--FormFilePathSuggestItem--variable:hover,
+.content-cleanup-list .content-cleanup-file-input .form--FormFilePathSuggestItem--variable[data-highlighted="true"],
+.content-cleanup-list .content-cleanup-file-input-wide .form--FormFilePathSuggestItem--variable:hover,
+.content-cleanup-list .content-cleanup-file-input-wide .form--FormFilePathSuggestItem--variable[data-highlighted="true"] {
+	background-color: var(--interactive-accent) !important;
+	color: var(--text-on-accent) !important;
+}

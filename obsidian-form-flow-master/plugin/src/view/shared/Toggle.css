@@ -1,0 +1,104 @@
+/* Toggle 滑动开关样式 */
+.toggle {
+	position: relative;
+	display: inline-block;
+	cursor: pointer;
+	user-select: none;
+}
+
+.toggle[data-disabled="true"] {
+	cursor: not-allowed;
+	opacity: 0.6;
+}
+
+.toggle__input {
+	position: absolute;
+	opacity: 0;
+	width: 0;
+	height: 0;
+}
+
+.toggle__slider {
+	position: relative;
+	display: block;
+	background-color: var(--background-modifier-border);
+	border-radius: 20px;
+	transition: background-color 0.2s ease;
+}
+
+.toggle__slider::before {
+	content: '';
+	position: absolute;
+	top: 2px;
+	left: 2px;
+	background-color: var(--background-primary);
+	border-radius: 50%;
+	transition: transform 0.2s ease;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+/* 选中状态 */
+.toggle__input:checked + .toggle__slider {
+	background-color: var(--interactive-accent);
+}
+
+.toggle__input:checked + .toggle__slider::before {
+	background-color: var(--text-on-accent);
+}
+
+/* 聚焦状态 */
+.toggle__input:focus + .toggle__slider {
+	box-shadow: 0 0 0 2px var(--background-modifier-border-focus);
+}
+
+/* 禁用状态 */
+.toggle[data-disabled="true"] .toggle__slider {
+	background-color: var(--background-modifier-border);
+}
+
+.toggle[data-disabled="true"] .toggle__input:checked + .toggle__slider {
+	background-color: var(--interactive-accent-hover);
+}
+
+/* 尺寸变体 */
+.toggle--small .toggle__slider {
+	width: 32px;
+	height: 18px;
+}
+
+.toggle--small .toggle__slider::before {
+	width: 14px;
+	height: 14px;
+}
+
+.toggle--small .toggle__input:checked + .toggle__slider::before {
+	transform: translateX(14px);
+}
+
+.toggle--medium .toggle__slider {
+	width: 40px;
+	height: 22px;
+}
+
+.toggle--medium .toggle__slider::before {
+	width: 18px;
+	height: 18px;
+}
+
+.toggle--medium .toggle__input:checked + .toggle__slider::before {
+	transform: translateX(18px);
+}
+
+.toggle--large .toggle__slider {
+	width: 48px;
+	height: 26px;
+}
+
+.toggle--large .toggle__slider::before {
+	width: 22px;
+	height: 22px;
+}
+
+.toggle--large .toggle__input:checked + .toggle__slider::before {
+	transform: translateX(22px);
+}

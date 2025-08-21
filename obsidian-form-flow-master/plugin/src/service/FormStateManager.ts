@@ -1,5 +1,6 @@
 import { FormConfig } from "src/model/FormConfig";
 import { IFormField } from "src/model/field/IFormField";
+import { debugManager } from "../utils/DebugManager";
 
 /**
  * 全局表单状态管理器
@@ -32,7 +33,7 @@ export class FormStateManager {
      */
     private debugLog(message: string, ...args: any[]): void {
         if (this.debugEnabled) {
-            console.log(`[FormFlow Debug] FormStateManager: ${message}`, ...args);
+            debugManager.log('FormStateManager', message, ...args);
         }
     }
 

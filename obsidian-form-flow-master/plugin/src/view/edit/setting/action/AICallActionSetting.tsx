@@ -7,6 +7,7 @@ import { localInstance } from "../../../../i18n/locals";
 import MarkdownFileSuggestInput from "src/component/combobox/MarkdownFileSuggestInput";
 import { useObsidianApp } from "../../../../context/obsidianAppContext";
 import { TemplateFileSelect } from "../../../../component/ai/TemplateFileSelect";
+import { debugManager } from "../../../../utils/DebugManager";
 
 interface AICallActionSettingProps {
     value: IFormAction;
@@ -15,13 +16,12 @@ interface AICallActionSettingProps {
 }
 
 export function AICallActionSetting({ value, config, onChange }: AICallActionSettingProps) {
-    const app = useObsidianApp();
-    
-    // 类型检查
+    // 类型检查 - 必须在所有Hooks之前进行
     if (value.type !== FormActionType.AI_CALL) {
         return null;
     }
     
+    const app = useObsidianApp();
     const aiAction = value as AICallFormAction;
     const [promptSource, setPromptSource] = useState<PromptSourceType>(
         aiAction.promptSource || PromptSourceType.CUSTOM

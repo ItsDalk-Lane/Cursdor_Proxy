@@ -16,6 +16,7 @@ import { OpenFileActionSetting } from "./open-file/OpenFileActionSetting";
 import { OpenLinkActionSetting } from "./open-link/OpenLinkActionSetting";
 import { ExecuteCommandActionSetting } from "./execute-command/ExecuteCommandActionSetting";
 import { AICallActionSetting } from "./AICallActionSetting";
+import { ContentCleanupSetting } from "./content-cleanup/ContentCleanupSetting";
 import useFormConfig from "src/hooks/useFormConfig";
 
 /**
@@ -109,6 +110,7 @@ export default function (props: {
 				config={formConfig}
 				onChange={onChange} 
 			/>
+			<ContentCleanupSetting value={value} onChange={onChange} />
 		</CpsForm>
 	);
 }

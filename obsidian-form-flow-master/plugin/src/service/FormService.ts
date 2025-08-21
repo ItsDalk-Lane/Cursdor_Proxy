@@ -13,6 +13,7 @@ import { FormVisibilies } from "./condition/FormVisibilies";
 import { FormIdValues } from "./FormValues";
 import { FormValidator } from "./validator/FormValidator";
 import { AITimer } from "./ai/AITimerManager";
+import { debugManager } from "../utils/DebugManager";
 
 export interface FormSubmitOptions {
     app: App
@@ -110,7 +111,7 @@ export class FormService {
      * @param forceDirectExecution 是否强制直接执行（用于右键菜单等场景）
      */
     async openFormWithData(formConfig: FormConfig, prefilledData: Map<string, any>, app: App, forceDirectExecution: boolean = false) {
-        console.log('FormService: 打开表单并预填充数据', {
+        debugManager.logObject('FormService', '打开表单并预填充数据', {
             formId: formConfig.id,
             prefilledFields: Array.from(prefilledData.keys()),
             forceDirectExecution: forceDirectExecution
@@ -118,14 +119,14 @@ export class FormService {
         
         // 如果强制直接执行，需要检查是否所有字段都有值（包括必填和非必填字段）
         if (forceDirectExecution) {
-            console.log('FormService: 强制直接执行表单，检查所有字段是否需要用户输入');
+            debugManager.log('FormService', '强制直接执行表单，检查所有字段是否需要用户输入');
             
             // 使用shouldShowFormInterfaceWithData来检查是否需要显示表单界面
             // 这个方法会检查所有字段（包括必填和非必填）是否需要用户输入
             const shouldShowForm = this.shouldShowFormInterfaceWithData(formConfig, prefilledData);
             
             if (!shouldShowForm) {
-                console.log('FormService: 所有字段都有值，直接执行表单');
+                debugManager.log('FormService', '所有字段都有值，直接执行表单');
                 const formIdValues = this.createFormIdValuesWithData(formConfig, prefilledData);
                 const context: FormSubmitOptions = {
                     app: app,
@@ -139,7 +140,7 @@ export class FormService {
                 
                 return result;
             } else {
-                console.log('FormService: 存在字段需要用户输入，显示表单界面');
+                debugManager.log('FormService', '存在字段需要用户输入，显示表单界面');
                 // 有字段需要用户输入，显示表单界面
                 const m = new FormViewModal2(app, {
                     formConfig: formConfig,
@@ -155,7 +156,7 @@ export class FormService {
         
         if (!shouldShowForm) {
             // 直接提交表单
-            console.log('FormService: 所有字段都有值，直接提交表单');
+            debugManager.log('FormService', '所有字段都有值，直接提交表单');
             const formIdValues = this.createFormIdValuesWithData(formConfig, prefilledData);
             const context: FormSubmitOptions = {
                 app: app,
@@ -170,7 +171,7 @@ export class FormService {
             return result;
         } else {
             // 显示表单界面并预填充数据
-            console.log('FormService: 显示表单界面并预填充数据');
+            debugManager.log('FormService', '显示表单界面并预填充数据');
             const m = new FormViewModal2(app, {
                 formConfig: formConfig,
                 prefilledData: prefilledData
@@ -228,11 +229,11 @@ export class FormService {
      * @param prefilledData 预填充的数据
      */
     private shouldShowFormInterfaceWithData(formConfig: FormConfig, prefilledData: Map<string, any>): boolean {
-        console.log('FormService: 检查是否需要显示表单界面（含预填充数据）');
+        debugManager.log('FormService', '检查是否需要显示表单界面（含预填充数据）');
         
         // 如果没有字段，直接执行
         if (!formConfig.fields || formConfig.fields.length === 0) {
-            console.log('FormService: 没有字段，不显示表单');
+            debugManager.log('FormService', '没有字段，不显示表单');
             return false;
         }
 
@@ -240,7 +241,7 @@ export class FormService {
         const formIdValues = this.createFormIdValuesWithData(formConfig, prefilledData);
         const visibleFields = FormVisibilies.visibleFields(formConfig.fields, formIdValues);
         
-        console.log(`FormService: 可见字段数量: ${visibleFields.length}`);
+        debugManager.log('FormService', `可见字段数量: ${visibleFields.length}`);
         
         // 检查每个可见字段是否需要用户输入
         const fieldsNeedingInput: any[] = [];
@@ -250,29 +251,29 @@ export class FormService {
             const hasPrefilledValue = prefilledData.has(field.id);
             const prefilledValue = prefilledData.get(field.id);
             
-            console.log(`FormService: 字段 '${field.label}' - 固定值: ${hasFixedValue}, 预填充值: ${hasPrefilledValue}, 必填: ${field.required}`);
+            debugManager.log('FormService', `字段 '${field.label}' - 固定值: ${hasFixedValue}, 预填充值: ${hasPrefilledValue}, 必填: ${field.required}`);
             
             // 如果字段没有固定值，需要检查是否需要用户输入
             if (!hasFixedValue) {
                 // 如果没有预填充值，或者预填充值为空，则需要用户输入
                 if (!hasPrefilledValue || this.isEmptyValue(prefilledValue)) {
                     fieldsNeedingInput.push(field);
-                    console.log(`FormService: 字段 '${field.label}' 需要用户输入（无固定值且无有效预填充值）`);
+                    debugManager.log('FormService', `字段 '${field.label}' 需要用户输入（无固定值且无有效预填充值）`);
                 } else {
-                    console.log(`FormService: 字段 '${field.label}' 有预填充值，不需要用户输入`);
+                    debugManager.log('FormService', `字段 '${field.label}' 有预填充值，不需要用户输入`);
                 }
             } else {
-                console.log(`FormService: 字段 '${field.label}' 有固定值，不需要用户输入`);
+                debugManager.log('FormService', `字段 '${field.label}' 有固定值，不需要用户输入`);
             }
         }
 
         // 如果所有可见字段都有值（固定值或有效预填充值），不显示表单界面
         if (fieldsNeedingInput.length === 0) {
-            console.log('FormService: 所有可见字段都有值，不显示表单');
+            debugManager.log('FormService', '所有可见字段都有值，不显示表单');
             return false;
         }
 
-        console.log(`FormService: 有 ${fieldsNeedingInput.length} 个字段需要输入，显示表单`);
+        debugManager.log('FormService', `有 ${fieldsNeedingInput.length} 个字段需要输入，显示表单`);
         return true;
     }
 
@@ -282,14 +283,14 @@ export class FormService {
      * @param prefilledData 预填充的数据
      */
     private createFormIdValuesWithData(formConfig: FormConfig, prefilledData: Map<string, any>): FormIdValues {
-        console.log('FormService: 创建包含预填充数据的表单值对象');
+        debugManager.log('FormService', '创建包含预填充数据的表单值对象');
         
         // 先获取默认值
         const formIdValues = resolveDefaultFormIdValues(formConfig.fields);
         
         // 然后覆盖预填充的值
         prefilledData.forEach((value, fieldId) => {
-            console.log(`FormService: 设置字段 '${fieldId}' 的预填充值:`, value);
+            debugManager.logObject('FormService', `设置字段 '${fieldId}' 的预填充值`, value);
             formIdValues[fieldId] = value;
         });
         
@@ -300,8 +301,8 @@ export class FormService {
      * 检查字段是否有固定值
      */
     private fieldHasFixedValue(field: any): boolean {
-        console.log('=== DYNAMIC_DISPLAY_DEBUG: FormService.fieldHasFixedValue ===');
-        console.log('FormService字段信息:', {
+        debugManager.log('FormService', '=== DYNAMIC_DISPLAY_DEBUG: FormService.fieldHasFixedValue ===');
+        debugManager.logObject('FormService', 'FormService字段信息', {
             id: field.id,
             label: field.label,
             type: field.type,
@@ -318,44 +319,44 @@ export class FormService {
             case FormFieldType.TEXTAREA:
             case FormFieldType.PASSWORD:
                 hasFixedValue = !!(field.defaultValue && field.defaultValue.trim());
-                console.log('FormService: 文本类型字段固定值检查:', { hasFixedValue, defaultValue: field.defaultValue });
+                debugManager.logObject('FormService', '文本类型字段固定值检查', { hasFixedValue, defaultValue: field.defaultValue });
                 break;
             
             case FormFieldType.NUMBER:
                 hasFixedValue = field.defaultValue !== undefined && field.defaultValue !== null;
-                console.log('FormService: 数字类型字段固定值检查:', { hasFixedValue, defaultValue: field.defaultValue });
+                debugManager.logObject('FormService', '数字类型字段固定值检查', { hasFixedValue, defaultValue: field.defaultValue });
                 break;
             
             case FormFieldType.CHECKBOX:
                 hasFixedValue = field.defaultValue !== undefined;
-                console.log('FormService: 复选框类型字段固定值检查:', { hasFixedValue, defaultValue: field.defaultValue });
+                debugManager.logObject('FormService', '复选框类型字段固定值检查', { hasFixedValue, defaultValue: field.defaultValue });
                 break;
             
             case FormFieldType.RADIO:
             case FormFieldType.SELECT:
                 hasFixedValue = !!(field.defaultValue && field.defaultValue.trim());
-                console.log('FormService: 选择类型字段固定值检查:', { hasFixedValue, defaultValue: field.defaultValue });
+                debugManager.logObject('FormService', '选择类型字段固定值检查', { hasFixedValue, defaultValue: field.defaultValue });
                 break;
             
             case FormFieldType.DATE:
             case FormFieldType.TIME:
             case FormFieldType.DATETIME:
                 hasFixedValue = !!(field.defaultValue && field.defaultValue.trim());
-                console.log('FormService: 日期时间类型字段固定值检查:', { hasFixedValue, defaultValue: field.defaultValue });
+                debugManager.logObject('FormService', '日期时间类型字段固定值检查', { hasFixedValue, defaultValue: field.defaultValue });
                 break;
             
             case FormFieldType.FILE_LIST:
                 hasFixedValue = !!(field.defaultValue && 
                     ((Array.isArray(field.defaultValue) && field.defaultValue.length > 0) ||
                      (typeof field.defaultValue === 'string' && field.defaultValue.trim())));
-                console.log('FormService: 文件列表类型字段固定值检查:', { hasFixedValue, defaultValue: field.defaultValue });
+                debugManager.logObject('FormService', '文件列表类型字段固定值检查', { hasFixedValue, defaultValue: field.defaultValue });
                 break;
             
             case FormFieldType.AI_MODEL_LIST:
                 // AI模型字段如果有预选择的模型ID、启用了自动选择第一个或有默认值，则认为有固定值
                 hasFixedValue = !!(field.selectedModelId || field.autoSelectFirst || 
                     (field.defaultValue && field.defaultValue.trim()));
-                console.log('FormService: AI_MODEL_LIST字段固定值检查:', {
+                debugManager.logObject('FormService', 'AI_MODEL_LIST字段固定值检查', {
                     id: field.id,
                     label: field.label,
                     selectedModelId: field.selectedModelId,
@@ -369,7 +370,7 @@ export class FormService {
                 // 模板列表字段如果有预选择的模板文件、启用了自动选择第一个或有默认值，则认为有固定值
                 hasFixedValue = !!(field.selectedTemplateFile || field.autoSelectFirst || 
                     (field.defaultValue && field.defaultValue.trim()));
-                console.log('FormService: TEMPLATE_LIST字段固定值检查:', {
+                debugManager.logObject('FormService', 'TEMPLATE_LIST字段固定值检查', {
                     id: field.id,
                     label: field.label,
                     selectedTemplateFile: field.selectedTemplateFile,
@@ -383,12 +384,12 @@ export class FormService {
                 // 其他类型字段，检查是否有默认值
                 hasFixedValue = !!(field.defaultValue !== undefined && field.defaultValue !== null && 
                     (typeof field.defaultValue !== 'string' || field.defaultValue.trim()));
-                console.log('FormService: 其他类型字段固定值检查:', { hasFixedValue, defaultValue: field.defaultValue });
+                debugManager.logObject('FormService', '其他类型字段固定值检查', { hasFixedValue, defaultValue: field.defaultValue });
                 break;
         }
         
-        console.log(`FormService: 字段 '${field.label}' (${field.type}) 最终固定值结果:`, hasFixedValue);
-        console.log('=== DYNAMIC_DISPLAY_DEBUG: FormService结束 ===\n');
+        debugManager.log('FormService', `字段 '${field.label}' (${field.type}) 最终固定值结果: ${hasFixedValue}`);
+        debugManager.log('FormService', '=== DYNAMIC_DISPLAY_DEBUG: FormService结束 ===\n');
         
         return hasFixedValue;
     }
@@ -400,10 +401,10 @@ export class FormService {
      * @returns 是否所有必填字段都有值
      */
     private checkRequiredFieldsWithData(formConfig: FormConfig, prefilledData: Map<string, any>): boolean {
-        console.log('FormService: 检查必填字段是否都有值');
+        debugManager.log('FormService', '检查必填字段是否都有值');
         
         if (!formConfig.fields || formConfig.fields.length === 0) {
-            console.log('FormService: 没有字段，返回true');
+            debugManager.log('FormService', '没有字段，返回true');
             return true;
         }
 
@@ -418,17 +419,17 @@ export class FormService {
                 const hasPrefilledValue = prefilledData.has(field.id);
                 const prefilledValue = prefilledData.get(field.id);
                 
-                console.log(`FormService: 检查必填字段 '${field.label}' - 固定值: ${hasFixedValue}, 预填充值: ${hasPrefilledValue}`);
+                debugManager.log('FormService', `检查必填字段 '${field.label}' - 固定值: ${hasFixedValue}, 预填充值: ${hasPrefilledValue}`);
                 
                 // 如果字段既没有固定值，也没有有效的预填充值
                 if (!hasFixedValue && (!hasPrefilledValue || this.isEmptyValue(prefilledValue))) {
-                    console.log(`FormService: 必填字段 '${field.label}' 缺失值`);
+                    debugManager.log('FormService', `必填字段 '${field.label}' 缺失值`);
                     return false;
                 }
             }
         }
         
-        console.log('FormService: 所有必填字段都有值');
+        debugManager.log('FormService', '所有必填字段都有值');
         return true;
     }
 

@@ -3,6 +3,7 @@ import { ExecuteCommandFormAction } from "src/model/action/ExecuteCommandFormAct
 import { FormActionType } from "src/model/enums/FormActionType";
 import { FormTemplateProcessEngine } from "../../engine/FormTemplateProcessEngine";
 import { ActionChain, ActionContext, IActionService } from "../IActionService";
+import { debugManager } from "../../../utils/DebugManager";
 
 export default class ExecuteCommandActionService implements IActionService {
 
@@ -22,7 +23,7 @@ export default class ExecuteCommandActionService implements IActionService {
         try {
             await app.commands.executeCommandById(commandId);
         } catch (error) {
-            console.error(`Failed to execute command: ${commandId}`, error);
+            debugManager.error('ExecuteCommandAction', `Failed to execute command: ${commandId}`, error);
         }
         
         // 继续执行下一个动作

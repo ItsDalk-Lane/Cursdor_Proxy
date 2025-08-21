@@ -1,5 +1,6 @@
 .form--CpsFormItemInfo {
 	flex: 1 1 auto;
+	width: 100%;
 }
 
 .form--CpsFormItemInfoName {
@@ -28,6 +29,7 @@
 	display: flex;
 	gap: 0.5rem;
 	flex: 1;
+	width: 100%;
 }
 
 /* Horizontal layout - use direct parent form's data attribute */
@@ -40,7 +42,16 @@
 
 .form--CpsForm[data-layout="horizontal"]
 	> .form--CpsFormItem
+	> .form--CpsFormItemInfo {
+	flex: 1 1 auto;
+	width: 100%;
+}
+
+.form--CpsForm[data-layout="horizontal"]
+	> .form--CpsFormItem
 	> .form--CpsFormItemControl {
+	flex: 1 1 auto;
+	width: 100%;
 	justify-content: flex-end;
 }
 
@@ -84,6 +95,11 @@
 		display: flex;
 		flex-direction: column;
 		align-items: initial;
+	}
+	.form--CpsForm[data-layout="horizontal"]
+		> .form--CpsFormItem
+		> .form--CpsFormItemInfo {
+		width: 100%;
 	}
 	.form--CpsForm[data-layout="horizontal"]
 		> .form--CpsFormItem

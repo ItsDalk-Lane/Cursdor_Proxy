@@ -4,6 +4,7 @@ import { IAIModelConfig } from "../../model/ai/AIModelConfig";
 import { EncryptionService } from "../../utils/ai/Encryption";
 import { v4 as uuidv4 } from "uuid";
 import FormPlugin from "../../main";
+import { debugManager } from "../../utils/DebugManager";
 
 export class AISettingsService {
     private app: App;
@@ -28,7 +29,7 @@ export class AISettingsService {
     async loadSettings(): Promise<IAISettings> {
         try {
             if (!this.plugin) {
-                console.warn('插件实例不存在，使用默认AI设置');
+                debugManager.warn('AISettingsService', '插件实例不存在，使用默认AI设置');
                 return DEFAULT_AI_SETTINGS;
             }
 
@@ -42,7 +43,7 @@ export class AISettingsService {
                         try {
                             model.apiKey = EncryptionService.decryptApiKey(model.apiKey, this.masterPassword);
                         } catch (error) {
-                            console.warn(`解密模型 ${model.displayName} 的API密钥失败:`, error);
+                            debugManager.warn('AISettingsService', `解密模型 ${model.displayName} 的API密钥失败:`, error);
                             model.apiKey = '';
                             model.verified = false;
                         }
@@ -53,7 +54,7 @@ export class AISettingsService {
 
             return aiSettings;
         } catch (error) {
-            console.error('加载AI设置失败:', error);
+            debugManager.error('AISettingsService', '加载AI设置失败:', error);
             return DEFAULT_AI_SETTINGS;
         }
     }
@@ -91,7 +92,7 @@ export class AISettingsService {
 
 
         } catch (error) {
-            console.error('保存AI设置失败:', error);
+            debugManager.error('AISettingsService', '保存AI设置失败:', error);
             new Notice('保存AI设置失败: ' + (error instanceof Error ? error.message : '未知错误'));
             throw error;
         }
@@ -137,7 +138,7 @@ export class AISettingsService {
 
             return newModel;
         } catch (error) {
-            console.error('保存新模型失败:', error);
+            debugManager.error('AISettingsService', '保存新模型失败:', error);
             throw error;
         }
     }
@@ -153,7 +154,7 @@ export class AISettingsService {
         const modelIndex = currentSettings.models.findIndex(m => m.id === modelId);
         
         if (modelIndex === -1) {
-            console.error('要更新的模型不存在:', modelId);
+            debugManager.error('AISettingsService', '要更新的模型不存在:', modelId);
             throw new Error('模型不存在');
         }
 

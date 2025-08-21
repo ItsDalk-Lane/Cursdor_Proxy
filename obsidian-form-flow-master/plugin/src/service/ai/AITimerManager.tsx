@@ -1,6 +1,7 @@
 import { AIProgressTimer } from "../../component/timer/AIProgressTimer";
 import { createRoot, Root } from "react-dom/client";
 import React from "react";
+import { debugManager } from "../../utils/DebugManager";
 
 class AITimerManager {
     private static instance: AITimerManager;
@@ -76,7 +77,7 @@ class AITimerManager {
             try {
                 this.root.unmount();
             } catch (e) {
-                console.error("Error unmounting timer root:", e);
+                debugManager.error('AITimerManager', 'Error unmounting timer root:', e);
             }
             this.root = null;
         }

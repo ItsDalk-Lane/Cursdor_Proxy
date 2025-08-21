@@ -1,4 +1,5 @@
 import { FormScript } from "./FormScript";
+import { debugManager } from "../../utils/DebugManager";
 
 export class FormScriptComipler {
 
@@ -14,7 +15,7 @@ export class FormScriptComipler {
                 extension.name = options?.name;
             }
             if (!this.validateExtension(extension)) {
-                console.warn(`invalid extension: ${id}, maybe missing exports.default or export.default not valid`);
+                debugManager.warn('FormScriptComipler', `invalid extension: ${id}, maybe missing exports.default or export.default not valid`);
                 return null;
             }
             return {
@@ -23,7 +24,7 @@ export class FormScriptComipler {
                 id: id
             };
         } catch (err) {
-            console.error("compile extension error " + id, err);
+            debugManager.error('FormScriptComipler', `compile extension error ${id}`, err);
             return null;
         }
     }

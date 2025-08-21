@@ -1,0 +1,178 @@
+/* OptimizedFormItem 优化表单项样式 */
+.optimized-form-item {
+	display: flex;
+	padding: 16px 0;
+	border-bottom: 1px solid var(--background-modifier-border);
+	transition: all 0.2s ease;
+}
+
+.optimized-form-item:last-child {
+	border-bottom: none;
+}
+
+.optimized-form-item:hover {
+	background-color: var(--background-modifier-hover);
+	margin: 0 -12px;
+	padding: 16px 12px;
+	border-radius: 6px;
+}
+
+/* 水平布局 */
+.optimized-form-item--horizontal {
+	flex-direction: row;
+	align-items: flex-start;
+	gap: 24px;
+}
+
+.optimized-form-item--horizontal .optimized-form-item__info {
+	flex: 1;
+	min-width: 0;
+}
+
+.optimized-form-item--horizontal .optimized-form-item__control {
+	flex: 0 0 auto;
+	min-width: 120px;
+	display: flex;
+	align-items: center;
+	justify-content: flex-end;
+}
+
+/* 垂直布局 */
+.optimized-form-item--vertical {
+	flex-direction: column;
+	gap: 12px;
+}
+
+.optimized-form-item--vertical .optimized-form-item__info {
+	width: 100%;
+}
+
+.optimized-form-item--vertical .optimized-form-item__control {
+	width: 100%;
+	display: flex;
+	align-items: flex-start;
+	justify-content: flex-start;
+}
+
+/* 信息区域 */
+.optimized-form-item__info {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+
+/* 标题样式 */
+.optimized-form-item__label {
+	color: var(--text-normal);
+	font-size: var(--font-ui-medium);
+	font-weight: 500;
+	line-height: 1.4;
+	margin: 0;
+}
+
+.optimized-form-item__label--required::after {
+	content: ' *';
+	color: var(--text-error);
+	font-weight: normal;
+}
+
+/* 描述样式 */
+.optimized-form-item__description {
+	color: var(--text-muted);
+	font-size: var(--font-ui-small);
+	line-height: 1.4;
+	margin: 0;
+	word-break: break-word;
+}
+
+/* 控件区域 */
+.optimized-form-item__control {
+	gap: 8px;
+}
+
+.optimized-form-item__control > * {
+	flex-shrink: 0;
+}
+
+/* 特殊控件样式调整 */
+.optimized-form-item__control input[type="text"],
+.optimized-form-item__control input[type="number"],
+.optimized-form-item__control textarea {
+	min-width: 200px;
+	padding: 8px 12px;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 6px;
+	background-color: var(--background-primary);
+	color: var(--text-normal);
+	font-size: var(--font-ui-small);
+	transition: border-color 0.2s ease;
+}
+
+/* select元素单独设置较小的padding以避免遮挡标题 */
+.optimized-form-item__control select {
+	min-width: 200px;
+	padding: 4px 8px;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 6px;
+	background-color: var(--background-primary);
+	color: var(--text-normal);
+	font-size: var(--font-ui-small);
+	transition: border-color 0.2s ease;
+	height: auto;
+	line-height: 1.4;
+}
+
+.optimized-form-item__control input[type="text"]:focus,
+.optimized-form-item__control input[type="number"]:focus,
+.optimized-form-item__control textarea:focus {
+	outline: none;
+	border-color: var(--interactive-accent);
+	box-shadow: 0 0 0 2px var(--background-modifier-border-focus);
+}
+
+.optimized-form-item__control select:focus {
+	outline: none;
+	border-color: var(--interactive-accent);
+	box-shadow: 0 0 0 2px var(--background-modifier-border-focus);
+}
+
+/* 响应式设计 */
+@media screen and (max-width: 768px) {
+	.optimized-form-item--horizontal {
+		flex-direction: column;
+		gap: 12px;
+	}
+	
+	.optimized-form-item--horizontal .optimized-form-item__control {
+		justify-content: flex-start;
+		min-width: auto;
+	}
+	
+	.optimized-form-item__control input[type="text"],
+	.optimized-form-item__control input[type="number"],
+	.optimized-form-item__control textarea {
+		min-width: 100%;
+	}
+	
+	.optimized-form-item__control select {
+		min-width: 100%;
+	}
+}
+
+/* 分组样式 */
+.optimized-form-item-group {
+	margin: 24px 0;
+}
+
+.optimized-form-item-group__title {
+	color: var(--text-normal);
+	font-size: var(--font-ui-large);
+	font-weight: 600;
+	margin-bottom: 16px;
+	padding-bottom: 8px;
+	border-bottom: 2px solid var(--background-modifier-border);
+}
+
+.optimized-form-item-group__content {
+	padding-left: 0;
+}

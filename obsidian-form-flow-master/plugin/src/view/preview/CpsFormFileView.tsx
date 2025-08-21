@@ -7,6 +7,7 @@ import CpsFormActionView from "./CpsFormActionView";
 import "./CpsFormFileView.css";
 import { FormConfigContext } from "src/hooks/useFormConfig";
 import { localInstance } from "src/i18n/locals";
+import { debugManager } from "src/utils/DebugManager";
 
 type Props = {
 	filePath: string;
@@ -21,15 +22,13 @@ type Props = {
 
 export function CpsFormFileView(props: Props) {
 	// 调试信息：记录CpsFormFileView组件初始化
-	if ((window as any).FormFlowPlugin?.settings?.enableDebugLogging) {
-		console.log('[CpsFormFileView] 组件初始化');
-		console.log('[CpsFormFileView] props:', props);
-		console.log('[CpsFormFileView] filePath:', props.filePath);
-		console.log('[CpsFormFileView] formConfig:', props.formConfig);
-		console.log('[CpsFormFileView] prefilledData:', props.prefilledData);
-		console.log('[CpsFormFileView] prefilledData 是否存在:', !!props.prefilledData);
-		console.log('[CpsFormFileView] prefilledData 大小:', props.prefilledData ? props.prefilledData.size : 0);
-	}
+	debugManager.log('CpsFormFileView', '组件初始化');
+	debugManager.logObject('CpsFormFileView', 'props:', props);
+	debugManager.log('CpsFormFileView', 'filePath:', props.filePath);
+	debugManager.logObject('CpsFormFileView', 'formConfig:', props.formConfig);
+	debugManager.logObject('CpsFormFileView', 'prefilledData:', props.prefilledData);
+	debugManager.log('CpsFormFileView', 'prefilledData 是否存在:', !!props.prefilledData);
+	debugManager.log('CpsFormFileView', 'prefilledData 大小:', props.prefilledData ? props.prefilledData.size : 0);
 	
 	const viewOptions = props.options || {};
 	const [inEditing, setInEditing] = useState<boolean>(false);

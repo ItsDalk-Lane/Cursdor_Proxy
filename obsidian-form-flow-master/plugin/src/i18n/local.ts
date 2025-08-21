@@ -248,4 +248,5 @@ export interface Local {
 	ai_custom_content: string;
 	edit: string;
 	save: string;
+	content_cleanup: string;
 }

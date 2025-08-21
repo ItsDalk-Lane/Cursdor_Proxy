@@ -5,6 +5,7 @@ import CalloutBlock from "src/component/callout-block/CalloutBlock";
 import { ObsidianAppContext } from "src/context/obsidianAppContext";
 import { FormConfig } from "src/model/FormConfig";
 import { CpsFormFileView } from "src/view/preview/CpsFormFileView";
+import { debugManager } from "src/utils/DebugManager";
 
 export class CFormTextFileView extends TextFileView {
 	static FORM_VIEW = "form-view";
@@ -46,7 +47,7 @@ export class CFormTextFileView extends TextFileView {
 				this.root.unmount();
 			}
 			if (!this.file) {
-				console.info("file not loaded...");
+				debugManager.info('CFormTextFileView', 'file not loaded...');
 				return;
 			}
 			if (data === "{}" || data === "") {
@@ -68,7 +69,7 @@ export class CFormTextFileView extends TextFileView {
 					</StrictMode>
 				);
 			} catch (e) {
-				console.error(e);
+				debugManager.error('CFormTextFileView', 'Render error:', e);
 				this.root.render(
 					<StrictMode>
 						<CalloutBlock type="error">{e.message}</CalloutBlock>

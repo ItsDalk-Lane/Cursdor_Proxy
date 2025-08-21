@@ -6,6 +6,7 @@ import { fetchJsonStream } from "src/utils/fetchStream";
 import { getEditorSelection } from "src/utils/getEditorSelection";
 import { SelectionPopup } from "src/component/popup/SelectionPopup";
 import { ToastManager } from "src/component/toast/ToastManager";
+import { debugManager } from "../../utils/DebugManager";
 
 export class FormScriptRunner {
 
@@ -43,7 +44,7 @@ export class FormScriptRunner {
       );
       return await evalFunction(functions, context);
     } catch (error) {
-      console.error(`${localInstance.run_extend_function_error}:  ${expression}`, error);
+      debugManager.error("FormScriptRunner", `${localInstance.run_extend_function_error}:  ${expression}`, error);
       new Notice(`${localInstance.run_extend_function_error}: ${expression} \n` + error.message);
       throw new Error(`${localInstance.run_extend_function_error}: ${expression}\n` + error.message);
     }

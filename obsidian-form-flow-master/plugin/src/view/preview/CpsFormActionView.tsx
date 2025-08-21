@@ -6,6 +6,7 @@ import { FormIdValues } from "src/service/FormValues";
 import { useObsidianApp } from "src/context/obsidianAppContext";
 import { useState } from "react";
 import { ActionContext } from "src/service/action/IActionService";
+import { debugManager } from "src/utils/DebugManager";
 
 type Props = {
 	formConfig: FormConfig;
@@ -17,19 +18,17 @@ type Props = {
 
 export default function (props: Props) {
 	// 调试信息：记录CpsFormActionView组件初始化
-	if ((window as any).FormFlowPlugin?.settings?.enableDebugLogging) {
-		console.log('[CpsFormActionView] 组件初始化');
-		console.log('[CpsFormActionView] props:', props);
-		console.log('[CpsFormActionView] formConfig:', props.formConfig);
-		console.log('[CpsFormActionView] prefilledData:', props.prefilledData);
-		console.log('[CpsFormActionView] prefilledData 是否存在:', !!props.prefilledData);
-		console.log('[CpsFormActionView] prefilledData 大小:', props.prefilledData ? props.prefilledData.size : 0);
-		if (props.prefilledData && props.prefilledData.size > 0) {
-			console.log('[CpsFormActionView] prefilledData 内容:');
-			props.prefilledData.forEach((value, key) => {
-				console.log(`  ${key}:`, value);
-			});
-		}
+	debugManager.log('CpsFormActionView', '组件初始化');
+	debugManager.logObject('CpsFormActionView', 'props:', props);
+	debugManager.logObject('CpsFormActionView', 'formConfig:', props.formConfig);
+	debugManager.logObject('CpsFormActionView', 'prefilledData:', props.prefilledData);
+	debugManager.log('CpsFormActionView', 'prefilledData 是否存在:', !!props.prefilledData);
+	debugManager.log('CpsFormActionView', 'prefilledData 大小:', props.prefilledData ? props.prefilledData.size : 0);
+	if (props.prefilledData && props.prefilledData.size > 0) {
+		debugManager.log('CpsFormActionView', 'prefilledData 内容:');
+		props.prefilledData.forEach((value, key) => {
+			debugManager.log('CpsFormActionView', `  ${key}:`, value);
+		});
 	}
 	
 	const viewOptions = props.options ?? {};
@@ -47,7 +46,7 @@ export default function (props: Props) {
 			const result = await formService.submit(values, formConfig, context);
 			setSubmitResult(result);
 		} catch (error) {
-			console.error('表单提交失败:', error);
+			debugManager.error('CpsFormActionView', '表单提交失败:', error);
 			throw error;
 		}
 	};
@@ -82,11 +81,9 @@ export default function (props: Props) {
 	}
 
 	// 调试信息：记录传递给CpsFormRenderView的数据
-	if ((window as any).FormFlowPlugin?.settings?.enableDebugLogging) {
-		console.log('[CpsFormActionView] 传递给 CpsFormRenderView:');
-		console.log('[CpsFormActionView] formConfig:', formConfig);
-		console.log('[CpsFormActionView] prefilledData:', prefilledData);
-	}
+	debugManager.log('CpsFormActionView', '传递给 CpsFormRenderView:');
+	debugManager.logObject('CpsFormActionView', 'formConfig:', formConfig);
+	debugManager.logObject('CpsFormActionView', 'prefilledData:', prefilledData);
 	
 	return (
 		<CpsFormRenderView

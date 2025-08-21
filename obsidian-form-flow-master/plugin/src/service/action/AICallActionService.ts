@@ -10,6 +10,7 @@ import { IAIModelConfig } from "../../model/ai/AIModelConfig";
 import { FormFieldType } from "../../model/enums/FormFieldType";
 import { AIModelListField } from "../../model/field/AIModelListField";
 import { TemplateListField } from "../../model/field/TemplateListField";
+import { debugManager } from "../../utils/DebugManager";
 
 export default class AICallActionService implements IActionService {
 
@@ -26,7 +27,7 @@ export default class AICallActionService implements IActionService {
             // 获取AI模型
             const model = await AICallActionService.getSelectedModel(aiAction, context);
             if (!model) {
-                console.error('未找到有效的AI模型');
+                debugManager.error('AICallAction', '未找到有效的AI模型');
                 throw new Error('未找到有效的AI模型');
             }
 
@@ -34,7 +35,7 @@ export default class AICallActionService implements IActionService {
             // 准备提示词
             const prompt = await AICallActionService.preparePrompt(aiAction, context);
             if (!prompt.trim()) {
-                console.error('提示词内容为空');
+                debugManager.error('AICallAction', '提示词内容为空');
                 throw new Error('提示词内容为空');
             }
 
@@ -61,12 +62,12 @@ export default class AICallActionService implements IActionService {
 
                 new Notice(`AI调用成功，结果已存储到变量 ${aiAction.outputVariableName}`);
             } else {
-                console.error('AI调用失败:', response.error);
+                debugManager.error('AICallAction', 'AI调用失败', response.error);
                 throw new Error(response.error || 'AI调用失败');
             }
 
         } catch (error) {
-            console.error('AI调用过程中发生错误:', error);
+            debugManager.error('AICallAction', 'AI调用过程中发生错误', error);
             new Notice(`AI调用失败: ${error.message}`);
             throw error;
         }
@@ -176,7 +177,7 @@ export default class AICallActionService implements IActionService {
             return firstAvailable;
         }
 
-        console.error('没有找到任何可用的AI模型');
+        debugManager.error('AICallAction', '没有找到任何可用的AI模型');
         return null;
     }
 

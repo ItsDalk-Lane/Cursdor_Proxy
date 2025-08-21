@@ -29,9 +29,10 @@
 	padding: 8px 12px;
 	animation: fadeIn 200ms ease-out;
 	overflow-y: auto;
-	min-width: min(var(--radix-popover-content-available-width), 280px);
-	max-width: var(--radix-popover-content-available-width);
-	max-height: min(360px, var(--radix-popover-content-available-height));
+	min-width: 300px !important;
+	max-width: 300px !important;
+	max-height: min(400px, var(--radix-popover-content-available-height)) !important;
+	width: 300px !important;
 }
 
 input.form--FormFilePathSuggestInput {
@@ -48,7 +49,7 @@ input.form--FormFilePathSuggestInput:focus-visible {
 .form--FormFilePathSuggestList {
 	flex: 1;
 	overflow-y: auto;
-	width: min(400px, var(--radix-popover-trigger-width));
+	width: 100%;
 	padding: 8px 4px;
 	gap: 4px;
 }

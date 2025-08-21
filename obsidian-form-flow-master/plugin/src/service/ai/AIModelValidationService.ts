@@ -1,5 +1,6 @@
 import { requestUrl, RequestUrlParam } from "obsidian";
 import { IAIModelConfig, AIProvider } from "../../model/ai/AIModelConfig";
+import { debugManager } from "../../utils/DebugManager";
 
 export interface AIModelValidationResult {
     success: boolean;
@@ -16,8 +17,8 @@ export class AIModelValidationService {
      * 验证AI模型配置
      */
     static async validateModel(model: IAIModelConfig): Promise<AIModelValidationResult> {
-        console.log('=== AI_VALIDATION_DEBUG: 开始验证AI模型 ===');
-        console.log('验证模型配置:', {
+        debugManager.log('AIModelValidation', '=== 开始验证AI模型 ===');
+        debugManager.logObject('AIModelValidation', '验证模型配置', {
             displayName: model.displayName,
             modelName: model.modelName,
             provider: model.provider,
@@ -29,14 +30,14 @@ export class AIModelValidationService {
         try {
             const response = await this.testModelConnection(model);
             
-            console.log('模型连接测试结果:', response);
+            debugManager.logObject('AIModelValidation', '模型连接测试结果', response);
             
             if (response.success) {
-                console.log('连接测试成功，开始检测模型能力');
+                debugManager.log('AIModelValidation', '连接测试成功，开始检测模型能力');
                 // 检测模型能力
                 const capabilities = await this.detectCapabilities(model);
                 
-                console.log('模型能力检测结果:', capabilities);
+                debugManager.logObject('AIModelValidation', '模型能力检测结果', capabilities);
                 
                 const result = {
                     success: true,
@@ -44,7 +45,7 @@ export class AIModelValidationService {
                     capabilities
                 };
                 
-                console.log('=== AI_VALIDATION_DEBUG: 验证成功 ===\n');
+                debugManager.log('AIModelValidation', '=== 验证成功 ===');
                 return result;
             } else {
                 const result = {
@@ -53,12 +54,12 @@ export class AIModelValidationService {
                     capabilities: { reasoning: false, webSearch: false }
                 };
                 
-                console.log('=== AI_VALIDATION_DEBUG: 验证失败 ===', result);
+                debugManager.logObject('AIModelValidation', '=== 验证失败 ===', result);
                 return result;
             }
         } catch (error) {
             const errorMessage = error instanceof Error ? error.message : "验证过程中发生未知错误";
-            console.error('AI_VALIDATION_DEBUG: 验证过程异常:', {
+            debugManager.error('AIModelValidation', '验证过程异常', {
                 error: errorMessage,
                 stack: error instanceof Error ? error.stack : undefined
             });
@@ -69,7 +70,7 @@ export class AIModelValidationService {
                 capabilities: { reasoning: false, webSearch: false }
             };
             
-            console.log('=== AI_VALIDATION_DEBUG: 验证异常结束 ===\n');
+            debugManager.log('AIModelValidation', '=== 验证异常结束 ===');
             return result;
         }
     }
@@ -78,7 +79,7 @@ export class AIModelValidationService {
      * 测试模型连接
      */
     private static async testModelConnection(model: IAIModelConfig): Promise<{ success: boolean; error?: string }> {
-        console.log('AI_VALIDATION_DEBUG: 开始测试模型连接');
+        debugManager.log('AIModelValidation', '开始测试模型连接');
         
         try {
             const headers: Record<string, string> = {
@@ -106,7 +107,7 @@ export class AIModelValidationService {
                     break;
             }
             
-            console.log('AI_VALIDATION_DEBUG: 请求头设置完成:', {
+            debugManager.logObject('AIModelValidation', '请求头设置完成', {
                 provider: model.provider,
                 hasAuthHeader: !!headers['Authorization'],
                 authHeaderPrefix: headers['Authorization']?.substring(0, 20) + '...'
@@ -145,7 +146,7 @@ export class AIModelValidationService {
 
             const url = this.buildApiUrl(model);
             
-            console.log('AI_VALIDATION_DEBUG: 请求参数构建完成:', {
+            debugManager.logObject('AIModelValidation', '请求参数构建完成', {
                 url: url,
                 method: 'POST',
                 bodyKeys: Object.keys(requestBody),
@@ -160,10 +161,10 @@ export class AIModelValidationService {
                 throw: false
             };
 
-            console.log('AI_VALIDATION_DEBUG: 发送API请求...');
+            debugManager.log('AIModelValidation', '发送API请求...');
             const response = await requestUrl(requestParams);
             
-            console.log('AI_VALIDATION_DEBUG: 收到API响应:', {
+            debugManager.logObject('AIModelValidation', '收到API响应', {
                 status: response.status,
                 statusText: response.status >= 200 && response.status < 300 ? 'Success' : 'Error',
                 responseTextLength: response.text?.length || 0,
@@ -175,25 +176,25 @@ export class AIModelValidationService {
                 let data;
                 try {
                     if (!response.text || response.text.trim() === '') {
-                        console.log('AI_VALIDATION_DEBUG: 响应内容为空');
-                        return { success: false, error: "API响应内容为空" };
+                        debugManager.log('AIModelValidation', '响应内容为空');
+                    return { success: false, error: "API响应内容为空" };
                     }
                     
                     data = JSON.parse(response.text);
-                    console.log('AI_VALIDATION_DEBUG: JSON解析成功:', {
+                    debugManager.logObject('AIModelValidation', 'JSON解析成功', {
                         hasData: !!data,
                         dataType: typeof data,
                         dataKeys: data && typeof data === 'object' ? Object.keys(data) : []
                     });
                 } catch (parseError) {
-                    console.error('AI_VALIDATION_DEBUG: JSON解析失败:', {
+                    debugManager.error('AIModelValidation', 'JSON解析失败', {
                         error: parseError instanceof Error ? parseError.message : 'Unknown parse error',
                         responseText: response.text?.substring(0, 500)
                     });
                     return { success: false, error: `JSON解析失败: ${parseError instanceof Error ? parseError.message : 'Unknown error'}` };
                 }
                 
-                console.log('AI_VALIDATION_DEBUG: 解析成功响应数据:', {
+                debugManager.logObject('AIModelValidation', '解析成功响应数据', {
                     provider: model.provider,
                     hasData: !!data,
                     dataKeys: data ? Object.keys(data) : []
@@ -201,30 +202,30 @@ export class AIModelValidationService {
                 
                 // 处理Gemini响应格式
                 if (model.provider === AIProvider.GEMINI) {
-                    console.log('AI_VALIDATION_DEBUG: Gemini响应检查:', {
+                    debugManager.logObject('AIModelValidation', 'Gemini响应检查', {
                         hasCandidates: !!(data.candidates),
                         candidatesLength: data.candidates?.length || 0
                     });
                     
                     if (data.candidates && data.candidates.length > 0) {
-                        console.log('AI_VALIDATION_DEBUG: Gemini连接测试成功');
+                        debugManager.log('AIModelValidation', 'Gemini连接测试成功');
                         return { success: true };
                     } else {
-                        console.log('AI_VALIDATION_DEBUG: Gemini响应格式错误');
+                        debugManager.log('AIModelValidation', 'Gemini响应格式错误');
                         return { success: false, error: "Gemini API响应格式不正确" };
                     }
                 } else {
                     // 处理其他模型响应格式
-                    console.log('AI_VALIDATION_DEBUG: 标准API响应检查:', {
+                    debugManager.logObject('AIModelValidation', '标准API响应检查', {
                         hasChoices: !!(data.choices),
                         choicesLength: data.choices?.length || 0
                     });
                     
                     if (data.choices && data.choices.length > 0) {
-                        console.log('AI_VALIDATION_DEBUG: 标准API连接测试成功');
+                        debugManager.log('AIModelValidation', '标准API连接测试成功');
                         return { success: true };
                     } else {
-                        console.log('AI_VALIDATION_DEBUG: 标准API响应格式错误');
+                        debugManager.log('AIModelValidation', '标准API响应格式错误');
                         return { success: false, error: "API响应格式不正确" };
                     }
                 }
@@ -236,7 +237,7 @@ export class AIModelValidationService {
                         errorData = JSON.parse(response.text);
                     }
                 } catch (parseError) {
-                    console.log('AI_VALIDATION_DEBUG: 错误响应JSON解析失败:', {
+                    debugManager.logObject('AIModelValidation', '错误响应JSON解析失败', {
                         parseError: parseError instanceof Error ? parseError.message : 'Unknown error',
                         responseText: response.text?.substring(0, 200)
                     });
@@ -244,7 +245,7 @@ export class AIModelValidationService {
                 
                 const errorMessage = errorData?.error?.message || `HTTP ${response.status}: ${response.text}`;
                 
-                console.log('AI_VALIDATION_DEBUG: API请求失败:', {
+                debugManager.logObject('AIModelValidation', 'API请求失败', {
                     status: response.status,
                     errorData: errorData,
                     errorMessage: errorMessage
@@ -258,7 +259,7 @@ export class AIModelValidationService {
         } catch (error) {
             const errorMessage = error instanceof Error ? error.message : "连接测试失败";
             
-            console.error('AI_VALIDATION_DEBUG: 连接测试异常:', {
+            debugManager.error('AIModelValidation', '连接测试异常', {
                 error: errorMessage,
                 stack: error instanceof Error ? error.stack : undefined
             });
@@ -274,24 +275,24 @@ export class AIModelValidationService {
      * 检测模型能力
      */
     private static async detectCapabilities(model: IAIModelConfig): Promise<{ reasoning: boolean; webSearch: boolean }> {
-        console.log('AI_VALIDATION_DEBUG: 开始检测模型能力');
+        debugManager.log('AIModelValidation', '开始检测模型能力');
         const capabilities = { reasoning: false, webSearch: false };
 
         try {
-            console.log('AI_VALIDATION_DEBUG: 测试推理能力...');
+            debugManager.log('AIModelValidation', '测试推理能力...');
             // 测试推理能力
             capabilities.reasoning = await this.testReasoningCapability(model);
-            console.log('AI_VALIDATION_DEBUG: 推理能力测试结果:', capabilities.reasoning);
+            debugManager.log('AIModelValidation', '推理能力测试结果: ' + capabilities.reasoning);
             
-            console.log('AI_VALIDATION_DEBUG: 测试网络搜索能力...');
+            debugManager.log('AIModelValidation', '测试网络搜索能力...');
             // 测试网络搜索能力
             capabilities.webSearch = await this.testWebSearchCapability(model);
-            console.log('AI_VALIDATION_DEBUG: 网络搜索能力测试结果:', capabilities.webSearch);
+            debugManager.log('AIModelValidation', '网络搜索能力测试结果: ' + capabilities.webSearch);
         } catch (error) {
-            console.error('AI_VALIDATION_DEBUG: 检测模型能力时出错:', error);
+            debugManager.error('AIModelValidation', '检测模型能力时出错', error);
         }
 
-        console.log('AI_VALIDATION_DEBUG: 能力检测完成:', capabilities);
+        debugManager.logObject('AIModelValidation', '能力检测完成', capabilities);
         return capabilities;
     }
 
@@ -299,7 +300,7 @@ export class AIModelValidationService {
      * 测试推理能力
      */
     private static async testReasoningCapability(model: IAIModelConfig): Promise<boolean> {
-        console.log('AI_VALIDATION_DEBUG: 开始推理能力测试');
+        debugManager.log('AIModelValidation', '开始推理能力测试');
         try {
             const headers: Record<string, string> = {
                 'Content-Type': 'application/json'
@@ -320,7 +321,7 @@ export class AIModelValidationService {
                     break;
             }
             
-            console.log('AI_VALIDATION_DEBUG: 推理测试请求头设置完成:', {
+            debugManager.logObject('AIModelValidation', '推理测试请求头设置完成', {
                 provider: model.provider,
                 hasAuth: !!headers['Authorization']
             });
@@ -356,7 +357,7 @@ export class AIModelValidationService {
                 };
             }
 
-            console.log('AI_VALIDATION_DEBUG: 推理测试请求体构建完成:', {
+            debugManager.logObject('AIModelValidation', '推理测试请求体构建完成', {
                 provider: model.provider,
                 hasModel: !!requestBody.model,
                 hasContents: !!requestBody.contents,
@@ -364,7 +365,7 @@ export class AIModelValidationService {
             });
             
             const url = this.buildApiUrl(model);
-            console.log('AI_VALIDATION_DEBUG: 推理测试API URL:', url);
+            debugManager.log('AIModelValidation', '推理测试API URL: ' + url);
             
             const requestParams: RequestUrlParam = {
                 url,
@@ -374,7 +375,7 @@ export class AIModelValidationService {
                 throw: false
             };
 
-            console.log('AI_VALIDATION_DEBUG: 发送推理测试请求...');
+            debugManager.log('AIModelValidation', '发送推理测试请求...');
             
             // 添加超时处理
             const timeoutPromise = new Promise((_, reject) => {
@@ -388,7 +389,7 @@ export class AIModelValidationService {
                 timeoutPromise
             ]) as any;
             
-            console.log('AI_VALIDATION_DEBUG: 推理测试响应:', {
+            debugManager.logObject('AIModelValidation', '推理测试响应', {
                 status: response.status,
                 statusText: response.status >= 200 && response.status < 300 ? 'Success' : 'Error',
                 responseTextLength: response.text?.length || 0,
@@ -400,25 +401,25 @@ export class AIModelValidationService {
                 let data;
                 try {
                     if (!response.text || response.text.trim() === '') {
-                        console.log('AI_VALIDATION_DEBUG: 推理测试响应内容为空');
+                        debugManager.log('AIModelValidation', '推理测试响应内容为空');
                         return false;
                     }
                     
                     data = JSON.parse(response.text);
-                    console.log('AI_VALIDATION_DEBUG: 推理测试JSON解析成功:', {
+                    debugManager.logObject('AIModelValidation', '推理测试JSON解析成功', {
                         hasData: !!data,
                         dataType: typeof data,
                         dataKeys: data && typeof data === 'object' ? Object.keys(data) : []
                     });
                 } catch (parseError) {
-                    console.error('AI_VALIDATION_DEBUG: 推理测试JSON解析失败:', {
+                    debugManager.error('AIModelValidation', '推理测试JSON解析失败', {
                         error: parseError instanceof Error ? parseError.message : 'Unknown parse error',
                         responseText: response.text?.substring(0, 500)
                     });
                     return false;
                 }
                 
-                console.log('AI_VALIDATION_DEBUG: 推理测试响应数据解析:', {
+                debugManager.logObject('AIModelValidation', '推理测试响应数据解析', {
                     provider: model.provider,
                     hasData: !!data,
                     dataKeys: data ? Object.keys(data) : []
@@ -426,7 +427,7 @@ export class AIModelValidationService {
                 
                 // 处理Gemini响应格式
                 if (model.provider === AIProvider.GEMINI) {
-                    console.log('AI_VALIDATION_DEBUG: Gemini推理响应检查:', {
+                    debugManager.logObject('AIModelValidation', 'Gemini推理响应检查', {
                         hasCandidates: !!(data.candidates),
                         candidatesLength: data.candidates?.length || 0
                     });
@@ -435,16 +436,16 @@ export class AIModelValidationService {
                         const candidate = data.candidates[0];
                         if (candidate.content && candidate.content.parts && candidate.content.parts.length > 0) {
                             const content = candidate.content.parts[0].text || '';
-                            console.log('AI_VALIDATION_DEBUG: Gemini推理响应内容:', content.substring(0, 100) + '...');
+                            debugManager.log('AIModelValidation', 'Gemini推理响应内容: ' + content.substring(0, 100) + '...');
                             // 检查是否包含推理步骤
                             const hasReasoning = content.toLowerCase().includes('step') || 
                                    content.includes('15') && content.includes('7') && content.includes('3');
-                            console.log('AI_VALIDATION_DEBUG: Gemini推理能力检测结果:', hasReasoning);
+                            debugManager.log('AIModelValidation', 'Gemini推理能力检测结果: ' + hasReasoning);
                             return hasReasoning;
                         }
                     }
                 } else {
-                    console.log('AI_VALIDATION_DEBUG: 标准API推理响应检查:', {
+                    debugManager.logObject('AIModelValidation', '标准API推理响应检查', {
                         hasChoices: !!(data.choices),
                         choicesLength: data.choices?.length || 0
                     });
@@ -452,26 +453,26 @@ export class AIModelValidationService {
                     // 处理其他模型响应格式
                     if (data.choices && data.choices.length > 0) {
                         const content = data.choices[0].message?.content || '';
-                        console.log('AI_VALIDATION_DEBUG: 标准API推理响应内容:', content.substring(0, 100) + '...');
+                        debugManager.log('AIModelValidation', '标准API推理响应内容: ' + content.substring(0, 100) + '...');
                         // 检查是否包含推理步骤
                         const hasReasoning = content.toLowerCase().includes('step') || 
                                content.includes('15') && content.includes('7') && content.includes('3');
-                        console.log('AI_VALIDATION_DEBUG: 标准API推理能力检测结果:', hasReasoning);
+                        debugManager.log('AIModelValidation', '标准API推理能力检测结果: ' + hasReasoning);
                         return hasReasoning;
                     }
                 }
             } else {
-                console.log('AI_VALIDATION_DEBUG: 推理测试请求失败:', {
+                debugManager.logObject('AIModelValidation', '推理测试请求失败', {
                     status: response.status,
                     statusText: response.status,
                     responseText: response.text?.substring(0, 200) + '...'
                 });
             }
         } catch (error) {
-            console.error('AI_VALIDATION_DEBUG: 推理能力测试异常:', error);
+            debugManager.error('AIModelValidation', '推理能力测试异常', error);
         }
 
-        console.log('AI_VALIDATION_DEBUG: 推理能力测试返回false');
+        debugManager.log('AIModelValidation', '推理能力测试返回false');
         return false;
     }
 
@@ -479,7 +480,7 @@ export class AIModelValidationService {
      * 测试网络搜索能力
      */
     private static async testWebSearchCapability(model: IAIModelConfig): Promise<boolean> {
-        console.log('AI_VALIDATION_DEBUG: 开始网络搜索能力测试');
+        debugManager.log('AIModelValidation', '开始网络搜索能力测试');
         try {
             const headers: Record<string, string> = {
                 'Content-Type': 'application/json'
@@ -500,7 +501,7 @@ export class AIModelValidationService {
                     break;
             }
             
-            console.log('AI_VALIDATION_DEBUG: 网络搜索测试请求头设置完成:', {
+            debugManager.logObject('AIModelValidation', '网络搜索测试请求头设置完成', {
                 provider: model.provider,
                 hasAuth: !!headers['Authorization']
             });
@@ -536,7 +537,7 @@ export class AIModelValidationService {
                 };
             }
 
-            console.log('AI_VALIDATION_DEBUG: 网络搜索测试请求体构建完成:', {
+            debugManager.logObject('AIModelValidation', '网络搜索测试请求体构建完成', {
                 provider: model.provider,
                 hasModel: !!requestBody.model,
                 hasContents: !!requestBody.contents,
@@ -544,7 +545,7 @@ export class AIModelValidationService {
             });
             
             const url = this.buildApiUrl(model);
-            console.log('AI_VALIDATION_DEBUG: 网络搜索测试API URL:', url);
+            debugManager.log('AIModelValidation', '网络搜索测试API URL: ' + url);
             
             const requestParams: RequestUrlParam = {
                 url,
@@ -554,7 +555,7 @@ export class AIModelValidationService {
                 throw: false
             };
 
-            console.log('AI_VALIDATION_DEBUG: 发送网络搜索测试请求...');
+            debugManager.log('AIModelValidation', '发送网络搜索测试请求...');
             
             // 添加超时处理
             const timeoutPromise = new Promise((_, reject) => {
@@ -568,7 +569,7 @@ export class AIModelValidationService {
                 timeoutPromise
             ]) as any;
             
-            console.log('AI_VALIDATION_DEBUG: 网络搜索测试响应:', {
+            debugManager.logObject('AIModelValidation', '网络搜索测试响应', {
                 status: response.status,
                 statusText: response.status >= 200 && response.status < 300 ? 'Success' : 'Error',
                 responseTextLength: response.text?.length || 0,
@@ -580,25 +581,25 @@ export class AIModelValidationService {
                 let data;
                 try {
                     if (!response.text || response.text.trim() === '') {
-                        console.log('AI_VALIDATION_DEBUG: 网络搜索测试响应内容为空');
+                        debugManager.log('AIModelValidation', '网络搜索测试响应内容为空');
                         return false;
                     }
                     
                     data = JSON.parse(response.text);
-                    console.log('AI_VALIDATION_DEBUG: 网络搜索测试JSON解析成功:', {
+                    debugManager.logObject('AIModelValidation', '网络搜索测试JSON解析成功', {
                         hasData: !!data,
                         dataType: typeof data,
                         dataKeys: data && typeof data === 'object' ? Object.keys(data) : []
                     });
                 } catch (parseError) {
-                    console.error('AI_VALIDATION_DEBUG: 网络搜索测试JSON解析失败:', {
+                    debugManager.error('AIModelValidation', '网络搜索测试JSON解析失败', {
                         error: parseError instanceof Error ? parseError.message : 'Unknown parse error',
                         responseText: response.text?.substring(0, 500)
                     });
                     return false;
                 }
                 
-                console.log('AI_VALIDATION_DEBUG: 网络搜索测试响应数据解析:', {
+                debugManager.logObject('AIModelValidation', '网络搜索测试响应数据解析', {
                     provider: model.provider,
                     hasData: !!data,
                     dataKeys: data ? Object.keys(data) : []
@@ -606,7 +607,7 @@ export class AIModelValidationService {
                 
                 // 处理Gemini响应格式
                 if (model.provider === AIProvider.GEMINI) {
-                    console.log('AI_VALIDATION_DEBUG: Gemini网络搜索响应检查:', {
+                    debugManager.logObject('AIModelValidation', 'Gemini网络搜索响应检查', {
                         hasCandidates: !!(data.candidates),
                         candidatesLength: data.candidates?.length || 0
                     });
@@ -615,18 +616,18 @@ export class AIModelValidationService {
                         const candidate = data.candidates[0];
                         if (candidate.content && candidate.content.parts && candidate.content.parts.length > 0) {
                             const content = candidate.content.parts[0].text || '';
-                            console.log('AI_VALIDATION_DEBUG: Gemini网络搜索响应内容:', content.substring(0, 100) + '...');
+                            debugManager.log('AIModelValidation', 'Gemini网络搜索响应内容: ' + content.substring(0, 100) + '...');
                             // 检查是否提供了当前日期信息
                             const currentYear = new Date().getFullYear();
                             const hasWebSearch = content.includes(currentYear.toString()) || 
                                    content.toLowerCase().includes('current') ||
                                    content.toLowerCase().includes('today');
-                            console.log('AI_VALIDATION_DEBUG: Gemini网络搜索能力检测结果:', hasWebSearch);
+                            debugManager.log('AIModelValidation', 'Gemini网络搜索能力检测结果: ' + hasWebSearch);
                             return hasWebSearch;
                         }
                     }
                 } else {
-                    console.log('AI_VALIDATION_DEBUG: 标准API网络搜索响应检查:', {
+                    debugManager.logObject('AIModelValidation', '标准API网络搜索响应检查', {
                         hasChoices: !!(data.choices),
                         choicesLength: data.choices?.length || 0
                     });
@@ -634,28 +635,28 @@ export class AIModelValidationService {
                     // 处理其他模型响应格式
                     if (data.choices && data.choices.length > 0) {
                         const content = data.choices[0].message?.content || '';
-                        console.log('AI_VALIDATION_DEBUG: 标准API网络搜索响应内容:', content.substring(0, 100) + '...');
+                        debugManager.log('AIModelValidation', '标准API网络搜索响应内容: ' + content.substring(0, 100) + '...');
                         // 检查是否提供了当前日期信息
                         const currentYear = new Date().getFullYear();
                         const hasWebSearch = content.includes(currentYear.toString()) || 
                                content.toLowerCase().includes('current') ||
                                content.toLowerCase().includes('today');
-                        console.log('AI_VALIDATION_DEBUG: 标准API网络搜索能力检测结果:', hasWebSearch);
+                        debugManager.log('AIModelValidation', '标准API网络搜索能力检测结果: ' + hasWebSearch);
                         return hasWebSearch;
                     }
                 }
             } else {
-                console.log('AI_VALIDATION_DEBUG: 网络搜索测试请求失败:', {
+                debugManager.logObject('AIModelValidation', '网络搜索测试请求失败', {
                     status: response.status,
                     statusText: response.status,
                     responseText: response.text?.substring(0, 200) + '...'
                 });
             }
         } catch (error) {
-            console.error('AI_VALIDATION_DEBUG: 网络搜索能力测试异常:', error);
+            debugManager.error('AIModelValidation', '网络搜索能力测试异常', error);
         }
 
-        console.log('AI_VALIDATION_DEBUG: 网络搜索能力测试返回false');
+        debugManager.log('AIModelValidation', '网络搜索能力测试返回false');
         return false;
     }
 
@@ -677,15 +678,15 @@ export class AIModelValidationService {
             if (decodedUrl !== baseUrl && decodedUrl.includes('%')) {
                 try {
                     decodedUrl = decodeURIComponent(decodedUrl);
-                    console.log('AI_VALIDATION_DEBUG: URL构建 - 双重URL解码成功');
+                    debugManager.log('AIModelValidation', 'URL构建 - 双重URL解码成功');
                 } catch (secondDecodeError) {
-                    console.log('AI_VALIDATION_DEBUG: URL构建 - 双重URL解码失败');
+                    debugManager.log('AIModelValidation', 'URL构建 - 双重URL解码失败');
                 }
             }
             baseUrl = decodedUrl;
-            console.log('AI_VALIDATION_DEBUG: URL构建 - URL解码成功');
+            debugManager.log('AIModelValidation', 'URL构建 - URL解码成功');
         } catch (decodeError) {
-            console.log('AI_VALIDATION_DEBUG: URL构建 - URL解码失败，使用原始URL:', decodeError);
+            debugManager.log('AIModelValidation', 'URL构建 - URL解码失败，使用原始URL: ' + decodeError);
         }
         
         // 移除可能的非打印字符和控制字符
@@ -693,11 +694,11 @@ export class AIModelValidationService {
         
         // 确保URL格式正确
         if (!baseUrl.startsWith('http://') && !baseUrl.startsWith('https://')) {
-            console.log('AI_VALIDATION_DEBUG: URL构建 - URL缺少协议，可能存在问题');
+            debugManager.log('AIModelValidation', 'URL构建 - URL缺少协议，可能存在问题');
         }
         
-        console.log('AI_VALIDATION_DEBUG: URL构建 - 原始baseUrl:', model.baseUrl);
-        console.log('AI_VALIDATION_DEBUG: URL构建 - 清理后baseUrl:', baseUrl);
+        debugManager.log('AIModelValidation', 'URL构建 - 原始baseUrl: ' + model.baseUrl);
+        debugManager.log('AIModelValidation', 'URL构建 - 清理后baseUrl: ' + baseUrl);
         
         // 确保baseUrl以斜杠结尾
         if (!baseUrl.endsWith('/')) {
@@ -723,7 +724,7 @@ export class AIModelValidationService {
                 }
                 // 使用阿里云官方的完整端点
                 finalUrl = `${cleanBaseUrl}/compatible-mode/v1/chat/completions`;
-                console.log('AI_VALIDATION_DEBUG: 通义千问最终URL构建:', finalUrl);
+                debugManager.log('AIModelValidation', '通义千问最终URL构建: ' + finalUrl);
                 break;
             case AIProvider.SILICONFLOW:
                 finalUrl = `${baseUrl}v1/chat/completions`;
@@ -736,8 +737,8 @@ export class AIModelValidationService {
                 // 避免因为清理导致API key损坏或长度变化
                 const originalApiKey = model.apiKey;
                 
-                console.log('AI_VALIDATION_DEBUG: 使用原始API key，长度:', originalApiKey.length);
-                console.log('AI_VALIDATION_DEBUG: API key前10个字符:', originalApiKey.substring(0, 10));
+                debugManager.log('AIModelValidation', '使用原始API key，长度: ' + originalApiKey.length);
+                debugManager.log('AIModelValidation', 'API key前10个字符: ' + originalApiKey.substring(0, 10));
                 
                 finalUrl = `${baseUrl}models/${model.modelName}:generateContent?key=${originalApiKey}`;
                 break;
@@ -754,14 +755,14 @@ export class AIModelValidationService {
                     // 标准的OpenAI格式
                     finalUrl = `${customUrl}v1/chat/completions`;
                 }
-                console.log('AI_VALIDATION_DEBUG: 自定义模型最终URL构建:', finalUrl);
+                debugManager.log('AIModelValidation', '自定义模型最终URL构建: ' + finalUrl);
                 break;
             default:
                 finalUrl = `${baseUrl}v1/chat/completions`;
                 break;
         }
         
-        console.log('AI_VALIDATION_DEBUG: URL构建 - 最终URL:', finalUrl);
+        debugManager.log('AIModelValidation', 'URL构建 - 最终URL: ' + finalUrl);
         return finalUrl;
     }
 }

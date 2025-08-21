@@ -260,6 +260,7 @@ export class ZhTw implements Local {
 	// 右鍵提交相關翻譯
 	right_click_submit = "右鍵提交";
 	right_click_submit_description = "啟用右鍵點擊向此欄位提交內容";
+	content_cleanup = "內容清理";
 	add_selection_to_field = "添加選中內容到欄位";
 	add_file_content_to_field = "添加檔案內容到欄位";
 }

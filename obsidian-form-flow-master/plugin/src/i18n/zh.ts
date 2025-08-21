@@ -260,4 +260,5 @@ export class Zh implements Local {
 	ai_output_variable_name = "输出变量名称";
 	ai_template_file = "模板文件";
 	ai_custom_content = "自定义内容";
+	content_cleanup = "内容清理";
 }

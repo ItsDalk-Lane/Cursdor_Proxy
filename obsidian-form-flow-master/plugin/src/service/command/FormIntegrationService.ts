@@ -3,6 +3,7 @@ import { FormService } from "../FormService";
 import { ContextMenuService } from "../context-menu/ContextMenuService";
 import { FormConfig } from "src/model/FormConfig";
 import FormPlugin from "src/main";
+import { debugManager } from "../../utils/DebugManager";
 
 export class FormIntegrationService {
 
@@ -14,9 +15,7 @@ export class FormIntegrationService {
      * 调试日志输出
      */
     private debugLog(message: string, ...args: any[]): void {
-        if (this.plugin?.settings?.enableDebugLogging) {
-            console.log(`[FormFlow Debug] FormIntegrationService: ${message}`, ...args);
-        }
+        debugManager.log('FormIntegrationService', message, ...args);
     }
 
     getId(filePath: string) {
@@ -224,7 +223,7 @@ export class FormIntegrationService {
             new FormService().openForm(formConfig, app);
             
         } catch (error) {
-            console.error(`执行表单命令时发生错误:`, error);
+            debugManager.error('FormIntegrationService', '执行表单命令时发生错误:', error);
             // 出错时回退到原始行为
             new FormService().open(file, app);
         }
@@ -260,7 +259,7 @@ export class FormIntegrationService {
         const file = this.plugin.app.vault.getAbstractFileByPath(filePath);
         if (!(file instanceof TFile)) {
             this.debugLog(`[FormIntegrationService] 文件不存在或不是有效文件: ${filePath}`);
-            console.warn(`文件不存在或不是有效文件: ${filePath}`);
+            debugManager.warn('FormIntegrationService', `文件不存在或不是有效文件: ${filePath}`);
             return;
         }
         
@@ -284,11 +283,11 @@ export class FormIntegrationService {
                 this.debugLog(`[FormIntegrationService] 已注册表单 "${file.basename}" 的右键菜单字段，文件路径: ${file.path}`);
             } else {
                 this.debugLog(`[FormIntegrationService] ContextMenuService 实例不存在，无法注册右键菜单字段`);
-                console.warn("ContextMenuService 实例不存在，无法注册右键菜单字段");
+                debugManager.warn('FormIntegrationService', 'ContextMenuService 实例不存在，无法注册右键菜单字段');
             }
         } catch (error) {
             this.debugLog(`[FormIntegrationService] 注册表单右键菜单字段时发生错误: ${error}`);
-            console.error(`注册表单 "${file.basename}" 的右键菜单字段时发生错误:`, error);
+            debugManager.error('FormIntegrationService', `注册表单 "${file.basename}" 的右键菜单字段时发生错误:`, error);
         }
     }
 
@@ -334,7 +333,7 @@ export class FormIntegrationService {
             const contextMenuService = this.plugin.contextMenuService;
             if (!contextMenuService) {
                 this.debugLog(`[FormIntegrationService] ContextMenuService 实例不存在，无法取消注册右键菜单字段`);
-                console.warn("ContextMenuService 实例不存在，无法取消注册右键菜单字段");
+                debugManager.warn('FormIntegrationService', 'ContextMenuService 实例不存在，无法取消注册右键菜单字段');
                 return;
             }
             
@@ -357,7 +356,7 @@ export class FormIntegrationService {
                     return;
                 } catch (readError) {
                     this.debugLog(`[FormIntegrationService] 读取表单文件失败: ${readError}`);
-                    console.warn(`无法读取表单文件 "${filePath}"，尝试使用文件路径清理:`, readError);
+                    debugManager.warn('FormIntegrationService', `无法读取表单文件 "${filePath}"，尝试使用文件路径清理:`, readError);
                 }
             }
             
@@ -368,7 +367,7 @@ export class FormIntegrationService {
             
         } catch (error) {
             this.debugLog(`[FormIntegrationService] 取消注册表单右键菜单字段时发生错误: ${error}`);
-            console.error(`取消注册表单右键菜单字段时发生错误:`, error);
+            debugManager.error('FormIntegrationService', '取消注册表单右键菜单字段时发生错误:', error);
         }
     }
 
@@ -384,10 +383,10 @@ export class FormIntegrationService {
             if (file instanceof TFile) {
                 await this.executeFormCommand(file, app, fieldId);
             } else {
-                console.error(`表单文件不存在: ${filePath}`);
+                debugManager.error('FormIntegrationService', `表单文件不存在: ${filePath}`);
             }
         } catch (error) {
-            console.error(`执行右键菜单表单命令时发生错误:`, error);
+            debugManager.error('FormIntegrationService', '执行右键菜单表单命令时发生错误:', error);
         }
     }
 

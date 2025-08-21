@@ -6,6 +6,7 @@ import { IFormField } from "src/model/field/IFormField";
 import { FormFieldType } from "src/model/enums/FormFieldType";
 import { FormService } from "../FormService";
 import { FormConfig } from "src/model/FormConfig";
+import { debugManager } from "../../utils/DebugManager";
 // 移除静态导入，改为动态导入以避免循环依赖
 // import { FormIntegrationService } from "../FormIntegrationService";
 
@@ -30,15 +31,14 @@ interface RegisteredField {
 export class ContextMenuService {
     private plugin: FormPlugin;
     private app: App;
-    private debugEnabled: boolean = false;
+
     private static instance: ContextMenuService | null = null;
     private registeredFields: Map<string, RegisteredField> = new Map();
 
     constructor(plugin: FormPlugin) {
         this.plugin = plugin;
         this.app = plugin.app;
-        // 从插件设置中获取调试开关状态
-        this.debugEnabled = plugin.settings?.enableDebugLogging || false;
+
         ContextMenuService.instance = this;
     }
 
@@ -98,7 +98,7 @@ export class ContextMenuService {
             this.addFieldMenuItems(menu, editor, view, selectedText, hasSelection);
 
         } catch (error) {
-            console.error("ContextMenuService: 处理编辑器右键菜单时发生错误:", error);
+            debugManager.error("ContextMenuService", "处理编辑器右键菜单时发生错误:", error);
         }
     }
 
@@ -329,7 +329,7 @@ export class ContextMenuService {
             
             return rightClickFields;
         } catch (error) {
-            console.error("ContextMenuService: 获取右键提交字段时发生错误:", error);
+            debugManager.error("ContextMenuService", "获取右键提交字段时发生错误:", error);
             return [];
         }
     }
@@ -346,7 +346,7 @@ export class ContextMenuService {
             this.debugLog(`ContextMenuService: 暂时记录添加内容到字段 "${fieldId}" 的操作`);
             
         } catch (error) {
-            console.error(`ContextMenuService: 添加内容到字段 "${fieldId}" 时发生错误:`, error);
+            debugManager.error("ContextMenuService", `添加内容到字段 "${fieldId}" 时发生错误:`, error);
         }
     }
 
@@ -364,7 +364,7 @@ export class ContextMenuService {
             this.debugLog(`表单 "${field.formName}" 执行成功`);
             
         } catch (error) {
-            console.error(`添加内容到已注册字段 "${field.fieldLabel}" 时发生错误:`, error);
+            debugManager.error("ContextMenuService", `添加内容到已注册字段 "${field.fieldLabel}" 时发生错误:`, error);
         }
     }
 
@@ -385,11 +385,11 @@ export class ContextMenuService {
                 this.debugLog(`ContextMenuService: 读取文件内容成功，长度: ${content.length}`);
                 this.addContentToField(fieldId, content);
             }).catch(error => {
-                console.error("ContextMenuService: 读取文件内容时发生错误:", error);
+                debugManager.error("ContextMenuService", "读取文件内容时发生错误:", error);
             });
             
         } catch (error) {
-            console.error(`ContextMenuService: 添加文件内容到字段 "${fieldId}" 时发生错误:`, error);
+            debugManager.error("ContextMenuService", `添加文件内容到字段 "${fieldId}" 时发生错误:`, error);
         }
     }
 
@@ -407,7 +407,7 @@ export class ContextMenuService {
             this.debugLog(`表单 "${field.formName}" 执行成功`);
             
         } catch (error) {
-            console.error(`添加文件内容到已注册字段 "${field.fieldLabel}" 时发生错误:`, error);
+            debugManager.error("ContextMenuService", `添加文件内容到已注册字段 "${field.fieldLabel}" 时发生错误:`, error);
         }
     }
     
@@ -426,7 +426,7 @@ export class ContextMenuService {
             await formIntegrationService.executeRightClickCommand(field.formFilePath, field.fieldId, this.app);
             
         } catch (error) {
-            console.error(`执行表单时发生错误:`, error);
+            debugManager.error("ContextMenuService", `执行表单时发生错误:`, error);
         }
     }
 
@@ -444,7 +444,7 @@ export class ContextMenuService {
             await formIntegrationService.executeRightClickCommand(field.formFilePath, field.fieldId, this.app);
             
         } catch (error) {
-            console.error(`执行表单时发生错误:`, error);
+            debugManager.error("ContextMenuService", `执行表单时发生错误:`, error);
         }
     }
 
@@ -452,17 +452,7 @@ export class ContextMenuService {
      * 输出调试日志
      */
     private debugLog(message: string) {
-        if (this.debugEnabled) {
-            console.log(`[FormFlow Debug] ${message}`);
-        }
-    }
-
-    /**
-     * 更新调试开关状态
-     */
-    updateDebugSetting(enabled: boolean) {
-        this.debugEnabled = enabled;
-        this.debugLog(`ContextMenuService: 调试开关已${enabled ? '启用' : '禁用'}`);
+        debugManager.log("ContextMenuService", message);
     }
 
     /**

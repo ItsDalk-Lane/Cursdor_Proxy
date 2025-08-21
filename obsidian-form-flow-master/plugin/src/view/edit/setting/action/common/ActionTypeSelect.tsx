@@ -1,4 +1,4 @@
-import { Code, File, FileJson, MessageSquare, Text, ExternalLink, Link, Command, Brain } from "lucide-react";
+import { Code, File, FileJson, MessageSquare, Text, ExternalLink, Link, Command, Brain, Trash2 } from "lucide-react";
 import { localInstance } from "src/i18n/locals";
 import { FormActionType } from "src/model/enums/FormActionType";
 import { FormTypeSelect } from "src/view/shared/select/FormTypeSelect";
@@ -73,5 +73,10 @@ export const formActionTypeOptions = [
 		value: FormActionType.AI_CALL,
 		label: localInstance.ai_call_action,
 		icon: <Brain />,
+	},
+	{
+		value: FormActionType.CONTENT_CLEANUP,
+		label: localInstance.content_cleanup,
+		icon: <Trash2 />,
 	},
 ];

@@ -8,6 +8,7 @@ import {
 	ScriptSourceType,
 } from "../model/action/RunScriptFormAction";
 import { SuggestModalFormAction } from "../model/action/SuggestModalFormAction";
+import { ContentCleanupFormAction, CleanupType } from "../model/action/ContentCleanupFormAction";
 import { FormActionType } from "../model/enums/FormActionType";
 import { TargetFileType } from "../model/enums/TargetFileType";
 import { formActionTypeOptions } from "../view/edit/setting/action/common/ActionTypeSelect";
@@ -79,6 +80,40 @@ export function useActionTitle(value: IFormAction) {
 			}
 
 			title = file + " " + position;
+		}
+
+		if (value.type === FormActionType.CONTENT_CLEANUP) {
+			const cleanupAction = value as ContentCleanupFormAction;
+			switch (cleanupAction.cleanupType) {
+				case CleanupType.DELETE_FILES:
+					if (cleanupAction.targetFiles && cleanupAction.targetFiles.length > 0) {
+						title = `删除文件: ${cleanupAction.targetFiles.length}个文件`;
+					} else {
+						title = "删除文件";
+					}
+					break;
+				case CleanupType.DELETE_FOLDERS:
+					if (cleanupAction.targetFolders && cleanupAction.targetFolders.length > 0) {
+						title = `删除文件夹: ${cleanupAction.targetFolders.length}个文件夹`;
+					} else {
+						title = "删除文件夹";
+					}
+					break;
+				case CleanupType.DELETE_HEADING_CONTENT:
+					if (cleanupAction.headingName) {
+						title = `删除标题内容: ${cleanupAction.headingName}`;
+					} else {
+						title = "删除标题内容";
+					}
+					break;
+
+				case CleanupType.CLEAR_TEXT_FORMAT:
+					title = "清除文本格式";
+					break;
+				default:
+					title = "内容清理";
+					break;
+			}
 		}
 
 		return {

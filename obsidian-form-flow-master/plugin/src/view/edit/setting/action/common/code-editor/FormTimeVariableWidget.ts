@@ -1,6 +1,7 @@
 import { Decoration, DecorationSet, EditorView, ViewPlugin, ViewUpdate, WidgetType } from "@codemirror/view"
 import { RangeSetBuilder, EditorSelection } from "@codemirror/state"
 import { processObTemplate } from "src/utils/templates"
+import { debugManager } from "../../../../../../utils/DebugManager"
 
 /**
  * 用于展示日期变量预览的小部件
@@ -107,7 +108,7 @@ const timeTemplatePreviewPlugin = ViewPlugin.fromClass(class {
                 builder.add(from, to, decoration);
             }
         } catch (e) {
-            console.error('Error processing date templates:', e);
+            debugManager.error("FormTimeVariableWidget", 'Error processing date templates:', e);
         }
 
         return builder.finish();

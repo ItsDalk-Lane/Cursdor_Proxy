@@ -106,9 +106,9 @@ export function GeneralSettingTabItem(props: { plugin: FormPlugin }) {
 							enableDebugLogging: value,
 						};
 					});
-					// 更新右键菜单服务的调试设置
-					if (plugin.contextMenuService) {
-						plugin.contextMenuService.updateDebugSetting(value);
+					// 更新调试管理器的调试设置
+					if (plugin.debugManager) {
+						plugin.debugManager.setDebugEnabled(value);
 					}
 				});
 			});

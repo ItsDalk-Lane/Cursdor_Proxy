@@ -261,6 +261,7 @@ export class En implements Local {
 	// 右键提交相关翻译
 	right_click_submit = "Right Click Submit";
 	right_click_submit_description = "Enable right-click to submit content to this field";
+	content_cleanup = "Content Cleanup";
 	add_selection_to_field = "Add Selection to Field";
 	add_file_content_to_field = "Add File Content to Field";
 }
