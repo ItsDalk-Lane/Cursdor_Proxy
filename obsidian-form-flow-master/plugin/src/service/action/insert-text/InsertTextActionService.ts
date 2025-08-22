@@ -73,7 +73,8 @@ export default class InsertTextActionService implements IActionService {
      */
     private async processContent(content: string, state: FormState, app: App, config?: FormConfig): Promise<string> {
         const engine = new FormTemplateProcessEngine();
-        return engine.process(content, state, app, config);
+        const result = await engine.process(content, state, app, config);
+        return String(result);
     }
 
 }

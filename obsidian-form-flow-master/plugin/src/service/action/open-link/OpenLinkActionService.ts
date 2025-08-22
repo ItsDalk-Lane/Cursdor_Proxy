@@ -17,11 +17,12 @@ export default class OpenLinkActionService implements IActionService {
         
         // 处理链接中的变量
         let linkUrl = await engine.process(formAction.linkUrl, context.state, app, context.config);
+        const linkUrlString = String(linkUrl);
         
         // 检查是否是内链格式 [[链接]]
-        if (linkUrl.startsWith('[[') && linkUrl.endsWith(']]')) {
+        if (linkUrlString.startsWith('[[') && linkUrlString.endsWith(']]')) {
             // 处理内链
-            const noteName = linkUrl.slice(2, -2); // 移除 [[ 和 ]]
+            const noteName = linkUrlString.slice(2, -2); // 移除 [[ 和 ]]
             
             // 检查是否有显示文本 [[文件|显示文本]]
             const actualNoteName = noteName.includes('|') ? noteName.split('|')[0] : noteName;
@@ -37,7 +38,7 @@ export default class OpenLinkActionService implements IActionService {
             }
         } else {
             // 处理外部链接
-            window.open(linkUrl, '_blank');
+            window.open(linkUrlString, '_blank');
         }
         
         // 继续执行下一个动作

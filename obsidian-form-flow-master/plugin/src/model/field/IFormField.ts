@@ -14,6 +14,7 @@ import { IFileListField } from "./IFileListField";
 import { AIModelListField } from "./AIModelListField";
 import { TemplateListField } from "./TemplateListField";
 import { Filter } from "../filter/Filter";
+import { FormFieldValue } from "../../service/FormValues";
 
 export interface IFormField {
     id: string;
@@ -21,7 +22,7 @@ export interface IFormField {
     type: FormFieldType;
     placeholder?: string;
     description?: string;
-    defaultValue?: any;
+    defaultValue?: FormFieldValue;
     required?: boolean;
     enableDescription?: boolean;
     condition?: Filter;

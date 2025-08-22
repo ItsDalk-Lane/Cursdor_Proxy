@@ -7,6 +7,7 @@ import { FormFieldType } from "src/model/enums/FormFieldType";
 import { FormService } from "../FormService";
 import { FormConfig } from "src/model/FormConfig";
 import { debugManager } from "../../utils/DebugManager";
+import { BaseService } from "../BaseService";
 // 移除静态导入，改为动态导入以避免循环依赖
 // import { FormIntegrationService } from "../FormIntegrationService";
 
@@ -28,7 +29,7 @@ interface RegisteredField {
  * 负责处理编辑器和文件的右键菜单功能
  * 新架构：表单注册为命令时同时注册右键菜单项
  */
-export class ContextMenuService {
+export class ContextMenuService extends BaseService {
     private plugin: FormPlugin;
     private app: App;
 
@@ -36,6 +37,7 @@ export class ContextMenuService {
     private registeredFields: Map<string, RegisteredField> = new Map();
 
     constructor(plugin: FormPlugin) {
+        super('ContextMenuService');
         this.plugin = plugin;
         this.app = plugin.app;
 
@@ -450,9 +452,10 @@ export class ContextMenuService {
 
     /**
      * 输出调试日志
+     * 重写基类方法以保持兼容性
      */
-    private debugLog(message: string) {
-        debugManager.log("ContextMenuService", message);
+    protected debugLog(message: string) {
+        this.forceDebugLog(message);
     }
 
     /**

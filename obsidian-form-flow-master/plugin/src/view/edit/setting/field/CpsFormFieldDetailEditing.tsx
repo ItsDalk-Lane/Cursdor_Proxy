@@ -40,7 +40,7 @@ export function CpsFormFieldDetailEditing(props: {
 		if (selectTypes.includes(field.type)) {
 			return (
 				<SelectControl
-					field={field}
+					field={field as ISelectField}
 					value={field.defaultValue}
 					onValueChange={(v) => {
 						const newField = {
@@ -86,11 +86,11 @@ export function CpsFormFieldDetailEditing(props: {
 				<ToggleControl
 					value={field.required === true}
 					onValueChange={(value) => {
-						setField({
-							...field,
-							required: value,
-						});
-					}}
+					setField({
+						...field,
+						required: Boolean(value),
+					});
+				}}
 				/>
 			</CpsFormItem>
 
@@ -98,11 +98,11 @@ export function CpsFormFieldDetailEditing(props: {
 				<ToggleControl
 					value={field.enableDescription === true}
 					onValueChange={(value) => {
-						setField({
-							...field,
-							enableDescription: value,
-						});
-					}}
+					setField({
+						...field,
+						enableDescription: Boolean(value),
+					});
+				}}
 				/>
 			</CpsFormItem>
 			
@@ -139,16 +139,16 @@ export function CpsFormFieldDetailEditing(props: {
 							disabled={shouldDisable}
 							title={tooltipText}
 							onValueChange={(value) => {
-								// 如果按钮被禁用，不执行任何操作
-								if (shouldDisable) {
-									return;
-								}
-								
-								setField({
-									...field,
-									rightClickSubmit: value,
-								});
-							}}
+						// 如果按钮被禁用，不执行任何操作
+						if (shouldDisable) {
+							return;
+						}
+						
+						setField({
+							...field,
+							rightClickSubmit: Boolean(value),
+						});
+					}}
 						/>
 					</CpsFormItem>
 				);
@@ -188,11 +188,11 @@ export function CpsFormFieldDetailEditing(props: {
 							onValueChange={(value) => {
 								const f = field as IFileListField;
 								if (
-									value === false &&
-									Array.isArray(f.defaultValue)
-								) {
-									f.defaultValue = f.defaultValue[0];
-								}
+						value === false &&
+						Array.isArray(f.defaultValue)
+					) {
+						f.defaultValue = f.defaultValue[0] as any;
+					}
 								const v = {
 									...f,
 									multiple: value,

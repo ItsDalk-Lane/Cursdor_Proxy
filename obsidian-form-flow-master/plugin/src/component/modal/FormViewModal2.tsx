@@ -12,6 +12,7 @@ import "./FormViewModal.css";
 export default class FormViewModal2 {
 	private isOpen = false;
 	private containerEl: HTMLElement | null = null;
+	private root: any = null; // React根节点引用
 	private source: {
 		formFilePath?: string;
 		formConfig?: FormConfig;
@@ -54,37 +55,59 @@ export default class FormViewModal2 {
 		this.containerEl.className = "form--FormViewModal2Container";
 		document.body.appendChild(this.containerEl);
 
-		// Create React root
-		const root = createRoot(this.containerEl);
+		// Create React root and save reference for proper cleanup
+		this.root = createRoot(this.containerEl);
 
 		// Render the FormModalContent component
-		root.render(
+		this.root.render(
 			<StrictMode>
 				<FormModalContent
 					app={this.app}
 					source={this.source}
 					onClose={() => {
-						this.isOpen = false;
-						// 清除表单状态
-						FormStateManager.getInstance().clearCurrentForm();
-						setTimeout(() => {
-							root.unmount();
-							this.containerEl?.remove();
-							this.containerEl = null;
-						});
+						this.cleanup();
 					}}
 				/>
 			</StrictMode>
 		);
 	}
 
-	close() {
+	/**
+	 * 清理资源，防止内存泄漏
+	 */
+	private cleanup() {
 		this.isOpen = false;
+		
+		// 清除表单状态
+		FormStateManager.getInstance('FormStateManager').clearCurrentForm();
+		
+		// 延迟清理，确保React组件有时间完成卸载
+		setTimeout(() => {
+			try {
+				// 卸载React根节点
+				if (this.root) {
+					this.root.unmount();
+					this.root = null;
+				}
+				
+				// 移除DOM元素
+				if (this.containerEl) {
+					this.containerEl.remove();
+					this.containerEl = null;
+				}
+			} catch (error) {
+				console.error('[FormViewModal2] 清理资源时发生错误:', error);
+			}
+		}, 0);
+	}
+
+	close() {
 		if (this.containerEl) {
 			// Trigger React unmount through a state change in the component
 			const event = new CustomEvent("formmodal-close");
 			this.containerEl.dispatchEvent(event);
 		}
+		this.cleanup();
 	}
 }
 
@@ -134,7 +157,7 @@ function FormModalContent({
 					setFormConfig(config);
 					
 					// 设置当前活动表单到状态管理器
-					FormStateManager.getInstance().setCurrentForm(config);
+					FormStateManager.getInstance('FormStateManager').setCurrentForm(config);
 
 					// Set title based on file name
 					const fileBaseName = source.formFilePath.split("/").pop();
@@ -153,7 +176,7 @@ function FormModalContent({
 	// 设置表单配置到状态管理器
 	useEffect(() => {
 		if (formConfig) {
-			FormStateManager.getInstance().setCurrentForm(formConfig);
+			FormStateManager.getInstance('FormStateManager').setCurrentForm(formConfig);
 		}
 	}, [formConfig]);
 

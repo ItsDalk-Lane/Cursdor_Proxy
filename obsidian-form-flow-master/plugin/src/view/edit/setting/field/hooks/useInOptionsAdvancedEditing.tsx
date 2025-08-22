@@ -6,7 +6,7 @@ import { Strings } from "src/utils/Strings";
 export function useInOptionsAdvancedEditing(field: IFormField) {
 	const options = (field as IOptionsField).options || [];
 	const hasValueInOptions = options.some((option) =>
-		Strings.isNotEmpty(option.value)
+		Strings.isNotEmpty(String(option.value || ''))
 	);
 	const [inOptionsAdvancedEditing, setInOptionsAdvancedEditing] =
 		useState(hasValueInOptions);

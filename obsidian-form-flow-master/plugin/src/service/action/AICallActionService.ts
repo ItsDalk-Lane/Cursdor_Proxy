@@ -201,7 +201,7 @@ export default class AICallActionService implements IActionService {
                         const aiSettingsService = new AISettingsService(context.app);
                         const aiSettings = await aiSettingsService.loadSettings();
                         const templateService = new PromptTemplateService(context.app, aiSettings.promptTemplateFolder);
-                        promptContent = await templateService.loadTemplate(selectedTemplateFile);
+                        promptContent = await templateService.loadTemplate(String(selectedTemplateFile));
                     } else {
                         throw new Error(`模板列表字段 "${action.templateFieldName}" 未选择模板文件`);
                     }
@@ -236,7 +236,8 @@ export default class AICallActionService implements IActionService {
             outputVariables: context.state.outputVariables || {}
         };
 
-        return templateEngine.process(promptContent, formState, context.app, context.config);
+        const processedContent = await templateEngine.process(promptContent, formState, context.app, context.config);
+        return String(processedContent);
     }
 
     /**

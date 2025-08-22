@@ -1,3 +1,5 @@
+import { FormFieldValue } from "../service/FormValues";
+
 export class Strings {
 
     static isBlank(value: string | null | undefined): boolean {
@@ -65,19 +67,35 @@ export class Strings {
         return false;
     }
 
-    static safeToLowerCaseString(value: any) {
+    /**
+     * 安全地将值转换为小写字符串
+     * @param value 输入值
+     * @returns 小写字符串或原值
+     */
+    static safeToLowerCaseString(value: FormFieldValue): string {
         if (value === undefined || value === null) {
             return "";
         }
 
-        if (value.toLowerCase) {
+        // 如果是字符串类型，直接调用 toLowerCase
+        if (typeof value === 'string') {
             return value.toLowerCase();
         }
 
-        if (value.toString) {
+        // 对于其他类型，先转换为字符串再转小写
+        if (typeof value === 'number' || typeof value === 'boolean') {
             return value.toString().toLowerCase();
         }
 
-        return value + "";
+        if (value instanceof Date) {
+            return value.toISOString().toLowerCase();
+        }
+
+        if (Array.isArray(value)) {
+            return value.join(', ').toLowerCase();
+        }
+
+        // 兜底处理：转换为字符串
+        return String(value).toLowerCase();
     }
 }

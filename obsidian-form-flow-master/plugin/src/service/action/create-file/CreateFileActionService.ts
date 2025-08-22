@@ -31,7 +31,7 @@ export default class CreateFileActionService implements IActionService {
                 formContent = "";
             } else {
                 const processedTemplateFilePath = await engine.process(templateFilePath, state, context.app, context.config);
-                const templateFile = app.vault.getAbstractFileByPath(processedTemplateFilePath);
+                const templateFile = app.vault.getAbstractFileByPath(String(processedTemplateFilePath));
                 if (!templateFile || !(templateFile instanceof TFile)) {
                     throw new Error(localInstance.template_file_not_exists + ": " + processedTemplateFilePath);
                 }
@@ -43,7 +43,7 @@ export default class CreateFileActionService implements IActionService {
         }
 
         const filePath = await getFilePathFromAction(formAction, context);
-        const file = await createFileByText(app, filePath, formContent);
+        const file = await createFileByText(app, filePath, String(formContent));
         openFilePathDirectly(app, filePath, formAction.openPageIn || OpenPageInType.none);
 
         // do next

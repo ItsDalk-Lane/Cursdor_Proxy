@@ -1,41 +1,26 @@
 import { FormConfig } from "src/model/FormConfig";
 import { IFormField } from "src/model/field/IFormField";
-import { debugManager } from "../utils/DebugManager";
+import { BaseSingletonService } from "./BaseService";
+import { DebugModule } from "src/utils/DebugConfig";
 
 /**
  * 全局表单状态管理器
  * 用于追踪当前活动的表单和字段信息
  */
-export class FormStateManager {
-    private static instance: FormStateManager;
+export class FormStateManager extends BaseSingletonService {
     private currentForm: FormConfig | null = null;
-    private debugEnabled = false;
 
     /**
-     * 获取单例实例
+     * 构造函数
+     * 说明：为了兼容基类 BaseSingletonService.getInstance 的 "this" 构造签名，
+     * 必须提供 (serviceName: string, debugModule?: DebugModule) 的构造函数。
+     * 这里默认将 debugModule 设置为 DebugModule.FORM_SERVICE，便于按模块控制日志输出。
      */
-    static getInstance(): FormStateManager {
-        if (!FormStateManager.instance) {
-            FormStateManager.instance = new FormStateManager();
-        }
-        return FormStateManager.instance;
+    constructor(serviceName: string, debugModule?: DebugModule) {
+        super(serviceName, debugModule ?? DebugModule.FORM_SERVICE);
     }
-
-    /**
-     * 设置调试模式
-     */
-    setDebugMode(enabled: boolean): void {
-        this.debugEnabled = enabled;
-    }
-
-    /**
-     * 调试日志输出
-     */
-    private debugLog(message: string, ...args: any[]): void {
-        if (this.debugEnabled) {
-            debugManager.log('FormStateManager', message, ...args);
-        }
-    }
+    
+    // 调试功能已由基类提供
 
     /**
      * 设置当前活动的表单
@@ -95,6 +80,14 @@ export class FormStateManager {
     clearCurrentForm(): void {
         this.debugLog("清除当前表单状态");
         this.currentForm = null;
+    }
+
+    /**
+     * 重置单例实例 - 用于插件重新加载时清理状态
+     * 防止内存泄漏和状态累积
+     */
+    static resetInstance(): void {
+        BaseSingletonService.clearInstance('FormStateManager');
     }
 
     /**

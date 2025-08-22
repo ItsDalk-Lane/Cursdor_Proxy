@@ -1,4 +1,5 @@
-import { HTMLAttributes, useState, useRef, useMemo, useEffect } from "react";
+import { HTMLAttributes, useState, useRef, useMemo, useEffect, useCallback } from "react";
+import React from "react";
 import { useAnotherKeyToSubmitForm } from "src/hooks/useAnotherKeyToSubmitForm";
 import { useAutoFocus } from "src/hooks/useAutoFocus";
 import { SubmitState } from "src/hooks/useSubmitForm";
@@ -18,6 +19,7 @@ import { ToastManager } from "../../component/toast/ToastManager";
 import CpsFormButtonLoading from "./animation/CpsFormButtonLoading";
 import CalloutBlock from "src/component/callout-block/CalloutBlock";
 import { debugManager } from "src/utils/DebugManager";
+import { FieldValidationUtils } from "src/utils/FieldValidationUtils";
 
 type Props = {
 	fields?: IFormField[]; // 保持向后兼容
@@ -25,9 +27,14 @@ type Props = {
 	onSubmit: (values: FormIdValues) => Promise<void>;
 	afterSubmit?: (values: FormIdValues) => void;
 	prefilledData?: Map<string, any>; // 预填充数据
-} & Omit<HTMLAttributes<HTMLDivElement>, "defaultValue">;
+} & Omit<HTMLAttributes<HTMLDivElement>, "defaultValue" | "onSubmit">;
 
-export function CpsFormRenderView(props: Props) {
+/**
+ * 表单渲染视图组件 - 已优化性能
+ * 使用React.memo、useCallback和useMemo减少不必要的重新渲染
+ * 添加调试信息追踪性能问题
+ */
+function CpsFormRenderViewComponent(props: Props) {
 	// 调试信息：记录CpsFormRenderView组件初始化
 	debugManager.log('CpsFormRenderView', '组件初始化');
 	debugManager.logObject('CpsFormRenderView', 'props', props);
@@ -53,8 +60,9 @@ export function CpsFormRenderView(props: Props) {
 	
 	/**
 	 * 创建包含预填充数据的初始表单值
+	 * 使用useCallback优化性能
 	 */
-	const createInitialFormValues = (): FormIdValues => {
+	const createInitialFormValues = useCallback((): FormIdValues => {
 		const defaultValues = resolveDefaultFormIdValues(fields);
 		
 		// 调试信息：记录默认值
@@ -71,7 +79,7 @@ export function CpsFormRenderView(props: Props) {
 		}
 		
 		return defaultValues;
-	};
+	}, [fields, prefilledData]);
 	
 	const [formIdValues, setFormIdValues] = useState<FormIdValues>(
 		createInitialFormValues()
@@ -94,10 +102,16 @@ export function CpsFormRenderView(props: Props) {
 	const settingRef = useRef<HTMLDivElement>(null);
 	const submitButtonRef = useRef<HTMLButtonElement>(null);
 
-	const submit = async () => {
+	/**
+	 * 优化的表单提交函数
+	 * 使用useCallback避免不必要的重新创建
+	 */
+	const submit = useCallback(async () => {
 		if (submitState.submitting) {
 			return;
 		}
+
+		debugManager.log('CpsFormRenderView', '开始提交表单', formIdValues);
 
 		setSubmitState({
 			submitting: true,
@@ -107,12 +121,14 @@ export function CpsFormRenderView(props: Props) {
 
 		try {
 			await onSubmit(formIdValues);
+			debugManager.log('CpsFormRenderView', '表单提交成功');
 			setSubmitState({
 				submitting: false,
 				error: false,
 				errorMessage: "",
 			});
 		} catch (e) {
+			debugManager.error('CpsFormRenderView', '表单提交失败', e);
 			setSubmitState({
 				submitting: false,
 				error: true,
@@ -129,7 +145,7 @@ export function CpsFormRenderView(props: Props) {
 		}
 		
 		setFormIdValues(resolveDefaultFormIdValues(fields));
-	};
+	}, [submitState.submitting, formIdValues, onSubmit, afterSubmit, formConfig?.showSubmitMessage, fields]);
 
 	useAnotherKeyToSubmitForm(
 		() => {
@@ -141,102 +157,29 @@ export function CpsFormRenderView(props: Props) {
 	useAutoFocus(formRef);
 
 	/**
-	 * 检查字段是否有固定值（与FormService中的逻辑保持一致）
+	 * 优化的值变更处理函数（柯里化版本）
+	 * 返回指定字段的单参数回调，供子组件直接调用
+	 * - 使用函数式 setState 避免闭包捕获旧状态
+	 * - 在调试模式下输出详细日志，便于问题排查
 	 */
-	const fieldHasFixedValue = (field: IFormField): boolean => {
-		debugManager.log('CpsFormRenderView', '=== DYNAMIC_DISPLAY_DEBUG: CpsFormRenderView.fieldHasFixedValue ===');
-		debugManager.logObject('CpsFormRenderView', '字段信息:', {
-			id: field.id,
-			label: field.label,
-			type: field.type,
-			defaultValue: field.defaultValue
-		});
-		
-		let hasFixedValue = false;
-		
-		switch (field.type) {
-			case FormFieldType.TEXT:
-			case FormFieldType.TEXTAREA:
-			case FormFieldType.PASSWORD:
-				hasFixedValue = !!(field.defaultValue && field.defaultValue.trim());
-				debugManager.logObject('CpsFormRenderView', '文本类型字段固定值检查:', { hasFixedValue, defaultValue: field.defaultValue });
-				break;
-			
-			case FormFieldType.NUMBER:
-				hasFixedValue = field.defaultValue !== undefined && field.defaultValue !== null;
-				debugManager.logObject('CpsFormRenderView', '数字类型字段固定值检查:', { hasFixedValue, defaultValue: field.defaultValue });
-				break;
-			
-			case FormFieldType.CHECKBOX:
-				hasFixedValue = field.defaultValue !== undefined;
-				debugManager.logObject('CpsFormRenderView', '复选框类型字段固定值检查:', { hasFixedValue, defaultValue: field.defaultValue });
-				break;
-			
-			case FormFieldType.RADIO:
-			case FormFieldType.SELECT:
-				hasFixedValue = !!(field.defaultValue && field.defaultValue.trim());
-				debugManager.logObject('CpsFormRenderView', '选择类型字段固定值检查:', { hasFixedValue, defaultValue: field.defaultValue });
-				break;
-			
-			case FormFieldType.DATE:
-			case FormFieldType.TIME:
-			case FormFieldType.DATETIME:
-				hasFixedValue = !!(field.defaultValue && field.defaultValue.trim());
-				debugManager.logObject('CpsFormRenderView', '日期时间类型字段固定值检查:', { hasFixedValue, defaultValue: field.defaultValue });
-				break;
-			
-			case FormFieldType.FILE_LIST:
-				hasFixedValue = !!(field.defaultValue && 
-					((Array.isArray(field.defaultValue) && field.defaultValue.length > 0) ||
-					 (typeof field.defaultValue === 'string' && field.defaultValue.trim())));
-				debugManager.logObject('CpsFormRenderView', '文件列表类型字段固定值检查:', { hasFixedValue, defaultValue: field.defaultValue });
-				break;
-			
-            case FormFieldType.AI_MODEL_LIST:
-                // AI模型字段如果有预选择的模型ID、自动选择第一个或有默认值，则认为有固定值
-                const aiField = field as any;
-                hasFixedValue = !!(aiField.selectedModelId || aiField.autoSelectFirst || 
-                    (field.defaultValue && field.defaultValue.trim()));
-                debugManager.logObject('CpsFormRenderView', 'AI模型列表字段固定值检查:', {
-                    fieldId: field.id,
-                    fieldLabel: field.label,
-                    selectedModelId: aiField.selectedModelId,
-                    autoSelectFirst: aiField.autoSelectFirst,
-                    hasFixedValue: hasFixedValue,
-                    formValue: formIdValues[field.id],
-                    defaultValue: field.defaultValue
-                });
-                break;
-            
-            case FormFieldType.TEMPLATE_LIST:
-                // 模板列表字段如果有预选择的模板文件、自动选择第一个或有默认值，则认为有固定值
-                const templateField = field as any;
-                hasFixedValue = !!(templateField.selectedTemplateFile || templateField.autoSelectFirst || 
-                    (field.defaultValue && field.defaultValue.trim()));
-                debugManager.logObject('CpsFormRenderView', '模板列表字段固定值检查:', {
-                    fieldId: field.id,
-                    fieldLabel: field.label,
-                    selectedTemplateFile: templateField.selectedTemplateFile,
-                    autoSelectFirst: templateField.autoSelectFirst,
-                    hasFixedValue: hasFixedValue,
-                    formValue: formIdValues[field.id],
-                    defaultValue: field.defaultValue
-                });
-                break;
-			
-			default:
-				// 其他类型字段，检查是否有默认值
-				hasFixedValue = !!(field.defaultValue !== undefined && field.defaultValue !== null && 
-					(typeof field.defaultValue !== 'string' || field.defaultValue.trim()));
-				debugManager.logObject('CpsFormRenderView', '其他类型字段固定值检查:', { hasFixedValue, defaultValue: field.defaultValue });
-				break;
-		}
-		
-		debugManager.log('CpsFormRenderView', `字段 '${field.label}' (${field.type}) 最终固定值结果:`, hasFixedValue);
-		debugManager.log('CpsFormRenderView', '=== DYNAMIC_DISPLAY_DEBUG: 结束 ===\n');
-		
-		return hasFixedValue;
-	};
+	const createFieldValueChangeHandler = useCallback((fieldId: string) => {
+		return (value: any) => {
+			debugManager.log('CpsFormRenderView', '字段值变更', { fieldId, value });
+			setFormIdValues((prev) => ({
+				...prev,
+				[fieldId]: value,
+			}));
+		};
+	}, []);
+
+	/**
+	 * 检查字段是否有固定值
+	 * @param field 表单字段
+	 * @returns 是否有固定值
+	 */
+	const fieldHasFixedValue = useCallback((field: IFormField): boolean => {
+		return FieldValidationUtils.fieldHasFixedValue(field, 'CpsFormRenderView');
+	}, []);
 
 	const visibleFields = useMemo(() => {
 		// 调试信息：记录字段可见性计算开始
@@ -255,18 +198,13 @@ export function CpsFormRenderView(props: Props) {
 			const hasPrefilledValue = prefilledData && prefilledData.has(field.id);
 			const prefilledValue = prefilledData ? prefilledData.get(field.id) : undefined;
 			
-			// 检查预填充值是否为空
+			/**
+			 * 检查预填充值是否为空
+			 * @param value 预填充值
+			 * @returns 是否为空
+			 */
 			const isEmptyPrefilledValue = (value: any): boolean => {
-				if (value === undefined || value === null) {
-					return true;
-				}
-				if (typeof value === 'string' && value.trim() === '') {
-					return true;
-				}
-				if (Array.isArray(value) && value.length === 0) {
-					return true;
-				}
-				return false;
+				return FieldValidationUtils.isEmptyPrefilledValue(value);
 			};
 			
 			debugManager.log('CpsFormRenderView', `字段 '${field.label}' (${field.type}) - 固定值: ${hasFixedValue}, 预填充值: ${hasPrefilledValue}`);
@@ -322,13 +260,7 @@ export function CpsFormRenderView(props: Props) {
 							field={field}
 							value={formIdValues[field.id]}
 							autoFocus={index === 0}
-							onValueChange={(value) => {
-								const newValues = {
-									...formIdValues,
-									[field.id]: value,
-								};
-								setFormIdValues(newValues);
-							}}
+							onValueChange={createFieldValueChangeHandler(field.id)}
 						/>
 					</CpsFormItem>
 				))}
@@ -373,3 +305,18 @@ export function CpsFormRenderView(props: Props) {
 		</form>
 	);
 }
+
+// 使用React.memo优化组件性能，避免不必要的重新渲染
+const CpsFormRenderViewMemo = React.memo(CpsFormRenderViewComponent, (prevProps, nextProps) => {
+	// 自定义比较函数，只在关键属性变化时重新渲染
+	return (
+		prevProps.fields === nextProps.fields &&
+		prevProps.formConfig === nextProps.formConfig &&
+		prevProps.onSubmit === nextProps.onSubmit &&
+		prevProps.afterSubmit === nextProps.afterSubmit &&
+		prevProps.prefilledData === nextProps.prefilledData &&
+		prevProps.className === nextProps.className
+	);
+});
+
+export { CpsFormRenderViewMemo as CpsFormRenderView };

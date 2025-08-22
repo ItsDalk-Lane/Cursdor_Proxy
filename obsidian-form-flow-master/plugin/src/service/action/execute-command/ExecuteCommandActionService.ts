@@ -18,12 +18,13 @@ export default class ExecuteCommandActionService implements IActionService {
         
         // 处理命令ID中的变量
         const commandId = await engine.process(formAction.commandId, context.state, app, context.config);
+        const commandIdString = String(commandId);
         
         // 执行命令
         try {
-            await app.commands.executeCommandById(commandId);
+            await app.commands.executeCommandById(commandIdString);
         } catch (error) {
-            debugManager.error('ExecuteCommandAction', `Failed to execute command: ${commandId}`, error);
+            debugManager.error('ExecuteCommandAction', `Failed to execute command: ${commandIdString}`, error);
         }
         
         // 继续执行下一个动作

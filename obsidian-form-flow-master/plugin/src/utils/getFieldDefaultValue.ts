@@ -1,5 +1,6 @@
 import { FormFieldType } from "../model/enums/FormFieldType";
 import { IFormField } from "../model/field/IFormField";
+import { FormFieldValue } from "../service/FormValues";
 import { ISelectField } from "../model/field/ISelectField";
 import { AIModelListField } from "../model/field/AIModelListField";
 import { TemplateListField } from "../model/field/TemplateListField";
@@ -10,9 +11,14 @@ import { Strings } from "./Strings";
 
 export const OBSIDIAN_DATETIME_YAML_VALUE_FORMAT = "yyyy-MM-dd'T'HH:mm";
 
+/**
+ * 获取字段的默认值
+ * @param curr 表单字段
+ * @returns 默认值
+ */
 export function getFieldDefaultValue(
     curr: IFormField
-): any {
+): FormFieldValue {
     if (curr.type === FormFieldType.SELECT) {
         const selectField = curr as ISelectField;
         const options = selectField.options || [];
@@ -26,10 +32,11 @@ export function getFieldDefaultValue(
         });
 
         if (selectField.multiple) {
-            const def = Array.isArray(selectField.defaultValue) ? selectField.defaultValue : [];
-            return def.filter(v => values.includes(v));
+            const def: any[] = Array.isArray(selectField.defaultValue) ? selectField.defaultValue : [];
+            // 确保返回的数组类型与 FormFieldValue 中的 string[] 匹配
+            return def.filter((v: any) => typeof v === 'string' && values.includes(v)) as string[];
         } else {
-            if (selectField.defaultValue && values.includes(selectField.defaultValue)) {
+            if (selectField.defaultValue && typeof selectField.defaultValue === 'string' && values.includes(selectField.defaultValue)) {
                 return selectField.defaultValue;
             }
             return undefined;
@@ -53,7 +60,7 @@ export function getFieldDefaultValue(
     }
 
     if (curr.type === FormFieldType.CHECKBOX || curr.type === FormFieldType.TOGGLE) {
-        if (Strings.isEmpty(curr.defaultValue)) {
+        if (Strings.isEmpty(typeof curr.defaultValue === 'string' ? curr.defaultValue : String(curr.defaultValue || ''))) {
             return false;
         }
         return curr.defaultValue ?? false;

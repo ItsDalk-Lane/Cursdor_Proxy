@@ -9,13 +9,13 @@ import { FormStateManager } from './service/FormStateManager';
 import { PluginSettingTab } from './settings/PluginSettingTab';
 import './style/base.css'
 import { FormFlowApi } from './api/FormFlowApi';
-import { debugManager } from './utils/DebugManager';
+import { debugManager, DebugManager } from './utils/DebugManager';
 
 export default class FormPlugin extends Plugin {
 	settings: PluginSettings = DEFAULT_SETTINGS;
 	contextMenuService: ContextMenuService;
 	formIntegrationService: any; // FormIntegrationService 实例
-	api: FormFlowApi;
+	api: FormFlowApi | null = null;
 	debugManager = debugManager; // 调试管理器实例
 
 	async onload() {
@@ -26,7 +26,7 @@ export default class FormPlugin extends Plugin {
 		debugManager.setDebugEnabled(this.settings.enableDebugLogging || false);
 		
 		// 初始化 FormStateManager 的调试模式
-		const formStateManager = FormStateManager.getInstance();
+		const formStateManager = FormStateManager.getInstance('FormStateManager');
 		formStateManager.setDebugMode(this.settings.enableDebugLogging || false);
 		
 		this.addSettingTab(new PluginSettingTab(this));
@@ -112,12 +112,20 @@ export default class FormPlugin extends Plugin {
 	}
 
 	onunload() {
+		// 清理服务
 		formScriptService.unload();
 		applicationCommandService.unload(this);
 		applicationFileViewService.unload(this);
 		if (this.contextMenuService) {
 			this.contextMenuService.unload();
 		}
+		
+		// 重置单例对象，防止内存泄漏和状态累积
+		FormStateManager.resetInstance();
+		DebugManager.resetInstance();
+		
+		// 清理API引用
+		this.api = null;
 	}
 
 	async loadSettings() {
@@ -143,7 +151,7 @@ export default class FormPlugin extends Plugin {
 		debugManager.setDebugEnabled(this.settings.enableDebugLogging || false);
 		
 		// 同步更新 FormStateManager 的调试模式
-		const formStateManager = FormStateManager.getInstance();
+		const formStateManager = FormStateManager.getInstance('FormStateManager');
 		formStateManager.setDebugMode(this.settings.enableDebugLogging || false);
 		
 		formScriptService.refresh(this.settings.scriptFolder);

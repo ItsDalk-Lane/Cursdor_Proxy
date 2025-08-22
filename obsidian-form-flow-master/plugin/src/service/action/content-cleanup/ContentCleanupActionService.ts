@@ -5,21 +5,21 @@ import { FormActionType } from "src/model/enums/FormActionType";
 import { FormTemplateProcessEngine } from "../../engine/FormTemplateProcessEngine";
 import { ActionChain, ActionContext, IActionService } from "../IActionService";
 import FormPlugin from "src/main";
-import { debugManager } from "src/utils/DebugManager";
+import { BaseService } from "../../BaseService";
+import { debugManager } from "../../../utils/DebugManager";
 
 /**
  * 内容清理动作服务
  * 支持删除文件、文件夹、指定标题下的内容和清除文本格式
  */
-export default class ContentCleanupActionService implements IActionService {
+export default class ContentCleanupActionService extends BaseService implements IActionService {
     private engine = new FormTemplateProcessEngine();
 
-    /**
-     * 调试日志输出
-     */
-    private debugLog(message: string, ...args: any[]): void {
-        debugManager.log('ContentCleanupActionService', message, ...args);
+    constructor() {
+        super('ContentCleanupActionService');
     }
+
+    // 调试功能已由基类提供
 
     /**
      * 检查是否接受此动作
@@ -117,7 +117,7 @@ export default class ContentCleanupActionService implements IActionService {
             const processedMessage = await this.engine.process(message, context.state, context.app, context.config);
             
             // 创建确认对话框
-            const modal = new ConfirmationModal(context.app, processedMessage, resolve);
+            const modal = new ConfirmationModal(context.app, String(processedMessage), resolve);
             modal.open();
         });
     }
@@ -134,15 +134,16 @@ export default class ContentCleanupActionService implements IActionService {
 
         for (const filePath of formAction.targetFiles) {
             const processedPath = await this.engine.process(filePath, context.state, context.app, context.config);
+            const pathString = String(processedPath);
             
-            this.debugLog("正在删除文件", { filePath: processedPath });
+            this.debugLog("正在删除文件", { filePath: pathString });
             
-            const file = context.app.vault.getAbstractFileByPath(processedPath);
+            const file = context.app.vault.getAbstractFileByPath(pathString);
             if (file instanceof TFile) {
                 await context.app.vault.delete(file);
-                this.debugLog("文件删除成功", { filePath: processedPath });
+                this.debugLog("文件删除成功", { filePath: pathString });
             } else {
-                this.debugLog("文件不存在，跳过删除", { filePath: processedPath });
+                this.debugLog("文件不存在，跳过删除", { filePath: pathString });
             }
         }
     }
@@ -159,10 +160,11 @@ export default class ContentCleanupActionService implements IActionService {
 
         for (const folderPath of formAction.targetFolders) {
             const processedPath = await this.engine.process(folderPath, context.state, context.app, context.config);
+            const pathString = String(processedPath);
             
-            this.debugLog("正在删除文件夹", { folderPath: processedPath, recursive: formAction.recursive });
+            this.debugLog("正在删除文件夹", { folderPath: pathString, recursive: formAction.recursive });
             
-            const folder = context.app.vault.getAbstractFileByPath(processedPath);
+            const folder = context.app.vault.getAbstractFileByPath(pathString);
             if (folder instanceof TFolder) {
                 try {
                     if (formAction.recursive) {
@@ -244,13 +246,14 @@ export default class ContentCleanupActionService implements IActionService {
 
         const targetFile = await this.getTargetFile(formAction, context);
         const processedHeading = await this.engine.process(formAction.headingName, context.state, context.app, context.config);
+        const headingString = String(processedHeading);
         
         // 处理标题名称，去除可能包含的Markdown标题符号
-        const cleanHeadingName = processedHeading.replace(/^#+\s*/, '').trim();
+        const cleanHeadingName = headingString.replace(/^#+\s*/, '').trim();
         
         this.debugLog("开始删除标题下的内容", { 
             filePath: targetFile.path, 
-            originalHeadingName: processedHeading,
+            originalHeadingName: headingString,
             cleanHeadingName: cleanHeadingName,
             deleteToSameLevelHeading: formAction.deleteToSameLevelHeading !== false,
             deleteMode: formAction.deleteToSameLevelHeading !== false ? "删除到同级或更高级标题" : "只删除正文内容"
@@ -508,7 +511,8 @@ export default class ContentCleanupActionService implements IActionService {
         let targetPath: string;
         
         if (formAction.targetFilePath) {
-            targetPath = await this.engine.process(formAction.targetFilePath, context.state, context.app, context.config);
+            const processedPath = await this.engine.process(formAction.targetFilePath, context.state, context.app, context.config);
+            targetPath = String(processedPath);
         } else {
             // 使用当前活动文件
             const activeView = context.app.workspace.getActiveViewOfType(MarkdownView);

@@ -21,7 +21,7 @@ export default class OpenFileActionService implements IActionService {
         const filePath = await engine.process(formAction.filePath, context.state, app, context.config);
         
         // 打开文件
-        openFilePathDirectly(app, filePath, formAction.openPageIn || OpenPageInType.none);
+        openFilePathDirectly(app, String(filePath), formAction.openPageIn || OpenPageInType.none);
         
         // 继续执行下一个动作
         await chain.next(context);

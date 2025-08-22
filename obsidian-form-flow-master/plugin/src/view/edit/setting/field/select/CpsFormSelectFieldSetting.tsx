@@ -94,19 +94,20 @@ export default function (props: {
 									}}
 									onChange={(e) => {
 										const newItem = {
-											...item,
-											label: e.target.value,
-										};
-										updateOption(newItem);
+									...item,
+									label: e.target.value,
+									value: String(item.value || '')
+								};
+								updateOption(newItem);
 									}}
 								/>
 								{enableCustomValue && (
 									<textarea
-										className="form--CpsFormSelectOptionValueTextarea"
-										value={item.value}
-										rows={3}
-										required={true}
-										placeholder={localInstance.value}
+								className="form--CpsFormSelectOptionValueTextarea"
+								value={String(item.value || '')}
+								rows={3}
+								required={true}
+								placeholder={localInstance.value}
 										onChange={(e) => {
 											updateOption({
 												...item,

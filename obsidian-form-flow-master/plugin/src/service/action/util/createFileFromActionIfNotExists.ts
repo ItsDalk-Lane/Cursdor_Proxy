@@ -21,13 +21,16 @@ export async function createFileFromActionIfNotExists(
     let content = "";
     if (Strings.isNotBlank(templateFilePath)) {
         const engine = new FormTemplateProcessEngine();
-        const templatePath = await engine.process(templateFilePath!, context.state, app);
-        const templateFile = app.vault.getAbstractFileByPath(templatePath);
+        // 确保 templateFilePath 是字符串类型
+        const templatePathStr = String(templateFilePath);
+        const templatePath = await engine.process(templatePathStr, context.state, app);
+        const templateFile = app.vault.getAbstractFileByPath(String(templatePath));
         if (!templateFile || !(templateFile instanceof TFile)) {
             throw new Error(localInstance.template_file_not_exists + ": " + templateFilePath);
         }
         const templateContent = await app.vault.cachedRead(templateFile);
-        content = await engine.process(templateContent, context.state, context.app);
+        const processedContent = await engine.process(templateContent, context.state, context.app);
+        content = String(processedContent);
     }
     return await createFileByText(app, filePath, content);
 }

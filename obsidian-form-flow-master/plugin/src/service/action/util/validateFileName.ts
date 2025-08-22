@@ -19,7 +19,11 @@ export async function validateFileName(action: FileBaseFormAction, context: Acti
     const path = getFilePathCompatible(action);
     const state = context.state;
     const engine = new FormTemplateProcessEngine();
-    const filePath = await engine.process(path, state, context.app);
+    // 确保路径是字符串类型，避免类型不匹配
+    const pathStr = String(path || "");
+    const processedPath = await engine.process(pathStr, state, context.app);
+    // 确保返回值是字符串类型
+    const filePath = String(processedPath || "");
 
     if (action.type === FormActionType.CREATE_FILE) {
         failIfIsBlank(filePath, localInstance.file_name_cannot_be_empty);

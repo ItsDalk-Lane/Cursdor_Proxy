@@ -55,8 +55,8 @@ export default class SuggestModalActionService implements IActionService {
                 } else {
                     selected = Strings.defaultIfBlank(selectedItem?.value, selectedItem?.label || "");
                 }
-                selected = await new FormTemplateProcessEngine().process(selected, state, context.app)
-                state.values[suggestAction.fieldName] = selected;
+                const processedSelected = await new FormTemplateProcessEngine().process(selected, state, context.app);
+                state.values[suggestAction.fieldName] = String(processedSelected);
                 resolve(chain.next(context));
             })
             suggestModal.onCancel = () => {

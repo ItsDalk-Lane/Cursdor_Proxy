@@ -1,15 +1,22 @@
 import { ToggleComponent } from "obsidian";
 import { useRef, useLayoutEffect, useEffect } from "react";
 
-export default function (props: {
-	value: any;
-	onValueChange: (value: any) => void;
+import { FormFieldValue } from "../../../service/FormValues";
+
+/**
+ * 切换控件属性接口
+ */
+interface Props {
+	value: FormFieldValue;
+	onValueChange: (value: FormFieldValue) => void;
 	required?: boolean;
 	id?: string;
 	autoFocus?: boolean;
 	disabled?: boolean;
 	title?: string;
-}) {
+}
+
+export default function (props: Props) {
 	const { value, onValueChange, id, disabled, title } = props;
 	const containerRef = useRef<HTMLDivElement>(null);
 	const toggleRef = useRef<ToggleComponent | null>(null);
@@ -22,7 +29,7 @@ export default function (props: {
 		const el = new ToggleComponent(switchElement);
 		el.toggleEl.id = id ?? "";
 		el.toggleEl.autofocus = props.autoFocus || false;
-		el.setValue(value);
+		el.setValue(Boolean(value));
 		
 		// 设置禁用状态
 		if (disabled) {
@@ -51,7 +58,7 @@ export default function (props: {
 
 	useEffect(() => {
 		if (toggleRef.current) {
-			toggleRef.current.setValue(value);
+			toggleRef.current.setValue(Boolean(value));
 		}
 	}, [value]);
 	useEffect(() => {

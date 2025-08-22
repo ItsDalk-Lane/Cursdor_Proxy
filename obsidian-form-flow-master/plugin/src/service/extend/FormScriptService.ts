@@ -3,9 +3,14 @@ import { FormScriptLoader } from "./FormScriptLoader";
 import { FormScriptRunner } from "./FormScriptRunner";
 import { App, EventRef, normalizePath, TAbstractFile, TFile } from "obsidian";
 import { debugManager } from "../../utils/DebugManager";
+import { BaseService } from "../BaseService";
 
 
-export class FormScriptService {
+export class FormScriptService extends BaseService {
+    
+    constructor() {
+        super('FormScriptService');
+    }
 
     private formScripts: Map<string, FormScript> = new Map();
 
@@ -71,7 +76,7 @@ export class FormScriptService {
         const app = this.app;
         const createFileEventRef = app.vault.on("create", async (file: TFile) => {
             if (this.isExtensionFile(file)) {
-                debugManager.log("FormScriptService", "script extension created " + file.path);
+                this.forceDebugLog("script extension created " + file.path);
                 const extension = await this.formScriptLoader.load(app, file);
                 if (extension) {
                     this.formScripts.set(file.path, extension);
@@ -82,7 +87,7 @@ export class FormScriptService {
         // delete file
         const deleteFileEventRef = app.vault.on("delete", (file: TFile) => {
             if (this.isExtensionFile(file)) {
-                debugManager.log("FormScriptService", "script extension deleted " + file.path);
+                this.forceDebugLog("script extension deleted " + file.path);
                 this.formScripts.delete(file.path);
             }
         });
@@ -91,7 +96,7 @@ export class FormScriptService {
         const modifyFileEventRef = app.vault.on("modify", async (file: TFile) => {
             if (this.isExtensionFile(file)) {
                 const extension = await this.formScriptLoader.load(app, file);
-                debugManager.log("FormScriptService", "script extension modified " + file.path, extension);
+                this.forceDebugLog("script extension modified " + file.path, extension);
                 if (extension) {
                     this.formScripts.set(file.path, extension);
                 }
@@ -101,7 +106,7 @@ export class FormScriptService {
         // rename file
         const renameFileEventRef = app.vault.on("rename", async (file: TFile, oldPath: string) => {
             if (this.isExtensionFile(file)) {
-                debugManager.log("FormScriptService", "script extension renamed " + oldPath + " to " + file.path);
+                this.forceDebugLog("script extension renamed " + oldPath + " to " + file.path);
                 this.formScripts.delete(oldPath);
                 const extension = await this.formScriptLoader.load(app, file);
                 if (extension) {

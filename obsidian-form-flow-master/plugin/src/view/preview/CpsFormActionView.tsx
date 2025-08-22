@@ -89,8 +89,8 @@ export default function (props: Props) {
 		<CpsFormRenderView
 			formConfig={formConfig}
 			onSubmit={onSubmit}
-			afterSubmit={(state) => {
-				viewOptions.afterSubmit?.(state);
+			afterSubmit={(values) => {
+				viewOptions.afterSubmit?.(values);
 			}}
 			prefilledData={prefilledData}
 		/>

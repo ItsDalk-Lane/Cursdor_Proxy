@@ -168,12 +168,12 @@ export default function (props: {
 									<ToggleControl
 										value={formConfig.showSubmitMessage !== false}
 										onValueChange={(v) => {
-											const newConfig = {
-												...formConfig,
-												showSubmitMessage: v,
-											};
-											onChange(newConfig);
-										}}
+								const newConfig = {
+									...formConfig,
+									showSubmitMessage: Boolean(v),
+								};
+								onChange(newConfig);
+							}}
 									/>
 								</CpsFormItem>
 							</CpsFormSettingGroup>

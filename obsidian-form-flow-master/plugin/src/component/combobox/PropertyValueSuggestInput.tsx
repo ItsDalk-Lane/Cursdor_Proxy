@@ -4,6 +4,7 @@ import { isMultiTextProperty } from "src/utils/isMultiTextProperty";
 import ComboboxSuggestion from "./ComboboxSuggestion";
 import { useObsidianApp } from "src/context/obsidianAppContext";
 import { getPropertyValues } from "src/utils/getPropertyValues";
+import { FormFieldValue } from "src/service/FormValues";
 
 export function PropertyValueSuggestInput(props: {
 	id?: string;
@@ -18,16 +19,16 @@ export function PropertyValueSuggestInput(props: {
 	const items = useMemo(() => {
 		app.metadataTypeManager.getAllProperties().find;
 		const options = getPropertyValues(app, name)
-			.filter((f) => {
+			.filter((f: FormFieldValue) => {
 				if (f == null || f == undefined) {
 					return false;
 				}
 				return true;
 			})
-			.map((v, index) => {
+			.map((v: FormFieldValue, index: number) => {
 				return {
-					label: v + "",
-					value: v,
+					label: String(v),
+					value: String(v),
 				};
 			});
 		return options;

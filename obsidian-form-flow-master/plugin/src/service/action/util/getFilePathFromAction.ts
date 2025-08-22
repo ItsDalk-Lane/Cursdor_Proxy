@@ -36,7 +36,10 @@ export async function getFilePathFromAction(formAction: Action, context: ActionC
 async function resolveFilePath(formAction: CreateFileFormAction | InsertTextFormAction | UpdateFrontmatterFormAction, context: ActionContext) {
     const engine = new FormTemplateProcessEngine();
     const path = getFilePathCompatible(formAction);
-    let filePath = await engine.process(path, context.state, context.app, context.config);
-    filePath = normalizePath(filePath);
-    return filePath;
+    // 确保路径是字符串类型，避免 undefined 或其他类型传递给 process 方法
+    const pathStr = String(path || "");
+    let filePath = await engine.process(pathStr, context.state, context.app, context.config);
+    // 确保返回值是字符串类型
+    const processedPath = String(filePath || "");
+    return normalizePath(processedPath);
 }

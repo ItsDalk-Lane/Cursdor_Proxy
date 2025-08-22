@@ -3,6 +3,9 @@
  * 用于验证 FormStateManager 和 ContextMenuService 的集成
  */
 
+// 导入必要的类
+// const { FormStateManager } = require('./src/service/FormStateManager'); // 移除未使用的变量，避免 ESLint no-unused-vars 警告
+
 // 等待插件加载完成
 setTimeout(async () => {
 	console.log('[测试] 开始测试右键菜单功能');
@@ -57,7 +60,7 @@ setTimeout(async () => {
 				return;
 			}
             
-			const stateManager = FormStateManager.getInstance();
+			const stateManager = FormStateManager.getInstance('FormStateManager');
             
 			// 检查是否有活动表单
 			const hasActiveForm = stateManager.hasActiveForm();

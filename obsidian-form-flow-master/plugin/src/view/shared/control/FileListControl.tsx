@@ -8,13 +8,19 @@ import { localInstance } from "src/i18n/locals";
 import { IFileListField } from "src/model/field/IFileListField";
 import { IFormField } from "src/model/field/IFormField";
 import { Strings } from "src/utils/Strings";
+import { FormFieldValue } from "../../../service/FormValues";
 
-export function FileListControl(props: {
-	field: IFormField;
-	value: any;
-	onValueChange: (value: any) => void;
-	autoFocus?: boolean;
-}) {
+/**
+ * 文件列表控件属性接口
+ */
+interface Props {
+    field: IFileListField;
+    value: FormFieldValue;
+    onValueChange: (value: FormFieldValue) => void;
+    autoFocus?: boolean;
+}
+
+export function FileListControl(props: Props) {
 	const { value, field, onValueChange, autoFocus } = props;
 	const fileListField = field as IFileListField;
 
@@ -219,16 +225,21 @@ export function FileListControl(props: {
 	);
 }
 
-function TriggerItems(props: {
-	value: any;
-	onValueChange: (value: any) => void;
-}) {
+/**
+ * 触发器项组件属性接口
+ */
+interface TriggerItemsProps {
+    value: FormFieldValue;
+    onValueChange: (value: FormFieldValue) => void;
+}
+
+function TriggerItems(props: TriggerItemsProps) {
 	const { value, onValueChange } = props;
 	let arrayValue: string[];
 	if (Array.isArray(value)) {
-		arrayValue = value.map((v) => v?.toString());
+		arrayValue = value.map((v) => v?.toString() || "");
 	} else {
-		arrayValue = [value?.toString()];
+		arrayValue = [value?.toString() || ""];
 	}
 
 	const removeValue = (v: string) => {

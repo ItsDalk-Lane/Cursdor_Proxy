@@ -1,4 +1,5 @@
 import { Filter } from "src/model/filter/Filter";
+import { FormFieldValue } from "../../FormValues";
 import { EqOperatorHandler } from "./common/EqOperatorHandler";
 import { HasValueOperatorHandler } from "./common/HasValueOperatorHandler";
 import { NotEqOperatorHandler } from "./common/NotEqOperatorHandler";
@@ -29,7 +30,14 @@ export class OperatorHandlers {
         // new NotLikeOperatorHandler(),
     ]
 
-    static apply(filter: Filter, fieldValue: any, value: any): boolean {
+    /**
+     * 应用过滤器操作
+     * @param filter 过滤器配置
+     * @param fieldValue 字段值
+     * @param value 比较值
+     * @returns 是否匹配条件
+     */
+    static apply(filter: Filter, fieldValue: FormFieldValue, value: FormFieldValue): boolean {
         const handler = this.handlers.find(h => h.accept(filter));
         if (handler) {
             return handler.apply(fieldValue, value, {

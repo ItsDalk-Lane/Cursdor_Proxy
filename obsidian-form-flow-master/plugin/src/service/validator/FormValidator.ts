@@ -54,9 +54,9 @@ export class FormValidator {
             const hasEmptyValue = conditions.some((c, index) => {
                 let isEmpty;
                 if (enableCustomValue) {
-                    isEmpty = Strings.isEmpty(c.value);
+                    isEmpty = Strings.isEmpty(String(c.value || ''));
                 } else {
-                    isEmpty = Strings.isEmpty(c.label);
+                    isEmpty = Strings.isEmpty(String(c.label || ''));
                 }
                 errMessage = localInstance.please_fill_list_item_value.format((index + 1) + "");
                 return isEmpty;

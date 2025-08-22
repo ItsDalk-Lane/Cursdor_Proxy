@@ -160,7 +160,7 @@ function updateCondition(
 		);
 		if (updatedOption) {
 			condition.value = Strings.defaultIfEmpty(
-				updatedOption.value,
+				String(updatedOption.value || ''),
 				updatedOption.label
 			);
 		}

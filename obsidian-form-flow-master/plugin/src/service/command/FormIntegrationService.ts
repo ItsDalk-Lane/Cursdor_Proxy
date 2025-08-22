@@ -4,18 +4,21 @@ import { ContextMenuService } from "../context-menu/ContextMenuService";
 import { FormConfig } from "src/model/FormConfig";
 import FormPlugin from "src/main";
 import { debugManager } from "../../utils/DebugManager";
+import { BaseService } from "../BaseService";
 
-export class FormIntegrationService {
+export class FormIntegrationService extends BaseService {
 
     plugin: FormPlugin;
 
     private PREFIX = "@CFORM";
 
-    /**
-     * 调试日志输出
-     */
-    private debugLog(message: string, ...args: any[]): void {
-        debugManager.log('FormIntegrationService', message, ...args);
+    constructor() {
+        super('FormIntegrationService');
+    }
+
+    // 调试功能已由基类提供，但保留原有的 debugLog 方法以兼容现有代码
+    protected debugLog(message: string, ...args: any[]): void {
+        this.forceDebugLog(message, ...args);
     }
 
     getId(filePath: string) {

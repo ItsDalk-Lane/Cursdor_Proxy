@@ -19,11 +19,29 @@ export class DebugManager {
     }
 
     /**
+     * 重置单例实例 - 用于插件重新加载时清理状态
+     * 防止内存泄漏和状态累积
+     */
+    static resetInstance(): void {
+        if (DebugManager.instance) {
+            DebugManager.instance.debugEnabled = false;
+            DebugManager.instance = null;
+        }
+    }
+
+    /**
      * 设置调试开关状态
      */
     setDebugEnabled(enabled: boolean): void {
         this.debugEnabled = enabled;
         this.log('DebugManager', `调试模式已${enabled ? '启用' : '禁用'}`);
+    }
+
+    /**
+     * 设置调试模式（别名方法，与 setDebugEnabled 功能相同）
+     */
+    setDebugMode(enabled: boolean): void {
+        this.setDebugEnabled(enabled);
     }
 
     /**
