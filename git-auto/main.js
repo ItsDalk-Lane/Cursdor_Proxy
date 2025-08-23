@@ -2362,6 +2362,14 @@ var TimedAutoCommitManager = class {
     this.start();
   }
   /**
+   * 立刻触发一次自动提交检查（强制）
+   * 忽略编辑延迟与时间间隔，常用于手动命令或设置页按钮
+   */
+  async triggerImmediateCheck() {
+    this.plugin.debugLog("\u624B\u52A8\u89E6\u53D1\u5B9A\u65F6\u81EA\u52A8\u63D0\u4EA4\u68C0\u67E5\uFF08force=true\uFF09");
+    await this.checkAndExecuteAutoCommit(true);
+  }
+  /**
    * 通知文件编辑活动
    */
   notifyEditingActivity() {
@@ -2381,17 +2389,21 @@ var TimedAutoCommitManager = class {
   }
   /**
    * 检查并执行自动提交
+   * @param force 是否强制检查，true 时忽略编辑延迟与时间间隔
    */
-  async checkAndExecuteAutoCommit() {
+  async checkAndExecuteAutoCommit(force = false) {
+    var _a;
     try {
-      this.plugin.debugLog("=== \u68C0\u67E5\u81EA\u52A8\u63D0\u4EA4\u6761\u4EF6 ===");
+      this.plugin.debugLog(`=== \u68C0\u67E5\u81EA\u52A8\u63D0\u4EA4\u6761\u4EF6 === force=${force}`);
       if (!this.plugin.settings.timedAutoCommit) {
         this.plugin.debugLog("\u5B9A\u65F6\u81EA\u52A8\u63D0\u4EA4\u5DF2\u7981\u7528\uFF0C\u8DF3\u8FC7");
         return;
       }
-      if (this.plugin.settings.enableEditingDelay && this.isEditing) {
+      if (!force && this.plugin.settings.enableEditingDelay && this.isEditing) {
         this.plugin.debugLog("\u5F53\u524D\u6B63\u5728\u7F16\u8F91\u6587\u4EF6\u4E14\u542F\u7528\u4E86\u7F16\u8F91\u5EF6\u8FDF\uFF0C\u8DF3\u8FC7\u81EA\u52A8\u63D0\u4EA4");
         return;
+      } else if (force && this.plugin.settings.enableEditingDelay && this.isEditing) {
+        this.plugin.debugLog("force=true\uFF0C\u5FFD\u7565\u7F16\u8F91\u5EF6\u8FDF\u4E0E\u6B63\u5728\u7F16\u8F91\u72B6\u6001\uFF0C\u7EE7\u7EED\u6267\u884C\u68C0\u67E5");
       }
       const now = Date.now();
       const timeSinceLastCommit = now - this.lastCommitTime;
@@ -2399,9 +2411,11 @@ var TimedAutoCommitManager = class {
       const intervalMs = this.plugin.settings.autoCommitInterval * 60 * 1e3;
       const shouldCommitByInterval = Math.min(timeSinceLastCommit, timeSinceStart) >= intervalMs;
       this.plugin.debugLog(`\u65F6\u95F4\u68C0\u67E5: \u8DDD\u79BB\u4E0A\u6B21\u63D0\u4EA4${Math.round(timeSinceLastCommit / 1e3 / 60)}\u5206\u949F, \u8DDD\u79BB\u542F\u52A8${Math.round(timeSinceStart / 1e3 / 60)}\u5206\u949F, \u9700\u8981\u95F4\u9694${this.plugin.settings.autoCommitInterval}\u5206\u949F`);
-      if (!shouldCommitByInterval) {
+      if (!force && !shouldCommitByInterval) {
         this.plugin.debugLog("\u672A\u8FBE\u5230\u63D0\u4EA4\u95F4\u9694\u65F6\u95F4\uFF0C\u8DF3\u8FC7");
         return;
+      } else if (force && !shouldCommitByInterval) {
+        this.plugin.debugLog("force=true\uFF0C\u672A\u8FBE\u5230\u95F4\u9694\u4F46\u5C06\u5FFD\u7565\u65F6\u95F4\u9650\u5236\uFF0C\u7EE7\u7EED\u6267\u884C\u68C0\u67E5");
       }
       const changes = await this.plugin.getGitChanges();
       if (changes.length === 0) {
@@ -2413,7 +2427,7 @@ var TimedAutoCommitManager = class {
     } catch (error) {
       this.plugin.debugError("\u81EA\u52A8\u63D0\u4EA4\u68C0\u67E5\u8FC7\u7A0B\u4E2D\u53D1\u751F\u9519\u8BEF:", error);
       if (this.plugin.settings.showNotifications) {
-        new import_obsidian4.Notice(`\u26A0\uFE0F \u81EA\u52A8\u63D0\u4EA4\u68C0\u67E5\u5931\u8D25: ${error.message}`);
+        new import_obsidian4.Notice(`\u26A0\uFE0F \u81EA\u52A8\u63D0\u4EA4\u68C0\u67E5\u5931\u8D25: ${(_a = error == null ? void 0 : error.message) != null ? _a : error}`);
       }
     }
   }
@@ -2562,6 +2576,47 @@ var GitAutoCommitPlugin = class extends import_obsidian4.Plugin {
       name: "\u6D4B\u8BD5\u5206\u6279\u5904\u7406\u529F\u80FD",
       callback: () => {
         this.testBatchProcessing();
+      }
+    });
+    this.addCommand({
+      id: "timed-auto-commit-show-status",
+      name: "\u663E\u793A\u5B9A\u65F6\u81EA\u52A8\u63D0\u4EA4\u72B6\u6001",
+      callback: () => {
+        const status = this.getTimedCommitStatus();
+        this.debugLog("\u663E\u793A\u5B9A\u65F6\u81EA\u52A8\u63D0\u4EA4\u72B6\u6001\uFF1A", status);
+        new import_obsidian4.Notice(`\u{1F552} ${status}`);
+      }
+    });
+    this.addCommand({
+      id: "timed-auto-commit-start",
+      name: "\u542F\u52A8\u5B9A\u65F6\u81EA\u52A8\u63D0\u4EA4",
+      callback: () => {
+        this.startTimedAutoCommit();
+        new import_obsidian4.Notice("\u25B6\uFE0F \u5DF2\u542F\u52A8\u5B9A\u65F6\u81EA\u52A8\u63D0\u4EA4");
+      }
+    });
+    this.addCommand({
+      id: "timed-auto-commit-stop",
+      name: "\u505C\u6B62\u5B9A\u65F6\u81EA\u52A8\u63D0\u4EA4",
+      callback: () => {
+        this.stopTimedAutoCommit();
+        new import_obsidian4.Notice("\u23F9\uFE0F \u5DF2\u505C\u6B62\u5B9A\u65F6\u81EA\u52A8\u63D0\u4EA4");
+      }
+    });
+    this.addCommand({
+      id: "timed-auto-commit-restart",
+      name: "\u91CD\u542F\u5B9A\u65F6\u81EA\u52A8\u63D0\u4EA4",
+      callback: () => {
+        this.restartTimedAutoCommit();
+        new import_obsidian4.Notice("\u{1F501} \u5DF2\u91CD\u542F\u5B9A\u65F6\u81EA\u52A8\u63D0\u4EA4");
+      }
+    });
+    this.addCommand({
+      id: "timed-auto-commit-check-now",
+      name: "\u7ACB\u5373\u68C0\u67E5\u4E00\u6B21\uFF08\u5B9A\u65F6\u81EA\u52A8\u63D0\u4EA4\uFF09",
+      callback: async () => {
+        await this.triggerTimedAutoCommitCheck();
+        new import_obsidian4.Notice("\u26A1 \u5DF2\u89E6\u53D1\u4E00\u6B21\u68C0\u67E5\uFF0C\u8BF7\u67E5\u770B\u63A7\u5236\u53F0\u6216\u72B6\u6001");
       }
     });
     this.addSettingTab(new GitAutoCommitSettingTab(this.app, this));
@@ -2961,38 +3016,63 @@ var GitAutoCommitPlugin = class extends import_obsidian4.Plugin {
         return status;
     }
   }
+  /**
+   * 执行实际的 Git 提交
+   * - 负责在必要时暂存变更（避免重复暂存）
+   * - 处理多行提交信息文件化提交
+   * - 成功后通知并更新定时自动提交的最后提交时间
+   * 注意：为了兼容包含中文/特殊字符路径的文件，尽量避免不必要的 git add 重复执行。
+   */
   async performActualCommit(filesToCommit, commitMessage) {
     try {
       const vaultPath = this.app.vault.adapter.basePath || this.app.vault.adapter.path || this.app.vault.configDir;
+      const { stdout: stagedListRaw } = await execAsync("git diff --cached --name-only", {
+        cwd: vaultPath,
+        maxBuffer: 10 * 1024 * 1024
+      });
+      const stagedSet = new Set(
+        stagedListRaw.split("\n").map((s) => s.trim().replace(/\\/g, "/")).filter(Boolean)
+      );
+      this.debugLog("\u5DF2\u6682\u5B58\u6587\u4EF6\u6570\u91CF:", stagedSet.size);
       if (filesToCommit.length === 0) {
+        this.debugLog("\u672A\u6307\u5B9A\u6587\u4EF6\uFF0C\u4F7F\u7528 git add . \u6682\u5B58\u6240\u6709\u53D8\u66F4");
         await execAsync("git add .", {
           cwd: vaultPath,
           maxBuffer: 50 * 1024 * 1024
           // 50MB 缓冲区
         });
       } else {
-        for (const file of filesToCommit) {
-          try {
-            let cleanPath = file;
-            if (cleanPath.startsWith('"') && cleanPath.endsWith('"')) {
-              cleanPath = cleanPath.slice(1, -1);
+        const normalized = filesToCommit.map((file) => {
+          let cleanPath = file;
+          if (cleanPath.startsWith('"') && cleanPath.endsWith('"')) {
+            cleanPath = cleanPath.slice(1, -1);
+          }
+          cleanPath = cleanPath.replace(/\\[0-9]{3}/g, "");
+          cleanPath = cleanPath.replace(/\\/g, "/");
+          return cleanPath;
+        });
+        const toAdd = normalized.filter((p) => !stagedSet.has(p));
+        this.debugLog("\u6307\u5B9A\u6587\u4EF6\u603B\u6570:", normalized.length, "\u9700\u8981\u65B0\u589E\u6682\u5B58\u7684\u6587\u4EF6\u6570:", toAdd.length);
+        if (toAdd.length === 0) {
+          this.debugLog("\u6240\u6709\u6307\u5B9A\u6587\u4EF6\u5747\u5DF2\u5728\u6682\u5B58\u533A\uFF0C\u8DF3\u8FC7 git add \u6B65\u9AA4");
+        } else {
+          for (const cleanPath of toAdd) {
+            try {
+              const escapedPath = cleanPath.replace(/"/g, '\\"');
+              await execAsync(`git add "${escapedPath}"`, {
+                cwd: vaultPath,
+                maxBuffer: 10 * 1024 * 1024,
+                // 10MB 缓冲区
+                encoding: "utf8"
+              });
+            } catch (fileError) {
+              this.debugError("\u6DFB\u52A0\u5355\u4E2A\u6587\u4EF6\u5931\u8D25:", cleanPath, fileError);
+              await execAsync("git add .", {
+                cwd: vaultPath,
+                maxBuffer: 50 * 1024 * 1024
+              });
+              break;
             }
-            cleanPath = cleanPath.replace(/\\[0-9]{3}/g, "");
-            cleanPath = cleanPath.replace(/\\/g, "/");
-            const escapedPath = cleanPath.replace(/"/g, '\\"');
-            await execAsync(`git add "${escapedPath}"`, {
-              cwd: vaultPath,
-              maxBuffer: 10 * 1024 * 1024,
-              // 10MB 缓冲区
-              encoding: "utf8"
-            });
-          } catch (fileError) {
-            this.debugError("\u6DFB\u52A0\u5355\u4E2A\u6587\u4EF6\u5931\u8D25:", file, fileError);
-            await execAsync("git add .", {
-              cwd: vaultPath,
-              maxBuffer: 50 * 1024 * 1024
-            });
-            break;
           }
         }
       }
@@ -3144,38 +3224,50 @@ var GitAutoCommitPlugin = class extends import_obsidian4.Plugin {
       return [];
     }
   }
+  /**
+   * 基于最近的变更生成 AI 提交信息
+   * - 不进行暂存操作，仅从“已暂存 diff”或“工作区 diff”构建上下文
+   * - 优先使用已暂存内容，若无则回退到工作区内容
+   * - 发生异常时回退为基于文件变更的基础提交信息或默认文案
+   */
   async generateCommitMessageWithAI(filesToCommit) {
     try {
       this.debugLog("generateCommitMessageWithAI \u5F00\u59CB\u6267\u884C");
       const vaultPath = this.app.vault.adapter.basePath || this.app.vault.adapter.path || this.app.vault.configDir;
       this.debugLog("\u5DE5\u4F5C\u76EE\u5F55:", vaultPath);
-      if (filesToCommit.length > 0) {
-        this.debugLog("\u6DFB\u52A0\u6307\u5B9A\u6587\u4EF6\u5230\u6682\u5B58\u533A:", filesToCommit);
-        for (const file of filesToCommit) {
-          await execAsync(`git add "${file}"`, {
-            cwd: vaultPath,
-            maxBuffer: 5 * 1024 * 1024
-            // 5MB 缓冲区
-          });
-        }
-      } else {
-        this.debugLog("\u6DFB\u52A0\u6240\u6709\u6587\u4EF6\u5230\u6682\u5B58\u533A");
-        await execAsync("git add .", {
+      let gitDiff = "";
+      let gitDiffContent = "";
+      try {
+        const { stdout: cachedStatus } = await execAsync("git diff --cached --name-status", {
           cwd: vaultPath,
-          maxBuffer: 10 * 1024 * 1024
-          // 10MB 缓冲区
+          maxBuffer: 50 * 1024 * 1024
         });
+        const { stdout: cachedContent } = await execAsync("git diff --cached", {
+          cwd: vaultPath,
+          maxBuffer: 50 * 1024 * 1024
+        });
+        this.debugLog("Cached diff \u72B6\u6001\u884C\u6570:", cachedStatus ? cachedStatus.split("\n").filter((l) => l.trim()).length : 0, "\u5185\u5BB9\u957F\u5EA6:", cachedContent.length);
+        if (cachedStatus.trim()) {
+          gitDiff = cachedStatus;
+          gitDiffContent = cachedContent;
+        } else {
+          this.debugLog("\u672A\u68C0\u6D4B\u5230\u5DF2\u6682\u5B58\u53D8\u66F4\uFF0C\u4F7F\u7528\u5DE5\u4F5C\u533A diff");
+          const { stdout: workStatus } = await execAsync("git diff --name-status", {
+            cwd: vaultPath,
+            maxBuffer: 50 * 1024 * 1024
+          });
+          const { stdout: workContent } = await execAsync("git diff", {
+            cwd: vaultPath,
+            maxBuffer: 50 * 1024 * 1024
+          });
+          gitDiff = workStatus;
+          gitDiffContent = workContent;
+        }
+      } catch (diffError) {
+        this.debugError("\u83B7\u53D6diff\u4FE1\u606F\u5931\u8D25:", diffError);
+        gitDiff = "";
+        gitDiffContent = "";
       }
-      const { stdout: gitDiff } = await execAsync("git diff --cached --name-status", {
-        cwd: vaultPath,
-        maxBuffer: 50 * 1024 * 1024
-        // 50MB 缓冲区
-      });
-      const { stdout: gitDiffContent } = await execAsync("git diff --cached", {
-        cwd: vaultPath,
-        maxBuffer: 50 * 1024 * 1024
-        // 50MB 缓冲区
-      });
       this.debugLog("Git diff \u72B6\u6001:", gitDiff);
       this.debugLog("Git diff \u5185\u5BB9\u957F\u5EA6:", gitDiffContent.length);
       if (gitDiffContent.length > 10 * 1024 * 1024) {
@@ -4487,6 +4579,18 @@ ${batch.files.slice(0, 10).map((f) => `- ${f}`).join("\n")}${batch.files.length 
     }
   }
   /**
+   * 触发一次定时自动提交检查（强制）
+   * 从插件侧调用管理器执行一次立即检查
+   */
+  async triggerTimedAutoCommitCheck() {
+    if (this.timedAutoCommitManager) {
+      this.debugLog("\u63D2\u4EF6\u89E6\u53D1\uFF1A\u7ACB\u5373\u68C0\u67E5\u4E00\u6B21\u5B9A\u65F6\u81EA\u52A8\u63D0\u4EA4");
+      await this.timedAutoCommitManager.triggerImmediateCheck();
+    } else {
+      this.debugWarn("\u5B9A\u65F6\u81EA\u52A8\u63D0\u4EA4\u7BA1\u7406\u5668\u672A\u521D\u59CB\u5316\uFF0C\u65E0\u6CD5\u89E6\u53D1\u68C0\u67E5");
+    }
+  }
+  /**
    * 获取定时自动提交状态
    */
   getTimedCommitStatus() {
@@ -4702,6 +4806,17 @@ var GitAutoCommitSettingTab = class extends import_obsidian4.PluginSettingTab {
       statusEl.style.borderRadius = "4px";
       statusEl.style.fontFamily = "var(--font-monospace)";
       statusEl.style.fontSize = "0.9em";
+      statusSetting.addExtraButton((btn) => btn.setIcon("refresh-ccw").setTooltip("\u5237\u65B0\u72B6\u6001").onClick(() => {
+        const text = this.plugin.getTimedCommitStatus();
+        statusEl.textContent = text;
+        this.plugin.debugLog("\u8BBE\u7F6E\u9762\u677F\uFF1A\u5237\u65B0\u5F53\u524D\u72B6\u6001 =>", text);
+        new import_obsidian4.Notice("\u{1F504} \u72B6\u6001\u5DF2\u5237\u65B0");
+      })).addExtraButton((btn) => btn.setIcon("zap").setTooltip("\u7ACB\u5373\u68C0\u67E5\u4E00\u6B21").onClick(async () => {
+        await this.plugin.triggerTimedAutoCommitCheck();
+        statusEl.textContent = this.plugin.getTimedCommitStatus();
+        this.plugin.debugLog("\u8BBE\u7F6E\u9762\u677F\uFF1A\u5DF2\u89E6\u53D1\u4E00\u6B21\u7ACB\u5373\u68C0\u67E5");
+        new import_obsidian4.Notice("\u26A1 \u5DF2\u89E6\u53D1\u4E00\u6B21\u68C0\u67E5");
+      }));
     }
     containerEl.createEl("h3", { text: "\u{1F527} \u8C03\u8BD5\u8BBE\u7F6E" });
     new import_obsidian4.Setting(containerEl).setName("\u542F\u7528\u8C03\u8BD5\u6A21\u5F0F").setDesc("\u5F00\u542F\u540E\u4F1A\u5728\u6D4F\u89C8\u5668\u63A7\u5236\u53F0\u663E\u793A\u8BE6\u7EC6\u7684\u8C03\u8BD5\u4FE1\u606F\uFF0C\u5305\u62ECGit\u64CD\u4F5C\u3001AI\u751F\u6210\u3001\u6309\u94AE\u72B6\u6001\u7B49").addToggle((toggle) => toggle.setValue(this.plugin.settings.debugMode).onChange(async (value) => {

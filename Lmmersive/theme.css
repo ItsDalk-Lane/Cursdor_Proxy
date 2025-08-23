@@ -1,42 +1,8 @@
-/* ---------------------------------------------------------------------------
-
-Zen Theme by @Laughmaker
-
-User interface replacement for Obsidian.
-
-Readme:
-https://github.com/laughmaker/zen
-
------------------------------------------------------------------------------
-
-MIT License
-
-Copyright (c) 2020-2023 Laughmaker
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in 
-all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-
-*/
 
 /* @settings
 
-name: Zen
-id: zen
+name: Lmmersive
+id: lmmersive
 settings:
 	-
 		id: color-scheme-header
@@ -46,7 +12,7 @@ settings:
 		description.zh: 为亮色和暗色主题选择配色方案
 		type: heading
 		level: 1
-		collapsed: false
+		collapsed: true
 	-
 		id: theme-variant-light
 		title: Light Theme Color Scheme
@@ -228,6 +194,110 @@ settings:
 		description: Ensure all comments in code blocks are always visible, similar to VS Code style.
 		description.zh: 确保代码块中的注释始终可见，类似 VS Code 风格。
 		type: class-toggle
+	-
+		id: custom-content-colors-header
+		title: Custom Content Colors
+		title.zh: 自定义内容颜色
+		description: Customize colors for code blocks, math blocks, and tables
+		description.zh: 自定义代码块、数学块和表格的颜色
+		type: heading
+		level: 1
+		collapsed: true
+	-
+		id: custom-code-bg-color
+		title: Code Block Background Color
+		title.zh: 代码块背景色
+		description: Set custom background color for code blocks
+		description.zh: 设置代码块的自定义背景色
+		type: variable-themed-color
+		opacity: true
+		format: hex
+		default-light: "#f5f5f5"
+		default-dark: "#1c1c1c"
+	-
+		id: custom-code-text-color
+		title: Code Block Text Color
+		title.zh: 代码块文字颜色
+		description: Set custom text color for code blocks
+		description.zh: 设置代码块的自定义文字颜色
+		type: variable-themed-color
+		format: hex
+		default-light: "#1c1c1c"
+		default-dark: "#f5f5f5"
+	-
+		id: custom-inline-code-bg-color
+		title: Inline Code Background Color
+		title.zh: 行内代码背景色
+		description: Set custom background color for inline code
+		description.zh: 设置行内代码的自定义背景色
+		type: variable-themed-color
+		opacity: true
+		format: hex
+		default-light: "#f5f5f5"
+		default-dark: "#1c1c1c"
+	-
+		id: custom-inline-code-text-color
+		title: Inline Code Text Color
+		title.zh: 行内代码文字颜色
+		description: Set custom text color for inline code
+		description.zh: 设置行内代码的自定义文字颜色
+		type: variable-themed-color
+		format: hex
+		default-light: "#1c1c1c"
+		default-dark: "#f5f5f5"
+	-
+		id: custom-math-bg-color
+		title: Math Block Background Color
+		title.zh: 数学块背景色
+		description: Set custom background color for math blocks
+		description.zh: 设置数学块的自定义背景色
+		type: variable-themed-color
+		opacity: true
+		format: hex
+		default-light: "#f5f5f5"
+		default-dark: "#1c1c1c"
+	-
+		id: custom-math-text-color
+		title: Math Block Text Color
+		title.zh: 数学块文字颜色
+		description: Set custom text color for math blocks
+		description.zh: 设置数学块的自定义文字颜色
+		type: variable-themed-color
+		format: hex
+		default-light: "#1c1c1c"
+		default-dark: "#f5f5f5"
+	-
+		id: custom-table-bg-color
+		title: Table Background Color
+		title.zh: 表格背景色
+		description: Set custom background color for tables
+		description.zh: 设置表格的自定义背景色
+		type: variable-themed-color
+		opacity: true
+		format: hex
+		default-light: "#f5f5f5"
+		default-dark: "#1c1c1c"
+	-
+		id: custom-table-text-color
+		title: Table Text Color
+		title.zh: 表格文字颜色
+		description: Set custom text color for tables
+		description.zh: 设置表格的自定义文字颜色
+		type: variable-themed-color
+		format: hex
+		default-light: "#1c1c1c"
+		default-dark: "#f5f5f5"
+	-
+		id: custom-table-header-bg-color
+		title: Table Header Background Color
+		title.zh: 表格标题背景色
+		description: Set custom background color for table headers
+		description.zh: 设置表格标题的自定义背景色
+		type: variable-themed-color
+		opacity: true
+		format: hex
+		default-light: "#f5f5f5"
+		default-dark: "#1c1c1c"
 	-
 		id: modal-background-header
 		title: Modal Background Effects
@@ -2307,7 +2377,6 @@ body:not(.is-mobile):not(.composer--DisableNavHeaderAutoHide) .mod-sidedock .wor
 /* 
  * 适配PC端样式 
  */
-
 body:not(.is-mobile)	.suggestion-container,
 body:not(.is-mobile)	.suggestion-container.mod-search-suggestion .suggestion,
 body:not(.is-mobile)	.suggestion-container.mod-search-suggestion,
@@ -2329,7 +2398,6 @@ body:not(.is-mobile).theme-dark	.modal-container.mod-dim .prompt {
 	border: 1px solid rgba(255, 255, 255, 0.1);
 	box-shadow: 1px 1px 6px rgba(0, 0, 0, 0.2);
 }
-
 
 .setting-item-control select,
 body:not(.is-mobile)	.global-search-input-container,
@@ -4171,8 +4239,144 @@ body:not(.is-mobile):not(.composer--DisableNavHeaderAutoHide) .mod-sidedock .wor
 	border: 1px solid rgba(255, 235, 59, 0.5) !important;
 }
 
+/*
+[修复] 解决主题半透明模式下 suggestion-container 被遮挡问题
+... (完整的代码) ...
+*/
+body:not(.win-translucent-off):not(.mod-macos):not(.is-mobile):has(.suggestion-container) .app-container,
+body:not(.win-translucent-off):not(.mod-macos):not(.is-mobile):has(.suggestion-container) .horizontal-main-container {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+}
 
+/*
+ * 修复 callout 内部代码块双重背景问题
+ * Fix double background issue for code blocks inside callouts
+ */
+.callout code,
+.callout .cm-inline-code,
+.callout .markdown-rendered code {
+	background-color: transparent !important;
+	border: 1px solid var(--background-modifier-border-hover) !important;
+}
 
+/* 修复 callout 内部代码块容器的背景 */
+.callout pre,
+.callout .cm-editor,
+.callout .HyperMD-codeblock,
+.callout .markdown-rendered pre {
+	background-color: var(--codeblock-background) !important;
+	border-radius: var(--codeblock-border-radius) !important;
+}
 
+/* 确保 callout 内部的内联代码只有边框，没有背景 */
+.callout pre code,
+.callout .cm-editor code,
+.callout .HyperMD-codeblock code {
+	background-color: transparent !important;
+	border: none !important;
+	padding: 0 !important;
+}
+
+/* ================================ 自定义内容颜色设置 ================================ */
+
+/* 代码块样式 - 使用自定义颜色变量 */
+.markdown-rendered pre,
+.markdown-preview-view pre,
+.cm-editor .cm-scroller .cm-content .HyperMD-codeblock,
+.HyperMD-codeblock {
+	background-color: var(--custom-code-bg-color) !important;
+	color: var(--custom-code-text-color) !important;
+}
+
+.markdown-rendered pre code,
+.markdown-preview-view pre code,
+.cm-editor .cm-scroller .cm-content .HyperMD-codeblock code,
+.HyperMD-codeblock code {
+	color: var(--custom-code-text-color) !important;
+}
+
+/* 行内代码样式 - 使用自定义颜色变量 */
+code,
+.cm-inline-code,
+.markdown-rendered code,
+.markdown-preview-view code:not(pre code) {
+	background-color: var(--custom-inline-code-bg-color) !important;
+	color: var(--custom-inline-code-text-color) !important;
+}
+
+/* 数学块样式 - 使用自定义颜色变量 */
+.math-block,
+.cm-math,
+.markdown-rendered .math,
+.markdown-preview-view .math,
+.MathJax,
+.MathJax_Display,
+.cm-editor .cm-math-block {
+	background-color: var(--custom-math-bg-color) !important;
+	color: var(--custom-math-text-color) !important;
+}
+
+/* 表格样式 - 使用自定义颜色变量 */
+table,
+.markdown-rendered table,
+.markdown-preview-view table,
+.cm-editor table {
+	background-color: var(--custom-table-bg-color) !important;
+	color: var(--custom-table-text-color) !important;
+}
+
+table td,
+table th,
+.markdown-rendered table td,
+.markdown-rendered table th,
+.markdown-preview-view table td,
+.markdown-preview-view table th {
+	color: var(--custom-table-text-color) !important;
+}
+
+/* 表格标题行样式 - 使用自定义颜色变量 */
+table th,
+table thead th,
+.markdown-rendered table th,
+.markdown-rendered table thead th,
+.markdown-preview-view table th,
+.markdown-preview-view table thead th {
+	background-color: var(--custom-table-header-bg-color) !important;
+	color: var(--custom-table-text-color) !important;
+}
+
+/* 确保在标注内部的代码块也使用自定义颜色 */
+.callout code {
+	background-color: var(--custom-inline-code-bg-color) !important;
+	color: var(--custom-inline-code-text-color) !important;
+}
+
+.callout pre,
+.callout pre code {
+	background-color: var(--custom-code-bg-color) !important;
+	color: var(--custom-code-text-color) !important;
+}
+
+.callout .math {
+	background-color: var(--custom-math-bg-color) !important;
+	color: var(--custom-math-text-color) !important;
+}
+
+.callout table {
+	background-color: var(--custom-table-bg-color) !important;
+	color: var(--custom-table-text-color) !important;
+}
+
+.callout table th {
+	background-color: var(--custom-table-header-bg-color) !important;
+	color: var(--custom-table-text-color) !important;
+}
+
+/* 调试信息 - 可通过控制台查看自定义颜色是否正确加载 */
+body::before {
+	content: "Lmmersive Custom Colors Loaded";
+	display: none;
+}
 
 

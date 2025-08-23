@@ -81,6 +81,15 @@ class TimedAutoCommitManager {
     }
 
     /**
+     * 立刻触发一次自动提交检查（强制）
+     * 忽略编辑延迟与时间间隔，常用于手动命令或设置页按钮
+     */
+    public async triggerImmediateCheck(): Promise<void> {
+        this.plugin.debugLog('手动触发定时自动提交检查（force=true）');
+        await this.checkAndExecuteAutoCommit(true);
+    }
+
+    /**
      * 通知文件编辑活动
      */
     notifyEditingActivity(): void {
@@ -106,10 +115,11 @@ class TimedAutoCommitManager {
 
     /**
      * 检查并执行自动提交
+     * @param force 是否强制检查，true 时忽略编辑延迟与时间间隔
      */
-    private async checkAndExecuteAutoCommit(): Promise<void> {
+    private async checkAndExecuteAutoCommit(force: boolean = false): Promise<void> {
         try {
-            this.plugin.debugLog('=== 检查自动提交条件 ===');
+            this.plugin.debugLog(`=== 检查自动提交条件 === force=${force}`);
             
             // 检查是否启用了定时自动提交
             if (!this.plugin.settings.timedAutoCommit) {
@@ -117,13 +127,15 @@ class TimedAutoCommitManager {
                 return;
             }
 
-            // 检查是否正在编辑且启用了编辑延迟
-            if (this.plugin.settings.enableEditingDelay && this.isEditing) {
+            // 检查是否正在编辑且启用了编辑延迟（force 时忽略）
+            if (!force && this.plugin.settings.enableEditingDelay && this.isEditing) {
                 this.plugin.debugLog('当前正在编辑文件且启用了编辑延迟，跳过自动提交');
                 return;
+            } else if (force && this.plugin.settings.enableEditingDelay && this.isEditing) {
+                this.plugin.debugLog('force=true，忽略编辑延迟与正在编辑状态，继续执行检查');
             }
 
-            // 检查时间间隔
+            // 检查时间间隔（force 时忽略）
             const now = Date.now();
             const timeSinceLastCommit = now - this.lastCommitTime;
             const timeSinceStart = now - this.startTime;
@@ -133,9 +145,11 @@ class TimedAutoCommitManager {
             
             this.plugin.debugLog(`时间检查: 距离上次提交${Math.round(timeSinceLastCommit/1000/60)}分钟, 距离启动${Math.round(timeSinceStart/1000/60)}分钟, 需要间隔${this.plugin.settings.autoCommitInterval}分钟`);
             
-            if (!shouldCommitByInterval) {
+            if (!force && !shouldCommitByInterval) {
                 this.plugin.debugLog('未达到提交间隔时间，跳过');
                 return;
+            } else if (force && !shouldCommitByInterval) {
+                this.plugin.debugLog('force=true，未达到间隔但将忽略时间限制，继续执行检查');
             }
 
             // 检查是否有文件变更
@@ -150,10 +164,10 @@ class TimedAutoCommitManager {
             // 执行自动提交
             await this.executeAutoCommit(changes);
             
-        } catch (error) {
+        } catch (error: any) {
             this.plugin.debugError('自动提交检查过程中发生错误:', error);
             if (this.plugin.settings.showNotifications) {
-                new Notice(`⚠️ 自动提交检查失败: ${error.message}`);
+                new Notice(`⚠️ 自动提交检查失败: ${error?.message ?? error}`);
             }
         }
     }
@@ -440,6 +454,53 @@ export default class GitAutoCommitPlugin extends Plugin {
             name: '测试分批处理功能',
             callback: () => {
                 this.testBatchProcessing();
+            }
+        });
+
+        // 定时自动提交：状态/启动/停止/重启/立即检查
+        this.addCommand({
+            id: 'timed-auto-commit-show-status',
+            name: '显示定时自动提交状态',
+            callback: () => {
+                const status = this.getTimedCommitStatus();
+                this.debugLog('显示定时自动提交状态：', status);
+                new Notice(`🕒 ${status}`);
+            }
+        });
+
+        this.addCommand({
+            id: 'timed-auto-commit-start',
+            name: '启动定时自动提交',
+            callback: () => {
+                this.startTimedAutoCommit();
+                new Notice('▶️ 已启动定时自动提交');
+            }
+        });
+
+        this.addCommand({
+            id: 'timed-auto-commit-stop',
+            name: '停止定时自动提交',
+            callback: () => {
+                this.stopTimedAutoCommit();
+                new Notice('⏹️ 已停止定时自动提交');
+            }
+        });
+
+        this.addCommand({
+            id: 'timed-auto-commit-restart',
+            name: '重启定时自动提交',
+            callback: () => {
+                this.restartTimedAutoCommit();
+                new Notice('🔁 已重启定时自动提交');
+            }
+        });
+
+        this.addCommand({
+            id: 'timed-auto-commit-check-now',
+            name: '立即检查一次（定时自动提交）',
+            callback: async () => {
+                await this.triggerTimedAutoCommitCheck();
+                new Notice('⚡ 已触发一次检查，请查看控制台或状态');
             }
         });
 
@@ -948,44 +1009,74 @@ export default class GitAutoCommitPlugin extends Plugin {
         }
     }
 
+    /**
+     * 执行实际的 Git 提交
+     * - 负责在必要时暂存变更（避免重复暂存）
+     * - 处理多行提交信息文件化提交
+     * - 成功后通知并更新定时自动提交的最后提交时间
+     * 注意：为了兼容包含中文/特殊字符路径的文件，尽量避免不必要的 git add 重复执行。
+     */
     async performActualCommit(filesToCommit: string[], commitMessage: string): Promise<void> {
         try {
             const vaultPath = (this.app.vault.adapter as any).basePath || 
                              (this.app.vault.adapter as any).path ||
                              this.app.vault.configDir;
 
+            // 先检查是否已有已暂存变更，避免重复暂存导致路径编码问题
+            const { stdout: stagedListRaw } = await execAsync('git diff --cached --name-only', {
+                cwd: vaultPath,
+                maxBuffer: 10 * 1024 * 1024
+            });
+            const stagedSet = new Set(
+                stagedListRaw
+                    .split('\n')
+                    .map(s => s.trim().replace(/\\/g, '/'))
+                    .filter(Boolean)
+            );
+            this.debugLog('已暂存文件数量:', stagedSet.size);
+
             // 如果没有指定文件，提交所有变更
             if (filesToCommit.length === 0) {
+                this.debugLog('未指定文件，使用 git add . 暂存所有变更');
                 await execAsync('git add .', { 
                     cwd: vaultPath,
                     maxBuffer: 50 * 1024 * 1024 // 50MB 缓冲区
                 });
             } else {
-                // 添加指定文件 - 使用改进的路径处理
-                for (const file of filesToCommit) {
-                    try {
-                        // 清理文件路径
-                        let cleanPath = file;
-                        if (cleanPath.startsWith('"') && cleanPath.endsWith('"')) {
-                            cleanPath = cleanPath.slice(1, -1);
+                // 规范化并过滤出尚未暂存的文件
+                const normalized = filesToCommit.map((file) => {
+                    let cleanPath = file;
+                    if (cleanPath.startsWith('"') && cleanPath.endsWith('"')) {
+                        cleanPath = cleanPath.slice(1, -1);
+                    }
+                    cleanPath = cleanPath.replace(/\\[0-9]{3}/g, '');
+                    cleanPath = cleanPath.replace(/\\/g, '/');
+                    return cleanPath;
+                });
+                const toAdd = normalized.filter(p => !stagedSet.has(p));
+                this.debugLog('指定文件总数:', normalized.length, '需要新增暂存的文件数:', toAdd.length);
+
+                if (toAdd.length === 0) {
+                    this.debugLog('所有指定文件均已在暂存区，跳过 git add 步骤');
+                } else {
+                    // 添加指定文件 - 使用改进的路径处理
+                    for (const cleanPath of toAdd) {
+                        try {
+                            const escapedPath = cleanPath.replace(/"/g, '\\"');
+                            await execAsync(`git add "${escapedPath}"`, { 
+                                cwd: vaultPath,
+                                maxBuffer: 10 * 1024 * 1024, // 10MB 缓冲区
+                                encoding: 'utf8'
+                            });
+                        } catch (fileError) {
+                            this.debugError('添加单个文件失败:', cleanPath, fileError);
+                            // 如果单个文件失败，使用git add .作为备用方案
+                            await execAsync('git add .', { 
+                                cwd: vaultPath,
+                                maxBuffer: 50 * 1024 * 1024
+                            });
+                            break;
                         }
-                        cleanPath = cleanPath.replace(/\\[0-9]{3}/g, '');
-                        cleanPath = cleanPath.replace(/\\/g, '/');
-                        
-                        const escapedPath = cleanPath.replace(/"/g, '\\"');
-                        await execAsync(`git add "${escapedPath}"`, { 
-                            cwd: vaultPath,
-                            maxBuffer: 10 * 1024 * 1024, // 10MB 缓冲区
-                            encoding: 'utf8'
-                        });
-                    } catch (fileError) {
-                        this.debugError('添加单个文件失败:', file, fileError);
-                        // 如果单个文件失败，使用git add .作为备用方案
-                        await execAsync('git add .', { 
-                            cwd: vaultPath,
-                            maxBuffer: 50 * 1024 * 1024
-                        });
-                        break;
                     }
                 }
             }
@@ -1188,6 +1279,12 @@ export default class GitAutoCommitPlugin extends Plugin {
         }
     }
 
+    /**
+     * 基于最近的变更生成 AI 提交信息
+     * - 不进行暂存操作，仅从“已暂存 diff”或“工作区 diff”构建上下文
+     * - 优先使用已暂存内容，若无则回退到工作区内容
+     * - 发生异常时回退为基于文件变更的基础提交信息或默认文案
+     */
     async generateCommitMessageWithAI(filesToCommit: string[]): Promise<string> {
         try {
             this.debugLog('generateCommitMessageWithAI 开始执行');
@@ -1196,32 +1293,42 @@ export default class GitAutoCommitPlugin extends Plugin {
                              this.app.vault.configDir;
             this.debugLog('工作目录:', vaultPath);
 
-            // 添加文件到暂存区
-            if (filesToCommit.length > 0) {
-                this.debugLog('添加指定文件到暂存区:', filesToCommit);
-                for (const file of filesToCommit) {
-                    await execAsync(`git add "${file}"`, { 
-                        cwd: vaultPath,
-                        maxBuffer: 5 * 1024 * 1024 // 5MB 缓冲区
-                    });
-                }
-            } else {
-                this.debugLog('添加所有文件到暂存区');
-                await execAsync('git add .', { 
+            // 不在此处执行 git add，避免与提交阶段重复暂存导致路径编码问题（特别是包含中文/特殊字符路径）
+            // 优先使用已暂存的 diff；若无已暂存变更，则回退到工作区 diff
+            let gitDiff = '';
+            let gitDiffContent = '';
+            try {
+                const { stdout: cachedStatus } = await execAsync('git diff --cached --name-status', { 
                     cwd: vaultPath,
-                    maxBuffer: 10 * 1024 * 1024 // 10MB 缓冲区
+                    maxBuffer: 50 * 1024 * 1024
                 });
+                const { stdout: cachedContent } = await execAsync('git diff --cached', { 
+                    cwd: vaultPath,
+                    maxBuffer: 50 * 1024 * 1024
+                });
+                this.debugLog('Cached diff 状态行数:', cachedStatus ? cachedStatus.split('\n').filter(l=>l.trim()).length : 0, '内容长度:', cachedContent.length);
+                if (cachedStatus.trim()) {
+                    gitDiff = cachedStatus;
+                    gitDiffContent = cachedContent;
+                } else {
+                    this.debugLog('未检测到已暂存变更，使用工作区 diff');
+                    const { stdout: workStatus } = await execAsync('git diff --name-status', { 
+                        cwd: vaultPath,
+                        maxBuffer: 50 * 1024 * 1024
+                    });
+                    const { stdout: workContent } = await execAsync('git diff', { 
+                        cwd: vaultPath,
+                        maxBuffer: 50 * 1024 * 1024
+                    });
+                    gitDiff = workStatus;
+                    gitDiffContent = workContent;
+                }
+            } catch (diffError) {
+                this.debugError('获取diff信息失败:', diffError);
+                // 发生错误时，继续后续流程，最终会回退到默认提交信息
+                gitDiff = '';
+                gitDiffContent = '';
             }
-
-            // 获取详细的diff信息，包含文件名
-            const { stdout: gitDiff } = await execAsync('git diff --cached --name-status', { 
-                cwd: vaultPath,
-                maxBuffer: 50 * 1024 * 1024 // 50MB 缓冲区
-            });
-            const { stdout: gitDiffContent } = await execAsync('git diff --cached', { 
-                cwd: vaultPath,
-                maxBuffer: 50 * 1024 * 1024 // 50MB 缓冲区
-            });
             
             this.debugLog('Git diff 状态:', gitDiff);
             this.debugLog('Git diff 内容长度:', gitDiffContent.length);
@@ -2917,6 +3024,19 @@ ${batch.files.slice(0, 10).map(f => `- ${f}`).join('\n')}${batch.files.length > 
     }
 
     /**
+     * 触发一次定时自动提交检查（强制）
+     * 从插件侧调用管理器执行一次立即检查
+     */
+    async triggerTimedAutoCommitCheck(): Promise<void> {
+        if (this.timedAutoCommitManager) {
+            this.debugLog('插件触发：立即检查一次定时自动提交');
+            await this.timedAutoCommitManager.triggerImmediateCheck();
+        } else {
+            this.debugWarn('定时自动提交管理器未初始化，无法触发检查');
+        }
+    }
+
+    /**
      * 获取定时自动提交状态
      */
     getTimedCommitStatus(): string {
@@ -3315,6 +3435,27 @@ class GitAutoCommitSettingTab extends PluginSettingTab {
             statusEl.style.borderRadius = '4px';
             statusEl.style.fontFamily = 'var(--font-monospace)';
             statusEl.style.fontSize = '0.9em';
+
+            // 操作按钮：刷新状态 & 立即检查一次
+            statusSetting
+                .addExtraButton(btn => btn
+                    .setIcon('refresh-ccw')
+                    .setTooltip('刷新状态')
+                    .onClick(() => {
+                        const text = this.plugin.getTimedCommitStatus();
+                        statusEl.textContent = text;
+                        this.plugin.debugLog('设置面板：刷新当前状态 =>', text);
+                        new Notice('🔄 状态已刷新');
+                    }))
+                .addExtraButton(btn => btn
+                    .setIcon('zap')
+                    .setTooltip('立即检查一次')
+                    .onClick(async () => {
+                        await this.plugin.triggerTimedAutoCommitCheck();
+                        statusEl.textContent = this.plugin.getTimedCommitStatus();
+                        this.plugin.debugLog('设置面板：已触发一次立即检查');
+                        new Notice('⚡ 已触发一次检查');
+                    }));
         }
 
         // 调试设置
