@@ -151,17 +151,21 @@ function FormModalContent({
 			if (!source.formFilePath) return;
 
 			try {
-				const jsonObj = await app.vault.readJson(source.formFilePath);
-				if (jsonObj) {
-					const config = jsonObj as FormConfig;
-					setFormConfig(config);
+				const file = app.vault.getAbstractFileByPath(source.formFilePath);
+				if (file && file instanceof app.vault.adapter.constructor) {
+					const content = await app.vault.read(file as any);
+					const jsonObj = JSON.parse(content);
+					if (jsonObj) {
+						const config = jsonObj as FormConfig;
+						setFormConfig(config);
 					
-					// 设置当前活动表单到状态管理器
-					FormStateManager.getInstance('FormStateManager').setCurrentForm(config);
+						// 设置当前活动表单到状态管理器
+						FormStateManager.getInstance('FormStateManager').setCurrentForm(config);
 
-					// Set title based on file name
-					const fileBaseName = source.formFilePath.split("/").pop();
-					setTitle(fileBaseName);
+						// Set title based on file name
+						const fileBaseName = source.formFilePath.split("/").pop();
+						setTitle(fileBaseName);
+					}
 				}
 			} catch (error) {
 				console.error("Failed to load form config", error);

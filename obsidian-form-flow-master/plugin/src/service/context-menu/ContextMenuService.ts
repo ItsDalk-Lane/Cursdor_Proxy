@@ -159,19 +159,21 @@ export class ContextMenuService extends BaseService {
      * 添加单个字段的菜单项
      */
     private addSingleFieldMenuItems(menu: Menu, field: RegisteredField, selectedText: string, hasSelection: boolean, view: any, editor: Editor): void {
-        this.debugLog(`添加字段菜单项: ${field.fieldLabel}`);
+        // 构建显示名称：表单名称 - 字段名称
+        const displayName = `${field.formName} - ${field.fieldLabel}`;
+        this.debugLog(`添加字段菜单项: ${displayName}`);
         
         // 根据是否有选中内容决定显示的选项和执行的操作
         menu.addItem((item) => {
-            item.setTitle(field.fieldLabel)
+            item.setTitle(displayName)
                 .onClick(async () => {
                     if (hasSelection) {
                         // 有选中内容时，使用选中内容执行表单
-                        this.debugLog(`使用选中内容执行表单: ${field.fieldLabel}`);
+                        this.debugLog(`使用选中内容执行表单: ${displayName}`);
                         await this.executeFormWithContent(field, selectedText);
                     } else {
                         // 没有选中内容时，使用整个文件内容执行表单
-                        this.debugLog(`使用文件内容执行表单: ${field.fieldLabel}`);
+                        this.debugLog(`使用文件内容执行表单: ${displayName}`);
                         await this.executeFormWithFileContent(field, view);
                     }
                 });

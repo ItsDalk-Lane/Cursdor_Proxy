@@ -88,7 +88,8 @@ export class FormService extends BaseService {
     }
 
     async open(file: TFile, app: App) {
-        const form = await app.vault.readJson(file.path) as FormConfig;
+        const content = await app.vault.read(file);
+        const form = JSON.parse(content) as FormConfig;
         await this.openForm(form, app);
     }
 

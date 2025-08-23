@@ -1,4 +1,4 @@
-import { Plugin } from 'obsidian';
+import { Plugin, Notice } from 'obsidian';
 import { PluginSettings, DEFAULT_SETTINGS } from './settings/PluginSettings';
 import { formScriptService } from './service/extend/FormScriptService';
 import { formIntegrationService } from './service/command/FormIntegrationService';
@@ -41,10 +41,11 @@ export default class FormPlugin extends Plugin {
 		this.registerEvent(
 			this.app.vault.on('delete', async (file) => {
 				debugManager.log("FormPlugin", `文件删除事件触发: ${file.path}`);
-				debugManager.log("FormPlugin", `文件类型检查: 是否为JSON文件 = ${file.path.endsWith('.json')}`);
+				const isFormFile = file.path.endsWith('.json') || file.path.endsWith('.cform');
+				debugManager.log("FormPlugin", `文件类型检查: 是否为表单文件 = ${isFormFile}`);
 				
 				
-				if (file.path.endsWith('.json')) {
+				if (isFormFile) {
 					const isRegistered = this.formIntegrationService.isEnable(file.path);
 					debugManager.log("FormPlugin", `表单注册状态检查: ${file.path} 是否已注册 = ${isRegistered}`);
 					
@@ -76,31 +77,49 @@ export default class FormPlugin extends Plugin {
 		this.registerEvent(
 			this.app.vault.on('modify', async (file) => {
 				debugManager.log("FormPlugin", `文件修改事件触发: ${file.path}`);
-			debugManager.log("FormPlugin", `文件类型检查: 是否为JSON文件 = ${file.path.endsWith('.json')}`);
+				const isFormFile = file.path.endsWith('.json') || file.path.endsWith('.cform');
+				debugManager.log("FormPlugin", `文件类型检查: 是否为表单文件 = ${isFormFile}`);
 				
-				if (file.path.endsWith('.json')) {
+				if (isFormFile) {
 					const isRegistered = this.formIntegrationService.isEnable(file.path);
 					debugManager.log("FormPlugin", `表单注册状态检查: ${file.path} 是否已注册 = ${isRegistered}`);
 					
-					if (isRegistered) {
-					debugManager.log("FormPlugin", `开始重新注册已修改的表单: ${file.path}`);
 					// 记录重新注册前的右键菜单字段状态
 					const registeredFieldsBefore = this.contextMenuService.getRegisteredFields();
 					debugManager.log("FormPlugin", `重新注册前右键菜单注册字段数量: ${registeredFieldsBefore.length}`);
 					debugManager.log("FormPlugin", `重新注册前注册字段详情:`, registeredFieldsBefore);
 					
-					try {
-						await this.formIntegrationService.register(file.path);
-						
-						debugManager.log("FormPlugin", `表单重新注册完成: ${file.path}`);
-						// 记录重新注册后的右键菜单字段状态
-						const registeredFieldsAfter = this.contextMenuService.getRegisteredFields();
-						debugManager.log("FormPlugin", `重新注册后右键菜单注册字段数量: ${registeredFieldsAfter.length}`);
-						debugManager.log("FormPlugin", `重新注册后注册字段详情:`, registeredFieldsAfter);
-					} catch (error) {
-						debugManager.error("FormPlugin", `表单重新注册失败: ${file.path}`, error);
+					// 添加用户可见的通知，帮助确认实时更新是否工作
+					if (this.settings.enableDebugLogging) {
+						new Notice(`FormFlow: 检测到表单文件修改 ${file.path}`, 2000);
+					}
+					
+					if (isRegistered) {
+						debugManager.log("FormPlugin", `开始重新注册已修改的表单: ${file.path}`);
+						try {
+							await this.formIntegrationService.register(file.path);
+							debugManager.log("FormPlugin", `表单重新注册完成: ${file.path}`);
+							if (this.settings.enableDebugLogging) {
+								new Notice(`FormFlow: 已注册表单重新注册完成`, 2000);
+							}
+						} catch (error) {
+							debugManager.error("FormPlugin", `表单重新注册失败: ${file.path}`, error);
+						}
+					} else {
+						// 表单未注册为命令，需要移除其右键菜单字段
+						debugManager.log("FormPlugin", `表单未注册为命令，移除右键菜单字段: ${file.path}`);
+						// 取消注册该表单的右键菜单字段
+						this.contextMenuService.unregisterFormFieldsByPath(file.path);
+						debugManager.log("FormPlugin", `未注册表单的右键菜单字段已移除: ${file.path}`);
+						if (this.settings.enableDebugLogging) {
+							new Notice(`FormFlow: 未注册表单的右键菜单字段已移除`, 2000);
 						}
 					}
+					
+					// 记录重新注册后的右键菜单字段状态
+					const registeredFieldsAfter = this.contextMenuService.getRegisteredFields();
+					debugManager.log("FormPlugin", `重新注册后右键菜单注册字段数量: ${registeredFieldsAfter.length}`);
+					debugManager.log("FormPlugin", `重新注册后注册字段详情:`, registeredFieldsAfter);
 				}
 			})
 		);

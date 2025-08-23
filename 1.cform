@@ -1,0 +1,59 @@
+{
+  "id": "8ccfb90a-9be5-448f-b155-a40266525f04",
+  "fields": [
+    {
+      "id": "37d2e00c-c343-4558-b2fe-37490ab8e234",
+      "label": "内容",
+      "type": "text",
+      "required": false,
+      "rightClickSubmit": true,
+      "defaultValue": [],
+      "multiple": false
+    }
+  ],
+  "actions": [
+    {
+      "type": "insertText",
+      "targetFolder": "",
+      "fileName": "",
+      "id": "2f4af827-f933-4b4e-b31e-23468e9772eb",
+      "contentTemplateSource": "text",
+      "content": "{{@内容}}",
+      "templateFile": "",
+      "openPageIn": "modal",
+      "requireConfirmation": false,
+      "promptSource": "builtin_template",
+      "outputVariableName": "",
+      "modelFieldName": "",
+      "templateFieldName": "",
+      "cleanupType": "deleteFolders",
+      "targetFilePath": "测试/测试.md",
+      "headingName": "## 二级目录",
+      "filePath": "测试箱/1号表单测试文件.md",
+      "position": "bottomBelowTitle",
+      "propertyUpdates": [
+        {
+          "id": "9876ae52-27da-4298-9130-c1ac8679f641",
+          "name": "使用场景",
+          "value": [
+            "{{@内容}}"
+          ]
+        }
+      ],
+      "formatClearOptions": {
+        "clearAll": true
+      },
+      "targetFiles": [
+        "测试/测试 副本.md"
+      ],
+      "targetFolders": [
+        "测试"
+      ],
+      "recursive": true,
+      "targetFileType": "specified_file",
+      "heading": "# 尾行"
+    }
+  ],
+  "showSubmitMessage": false,
+  "autoCloseAfterSubmit": true
+}
