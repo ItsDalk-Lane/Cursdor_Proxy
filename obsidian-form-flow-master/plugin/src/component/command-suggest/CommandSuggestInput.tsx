@@ -162,20 +162,12 @@ export function CommandSuggestInput(props: {
                                         borderRadius: "4px",
                                         backgroundColor: activeIndex === index ? "var(--background-modifier-hover)" : "transparent",
                                         display: "flex",
-                                        flexDirection: "column",
-                                        gap: "2px",
+                                        alignItems: "center",
                                     }}
                                     onMouseEnter={() => setActiveIndex(index)}
                                 >
                                     <div style={{ fontWeight: "500", fontSize: "14px" }}>
                                         {item.label}
-                                    </div>
-                                    <div style={{ 
-                                        fontSize: "12px", 
-                                        color: "var(--text-muted)",
-                                        fontFamily: "var(--font-monospace)",
-                                    }}>
-                                        {item.commandId}
                                     </div>
                                 </div>
                             ))

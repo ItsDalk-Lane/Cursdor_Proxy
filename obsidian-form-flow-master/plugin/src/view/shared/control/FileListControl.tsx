@@ -9,6 +9,7 @@ import { IFileListField } from "src/model/field/IFileListField";
 import { IFormField } from "src/model/field/IFormField";
 import { Strings } from "src/utils/Strings";
 import { FormFieldValue } from "../../../service/FormValues";
+import { advancedSearch, highlightMatches } from "../../../utils/searchUtils";
 
 /**
  * 文件列表控件属性接口
@@ -33,24 +34,31 @@ export function FileListControl(props: Props) {
 
 	const items = useMemo(() => {
 		const files = app.vault.getMarkdownFiles();
-		const options = files
-			.filter((f) => {
-				if (Strings.isEmpty(path)) {
-					return true;
-				}
-				const filePath = Strings.safeToLowerCaseString(f.path);
-				const searchValue = path.toLowerCase();
-				return filePath.includes(searchValue);
-			})
-			.slice(0, 100)
-			.map((f) => {
-				return {
-					id: f.path,
-					value: f.path,
-					label: f.path,
-				};
-			});
-		return options;
+		
+		// 如果没有搜索路径，返回前100个文件
+		if (Strings.isEmpty(path)) {
+			return files.slice(0, 100).map((f) => ({
+				id: f.path,
+				value: f.path,
+				label: f.path,
+				matchedIndices: [] as number[][]
+			}));
+		}
+		
+		// 使用高级搜索算法
+		const searchResults = advancedSearch(
+			files,
+			path,
+			(f) => f.path,
+			100
+		);
+		
+		return searchResults.map((result) => ({
+			id: result.item.path,
+			value: result.item.path,
+			label: result.item.path,
+			matchedIndices: result.matchedIndices
+		}));
 	}, [path]);
 
 	const values = useMemo(() => {
@@ -193,22 +201,32 @@ export function FileListControl(props: Props) {
 						ref={listRef}
 					>
 						{items.map((item, index) => {
-							return (
-								<div
-									key={item.id}
-									className="form--FileListControlContentItem"
-									data-highlighted={
-										activeIndex === index ? "true" : "false"
-									}
-									data-id={item.id}
-									onClick={() => {
-										addValue(item.value, values);
-									}}
-								>
-									{item.label}
-								</div>
-							);
-						})}
+						// 获取高亮显示的标签
+						const getHighlightedLabel = () => {
+							if (!Strings.isEmpty(path) && (item as any).matchedIndices && (item as any).matchedIndices.length > 0) {
+								return highlightMatches(item.label, (item as any).matchedIndices);
+							}
+							return item.label;
+						};
+						
+						return (
+							<div
+								key={item.id}
+								className="form--FileListControlContentItem"
+								data-highlighted={
+									activeIndex === index ? "true" : "false"
+								}
+								data-id={item.id}
+								title={item.label}
+								onClick={() => {
+									addValue(item.value, values);
+								}}
+								dangerouslySetInnerHTML={{
+									__html: getHighlightedLabel()
+								}}
+							/>
+						);
+					})}
 
 						{items.length === 0 && (
 							<span className="form--FileListControlContentTip">

@@ -1,6 +1,7 @@
 import { App, SuggestModal, TFile } from "obsidian";
 import "./CFormSuggestModal.css";
 import { localInstance } from "src/i18n/locals";
+import { advancedSearch, highlightMatches } from "../../utils/searchUtils";
 
 export default class extends SuggestModal<TFile> {
 	emptyStateText: string = localInstance.none;
@@ -16,14 +17,13 @@ export default class extends SuggestModal<TFile> {
 
 	getSuggestions(query: string): TFile[] | Promise<TFile[]> {
 		const items = this.getItems();
-		const q = (query || "").toLowerCase();
-		const isFullMatch = (item: TFile) => item.basename.toLowerCase() === q;
-		const isPartialMatch = (item: TFile) =>
-			item.basename.toLowerCase().includes(q);
-
-		const fullmatch = items.filter((item) => isFullMatch(item));
-		const suggestions = items.filter(
-			(item) => isPartialMatch(item) && !isFullMatch(item)
+		
+		// 使用高级搜索算法
+		const searchResults = advancedSearch(
+			items,
+			query || "",
+			(item) => item.basename,
+			100
 		);
 
 		this.tabEventHandler = (evt) => {
@@ -43,7 +43,7 @@ export default class extends SuggestModal<TFile> {
 				}
 			}
 		};
-		return [...fullmatch, ...suggestions];
+		return searchResults.map(result => result.item);
 	}
 
 	onOpen(): void {
@@ -60,7 +60,31 @@ export default class extends SuggestModal<TFile> {
 		const name = value.basename;
 		el.addClass("form--CpsFormSuggestionItem");
 		el.setAttribute("data-file-path", value.path);
-		el.createSpan({ text: name });
+		
+		// 获取当前搜索查询
+		const query = this.inputEl.value;
+		let displayName = name;
+		
+		// 如果有搜索查询，高亮显示匹配的文本
+		if (query && query.trim() !== '') {
+			const items = this.getItems();
+			const searchResults = advancedSearch(
+				items,
+				query,
+				(item) => item.basename,
+				100
+			);
+			
+			const matchedResult = searchResults.find(result => result.item.path === value.path);
+			if (matchedResult && matchedResult.matchedIndices.length > 0) {
+				displayName = highlightMatches(name, matchedResult.matchedIndices);
+				el.createSpan().innerHTML = displayName;
+			} else {
+				el.createSpan({ text: name });
+			}
+		} else {
+			el.createSpan({ text: name });
+		}
 
 		const menusEl = el.createDiv({
 			cls: "form--CpsFormSuggestionItemMenus",

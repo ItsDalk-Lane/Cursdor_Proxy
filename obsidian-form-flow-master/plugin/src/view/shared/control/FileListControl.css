@@ -114,3 +114,19 @@ input.form--FileListControlContentInput:focus-visible {
 	padding: 4px;
 	border-radius: var(--radius-s);
 }
+
+/* 搜索匹配高亮样式 */
+.form--FileListControlContentItem mark {
+	background-color: var(--text-highlight-bg);
+	color: var(--text-normal);
+	font-weight: 600;
+	border-radius: 2px;
+	padding: 1px 2px;
+}
+
+/* 悬停和选中状态下的高亮样式 */
+.form--FileListControlContentItem:hover mark,
+.form--FileListControlContentItem[data-highlighted="true"] mark {
+	background-color: var(--text-selection);
+	color: var(--text-normal);
+}

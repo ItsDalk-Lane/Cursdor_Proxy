@@ -10,6 +10,7 @@ import { Strings } from "src/utils/Strings";
 import CpsFormItem from "src/view/shared/CpsFormItem";
 import useFormConfig from "src/hooks/useFormConfig";
 import { usePathVariables } from "src/hooks/usePathVariables";
+import { advancedSearch, highlightMatches, SearchResult } from "src/utils/searchUtils";
 
 export function FilePathFormItem(props: {
 	label: string;
@@ -87,44 +88,64 @@ function AllFilesList(props: {
 	const items = useMemo(() => {
 		// 获取所有文件，包括各种扩展名的文件
 		const files = app.vault.getFiles();
-		const fileOptions = files
-			.filter((f) => {
-				if (value === "") {
-					return true;
-				}
-				const path = Strings.safeToLowerCaseString(f.path);
-				const searchValue = Strings.safeToLowerCaseString(value);
-				return path.includes(searchValue);
-			})
-			.slice(0, 100)
-			.map((f) => {
-				return {
-					id: f.path,
-					value: f.path,
-					label: f.path,
-					type: 'file' as const,
-				};
-			});
-
+		
 		// 如果输入内容以 @ 开头，显示变量选项
 		const safeValue = value || "";
 		const isVariableMode = safeValue.trim().startsWith('@') || safeValue.includes('{{@');
+		
+		let variableResults: SearchResult<any>[] = [];
 		if (isVariableMode && variables.length > 0) {
-			const searchText = safeValue.trim().replace('@', '').toLowerCase();
-			const variableOptions = variables
-				.filter(v => v.label.toLowerCase().includes(searchText))
-				.map(v => ({
-					id: `var_${v.label}`,
-					value: `{{@${v.label}}}`,
-					label: `{{@${v.label}}}`,
+			const searchText = safeValue.trim().replace('@', '').replace('{{', '').replace('}}', '');
+			variableResults = advancedSearch(
+				variables,
+				searchText,
+				(v) => v.label,
+				50
+			).map(result => ({
+				...result,
+				item: {
+					id: `var_${result.item.label}`,
+					value: `{{@${result.item.label}}}`,
+					label: `{{@${result.item.label}}}`,
 					type: 'variable' as const,
-				}));
-			
-			return [...variableOptions, ...fileOptions];
+					searchResult: result
+				}
+			}));
 		}
-
-		return fileOptions;
-	}, [value, variables]);
+		
+		// 使用高级搜索算法搜索文件
+		const fileResults = advancedSearch(
+			files,
+			value || "",
+			(f) => f.path,
+			100
+		).map(result => ({
+			...result,
+			item: {
+				id: result.item.path,
+				value: result.item.path,
+				label: result.item.path,
+				type: 'file' as const,
+				searchResult: result
+			}
+		}));
+		
+		// 合并变量和文件结果，变量优先
+		const allResults = [...variableResults, ...fileResults];
+		
+		// 如果没有搜索词，返回前100个文件
+		if (!value || value.trim() === '') {
+			return files.slice(0, 100).map((f) => ({
+				id: f.path,
+				value: f.path,
+				label: f.path,
+				type: 'file' as const,
+				searchResult: null
+			}));
+		}
+		
+		return allResults.map(result => result.item);
+	}, [value, variables, app.vault]);
 
 	// 滚动到活跃项
 	useEffect(() => {
@@ -212,6 +233,15 @@ function AllFilesList(props: {
 						ref={listRef}
 					>
 						{items.map((item, index) => {
+							// 获取高亮文本
+							const getHighlightedLabel = () => {
+								if (item.searchResult && item.searchResult.matchedIndices.length > 0) {
+									const searchText = item.type === 'variable' ? item.label.replace('{{@', '').replace('}}', '') : item.label;
+									return highlightMatches(searchText, item.searchResult.matchedIndices);
+								}
+								return item.label;
+							};
+							
 							return (
 								<div
 									key={item.id}
@@ -224,9 +254,12 @@ function AllFilesList(props: {
 										onChange(item.value);
 										setOpen(false);
 									}}
+									title={item.label} // 添加完整路径的提示
 								>
 									{item.type === 'variable' && <span className="form--VariableIcon">@</span>}
-									{item.label}
+									<span 
+										dangerouslySetInnerHTML={{ __html: getHighlightedLabel() }}
+									/>
 								</div>
 							);
 						})}
