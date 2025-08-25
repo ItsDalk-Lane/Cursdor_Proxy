@@ -247,8 +247,7 @@ export class En implements Local {
 	ai_verify_model = "Verify Model";
 	ai_model_verified = "Model Verified";
 	ai_model_verification_failed = "Model Verification Failed";
-	ai_reasoning_capability = "Reasoning Capability";
-	ai_web_search_capability = "Web Search";
+
 	ai_call_action = "Call AI";
 	ai_prompt_setting = "Prompt Setting";
 	ai_builtin_template = "Built-in Template";

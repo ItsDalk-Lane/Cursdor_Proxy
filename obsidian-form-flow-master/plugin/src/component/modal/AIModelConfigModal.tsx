@@ -118,7 +118,6 @@ export function AIModelConfigModal({ model, onSave, onCancel }: AIModelConfigMod
             setFormData(prev => ({
                 ...prev,
                 verified: result.success,
-                capabilities: result.capabilities,
                 updatedAt: Date.now()
             }));
             
@@ -129,7 +128,6 @@ export function AIModelConfigModal({ model, onSave, onCancel }: AIModelConfigMod
             setFormData(prev => ({ 
                 ...prev, 
                 verified: false,
-                capabilities: { reasoning: false, webSearch: false },
                 updatedAt: Date.now()
             }));
         } finally {
@@ -270,37 +268,7 @@ export function AIModelConfigModal({ model, onSave, onCancel }: AIModelConfigMod
                         />
                     </div>
 
-                    {/* 模型能力设置 */}
-                    <div className="ai-form-group">
-                        <label>模型能力</label>
-                        <div style={{ display: 'flex', gap: '16px', marginTop: '8px' }}>
-                            <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 'normal' }}>
-                                <input
-                                    type="checkbox"
-                                    checked={formData.capabilities.reasoning}
-                                    onChange={(e) => handleInputChange('capabilities', {
-                                        ...formData.capabilities,
-                                        reasoning: e.target.checked
-                                    })}
-                                />
-                                推理能力
-                            </label>
-                            <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 'normal' }}>
-                                <input
-                                    type="checkbox"
-                                    checked={formData.capabilities.webSearch}
-                                    onChange={(e) => handleInputChange('capabilities', {
-                                        ...formData.capabilities,
-                                        webSearch: e.target.checked
-                                    })}
-                                />
-                                联网搜索
-                            </label>
-                        </div>
-                        <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>
-                            可手动设置或通过验证自动检测
-                        </div>
-                    </div>
+
 
                     {/* 高级设置 */}
                     <div className="ai-advanced-settings">

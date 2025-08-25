@@ -251,8 +251,7 @@ export class Zh implements Local {
 	ai_verify_model = "验证模型";
 	ai_model_verified = "模型已验证";
 	ai_model_verification_failed = "模型验证失败";
-	ai_reasoning_capability = "推理能力";
-	ai_web_search_capability = "网络搜索";
+
 	ai_call_action = "调用AI";
 	ai_prompt_setting = "提示词设置";
 	ai_builtin_template = "内置模板";

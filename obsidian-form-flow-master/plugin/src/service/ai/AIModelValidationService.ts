@@ -5,10 +5,6 @@ import { debugManager } from "../../utils/DebugManager";
 export interface AIModelValidationResult {
     success: boolean;
     message: string;
-    capabilities: {
-        reasoning: boolean;
-        webSearch: boolean;
-    };
 }
 
 export class AIModelValidationService {
@@ -33,16 +29,11 @@ export class AIModelValidationService {
             debugManager.logObject('AIModelValidation', '模型连接测试结果', response);
             
             if (response.success) {
-                debugManager.log('AIModelValidation', '连接测试成功，开始检测模型能力');
-                // 检测模型能力
-                const capabilities = await this.detectCapabilities(model);
-                
-                debugManager.logObject('AIModelValidation', '模型能力检测结果', capabilities);
+                debugManager.log('AIModelValidation', '连接测试成功');
                 
                 const result = {
                     success: true,
-                    message: "模型验证成功",
-                    capabilities
+                    message: "模型验证成功"
                 };
                 
                 debugManager.log('AIModelValidation', '=== 验证成功 ===');
@@ -50,8 +41,7 @@ export class AIModelValidationService {
             } else {
                 const result = {
                     success: false,
-                    message: response.error || "模型验证失败",
-                    capabilities: { reasoning: false, webSearch: false }
+                    message: response.error || "模型验证失败"
                 };
                 
                 debugManager.logObject('AIModelValidation', '=== 验证失败 ===', result);
@@ -66,8 +56,7 @@ export class AIModelValidationService {
             
             const result = {
                 success: false,
-                message: errorMessage,
-                capabilities: { reasoning: false, webSearch: false }
+                message: errorMessage
             };
             
             debugManager.log('AIModelValidation', '=== 验证异常结束 ===');
@@ -271,394 +260,11 @@ export class AIModelValidationService {
         }
     }
 
-    /**
-     * 检测模型能力
-     */
-    private static async detectCapabilities(model: IAIModelConfig): Promise<{ reasoning: boolean; webSearch: boolean }> {
-        debugManager.log('AIModelValidation', '开始检测模型能力');
-        const capabilities = { reasoning: false, webSearch: false };
 
-        try {
-            debugManager.log('AIModelValidation', '测试推理能力...');
-            // 测试推理能力
-            capabilities.reasoning = await this.testReasoningCapability(model);
-            debugManager.log('AIModelValidation', '推理能力测试结果: ' + capabilities.reasoning);
-            
-            debugManager.log('AIModelValidation', '测试网络搜索能力...');
-            // 测试网络搜索能力
-            capabilities.webSearch = await this.testWebSearchCapability(model);
-            debugManager.log('AIModelValidation', '网络搜索能力测试结果: ' + capabilities.webSearch);
-        } catch (error) {
-            debugManager.error('AIModelValidation', '检测模型能力时出错', error);
-        }
 
-        debugManager.logObject('AIModelValidation', '能力检测完成', capabilities);
-        return capabilities;
-    }
 
-    /**
-     * 测试推理能力
-     */
-    private static async testReasoningCapability(model: IAIModelConfig): Promise<boolean> {
-        debugManager.log('AIModelValidation', '开始推理能力测试');
-        try {
-            const headers: Record<string, string> = {
-                'Content-Type': 'application/json'
-            };
 
-            // 设置认证头
-            switch (model.provider) {
-                case AIProvider.DEEPSEEK:
-                case AIProvider.OPENROUTER:
-                case AIProvider.CUSTOM:
-                case AIProvider.ZHIPU:
-                case AIProvider.TONGYI:
-                case AIProvider.SILICONFLOW:
-                    headers['Authorization'] = `Bearer ${model.apiKey}`;
-                    break;
-                case AIProvider.GEMINI:
-                    // Gemini使用URL参数认证，不需要设置header
-                    break;
-            }
-            
-            debugManager.logObject('AIModelValidation', '推理测试请求头设置完成', {
-                provider: model.provider,
-                hasAuth: !!headers['Authorization']
-            });
 
-            // 根据不同提供商构建请求体
-            let requestBody;
-            if (model.provider === AIProvider.GEMINI) {
-                requestBody = {
-                    contents: [
-                        {
-                            role: "user",
-                            parts: [{
-                                text: "Please solve this step by step: If a store has 15 apples and sells 7, then buys 3 more, how many apples does it have? Please show your reasoning."
-                            }]
-                        }
-                    ],
-                    generationConfig: {
-                        maxOutputTokens: 100,
-                        temperature: 0.1
-                    }
-                };
-            } else {
-                requestBody = {
-                    model: model.modelName,
-                    messages: [
-                        {
-                            role: "user",
-                            content: "Please solve this step by step: If a store has 15 apples and sells 7, then buys 3 more, how many apples does it have? Please show your reasoning."
-                        }
-                    ],
-                    max_tokens: 100,
-                    temperature: 0.1
-                };
-            }
-
-            debugManager.logObject('AIModelValidation', '推理测试请求体构建完成', {
-                provider: model.provider,
-                hasModel: !!requestBody.model,
-                hasContents: !!requestBody.contents,
-                bodySize: JSON.stringify(requestBody).length
-            });
-            
-            const url = this.buildApiUrl(model);
-            debugManager.log('AIModelValidation', '推理测试API URL: ' + url);
-            
-            const requestParams: RequestUrlParam = {
-                url,
-                method: 'POST',
-                headers,
-                body: JSON.stringify(requestBody),
-                throw: false
-            };
-
-            debugManager.log('AIModelValidation', '发送推理测试请求...');
-            
-            // 添加超时处理
-            const timeoutPromise = new Promise((_, reject) => {
-                setTimeout(() => {
-                    reject(new Error('推理测试请求超时 (30秒)'));
-                }, 30000);
-            });
-            
-            const response = await Promise.race([
-                requestUrl(requestParams),
-                timeoutPromise
-            ]) as any;
-            
-            debugManager.logObject('AIModelValidation', '推理测试响应', {
-                status: response.status,
-                statusText: response.status >= 200 && response.status < 300 ? 'Success' : 'Error',
-                responseTextLength: response.text?.length || 0,
-                responseText: response.text?.substring(0, 200) + '...'
-            });
-            
-            if (response.status === 200) {
-                // 安全解析JSON响应
-                let data;
-                try {
-                    if (!response.text || response.text.trim() === '') {
-                        debugManager.log('AIModelValidation', '推理测试响应内容为空');
-                        return false;
-                    }
-                    
-                    data = JSON.parse(response.text);
-                    debugManager.logObject('AIModelValidation', '推理测试JSON解析成功', {
-                        hasData: !!data,
-                        dataType: typeof data,
-                        dataKeys: data && typeof data === 'object' ? Object.keys(data) : []
-                    });
-                } catch (parseError) {
-                    debugManager.error('AIModelValidation', '推理测试JSON解析失败', {
-                        error: parseError instanceof Error ? parseError.message : 'Unknown parse error',
-                        responseText: response.text?.substring(0, 500)
-                    });
-                    return false;
-                }
-                
-                debugManager.logObject('AIModelValidation', '推理测试响应数据解析', {
-                    provider: model.provider,
-                    hasData: !!data,
-                    dataKeys: data ? Object.keys(data) : []
-                });
-                
-                // 处理Gemini响应格式
-                if (model.provider === AIProvider.GEMINI) {
-                    debugManager.logObject('AIModelValidation', 'Gemini推理响应检查', {
-                        hasCandidates: !!(data.candidates),
-                        candidatesLength: data.candidates?.length || 0
-                    });
-                    
-                    if (data.candidates && data.candidates.length > 0) {
-                        const candidate = data.candidates[0];
-                        if (candidate.content && candidate.content.parts && candidate.content.parts.length > 0) {
-                            const content = candidate.content.parts[0].text || '';
-                            debugManager.log('AIModelValidation', 'Gemini推理响应内容: ' + content.substring(0, 100) + '...');
-                            // 检查是否包含推理步骤
-                            const hasReasoning = content.toLowerCase().includes('step') || 
-                                   content.includes('15') && content.includes('7') && content.includes('3');
-                            debugManager.log('AIModelValidation', 'Gemini推理能力检测结果: ' + hasReasoning);
-                            return hasReasoning;
-                        }
-                    }
-                } else {
-                    debugManager.logObject('AIModelValidation', '标准API推理响应检查', {
-                        hasChoices: !!(data.choices),
-                        choicesLength: data.choices?.length || 0
-                    });
-                    
-                    // 处理其他模型响应格式
-                    if (data.choices && data.choices.length > 0) {
-                        const content = data.choices[0].message?.content || '';
-                        debugManager.log('AIModelValidation', '标准API推理响应内容: ' + content.substring(0, 100) + '...');
-                        // 检查是否包含推理步骤
-                        const hasReasoning = content.toLowerCase().includes('step') || 
-                               content.includes('15') && content.includes('7') && content.includes('3');
-                        debugManager.log('AIModelValidation', '标准API推理能力检测结果: ' + hasReasoning);
-                        return hasReasoning;
-                    }
-                }
-            } else {
-                debugManager.logObject('AIModelValidation', '推理测试请求失败', {
-                    status: response.status,
-                    statusText: response.status,
-                    responseText: response.text?.substring(0, 200) + '...'
-                });
-            }
-        } catch (error) {
-            debugManager.error('AIModelValidation', '推理能力测试异常', error);
-        }
-
-        debugManager.log('AIModelValidation', '推理能力测试返回false');
-        return false;
-    }
-
-    /**
-     * 测试网络搜索能力
-     */
-    private static async testWebSearchCapability(model: IAIModelConfig): Promise<boolean> {
-        debugManager.log('AIModelValidation', '开始网络搜索能力测试');
-        try {
-            const headers: Record<string, string> = {
-                'Content-Type': 'application/json'
-            };
-
-            // 设置认证头
-            switch (model.provider) {
-                case AIProvider.DEEPSEEK:
-                case AIProvider.OPENROUTER:
-                case AIProvider.CUSTOM:
-                case AIProvider.ZHIPU:
-                case AIProvider.TONGYI:
-                case AIProvider.SILICONFLOW:
-                    headers['Authorization'] = `Bearer ${model.apiKey}`;
-                    break;
-                case AIProvider.GEMINI:
-                    // Gemini使用URL参数认证，不需要设置header
-                    break;
-            }
-            
-            debugManager.logObject('AIModelValidation', '网络搜索测试请求头设置完成', {
-                provider: model.provider,
-                hasAuth: !!headers['Authorization']
-            });
-
-            // 根据不同提供商构建请求体
-            let requestBody;
-            if (model.provider === AIProvider.GEMINI) {
-                requestBody = {
-                    contents: [
-                        {
-                            role: "user",
-                            parts: [{
-                                text: "What is the current date and time? Please provide the most recent information available."
-                            }]
-                        }
-                    ],
-                    generationConfig: {
-                        maxOutputTokens: 100,
-                        temperature: 0.1
-                    }
-                };
-            } else {
-                requestBody = {
-                    model: model.modelName,
-                    messages: [
-                        {
-                            role: "user",
-                            content: "What is the current date and time? Please provide the most recent information available."
-                        }
-                    ],
-                    max_tokens: 100,
-                    temperature: 0.1
-                };
-            }
-
-            debugManager.logObject('AIModelValidation', '网络搜索测试请求体构建完成', {
-                provider: model.provider,
-                hasModel: !!requestBody.model,
-                hasContents: !!requestBody.contents,
-                bodySize: JSON.stringify(requestBody).length
-            });
-            
-            const url = this.buildApiUrl(model);
-            debugManager.log('AIModelValidation', '网络搜索测试API URL: ' + url);
-            
-            const requestParams: RequestUrlParam = {
-                url,
-                method: 'POST',
-                headers,
-                body: JSON.stringify(requestBody),
-                throw: false
-            };
-
-            debugManager.log('AIModelValidation', '发送网络搜索测试请求...');
-            
-            // 添加超时处理
-            const timeoutPromise = new Promise((_, reject) => {
-                setTimeout(() => {
-                    reject(new Error('网络搜索测试请求超时 (30秒)'));
-                }, 30000);
-            });
-            
-            const response = await Promise.race([
-                requestUrl(requestParams),
-                timeoutPromise
-            ]) as any;
-            
-            debugManager.logObject('AIModelValidation', '网络搜索测试响应', {
-                status: response.status,
-                statusText: response.status >= 200 && response.status < 300 ? 'Success' : 'Error',
-                responseTextLength: response.text?.length || 0,
-                responseText: response.text?.substring(0, 200) + '...'
-            });
-            
-            if (response.status === 200) {
-                // 安全解析JSON响应
-                let data;
-                try {
-                    if (!response.text || response.text.trim() === '') {
-                        debugManager.log('AIModelValidation', '网络搜索测试响应内容为空');
-                        return false;
-                    }
-                    
-                    data = JSON.parse(response.text);
-                    debugManager.logObject('AIModelValidation', '网络搜索测试JSON解析成功', {
-                        hasData: !!data,
-                        dataType: typeof data,
-                        dataKeys: data && typeof data === 'object' ? Object.keys(data) : []
-                    });
-                } catch (parseError) {
-                    debugManager.error('AIModelValidation', '网络搜索测试JSON解析失败', {
-                        error: parseError instanceof Error ? parseError.message : 'Unknown parse error',
-                        responseText: response.text?.substring(0, 500)
-                    });
-                    return false;
-                }
-                
-                debugManager.logObject('AIModelValidation', '网络搜索测试响应数据解析', {
-                    provider: model.provider,
-                    hasData: !!data,
-                    dataKeys: data ? Object.keys(data) : []
-                });
-                
-                // 处理Gemini响应格式
-                if (model.provider === AIProvider.GEMINI) {
-                    debugManager.logObject('AIModelValidation', 'Gemini网络搜索响应检查', {
-                        hasCandidates: !!(data.candidates),
-                        candidatesLength: data.candidates?.length || 0
-                    });
-                    
-                    if (data.candidates && data.candidates.length > 0) {
-                        const candidate = data.candidates[0];
-                        if (candidate.content && candidate.content.parts && candidate.content.parts.length > 0) {
-                            const content = candidate.content.parts[0].text || '';
-                            debugManager.log('AIModelValidation', 'Gemini网络搜索响应内容: ' + content.substring(0, 100) + '...');
-                            // 检查是否提供了当前日期信息
-                            const currentYear = new Date().getFullYear();
-                            const hasWebSearch = content.includes(currentYear.toString()) || 
-                                   content.toLowerCase().includes('current') ||
-                                   content.toLowerCase().includes('today');
-                            debugManager.log('AIModelValidation', 'Gemini网络搜索能力检测结果: ' + hasWebSearch);
-                            return hasWebSearch;
-                        }
-                    }
-                } else {
-                    debugManager.logObject('AIModelValidation', '标准API网络搜索响应检查', {
-                        hasChoices: !!(data.choices),
-                        choicesLength: data.choices?.length || 0
-                    });
-                    
-                    // 处理其他模型响应格式
-                    if (data.choices && data.choices.length > 0) {
-                        const content = data.choices[0].message?.content || '';
-                        debugManager.log('AIModelValidation', '标准API网络搜索响应内容: ' + content.substring(0, 100) + '...');
-                        // 检查是否提供了当前日期信息
-                        const currentYear = new Date().getFullYear();
-                        const hasWebSearch = content.includes(currentYear.toString()) || 
-                               content.toLowerCase().includes('current') ||
-                               content.toLowerCase().includes('today');
-                        debugManager.log('AIModelValidation', '标准API网络搜索能力检测结果: ' + hasWebSearch);
-                        return hasWebSearch;
-                    }
-                }
-            } else {
-                debugManager.logObject('AIModelValidation', '网络搜索测试请求失败', {
-                    status: response.status,
-                    statusText: response.status,
-                    responseText: response.text?.substring(0, 200) + '...'
-                });
-            }
-        } catch (error) {
-            debugManager.error('AIModelValidation', '网络搜索能力测试异常', error);
-        }
-
-        debugManager.log('AIModelValidation', '网络搜索能力测试返回false');
-        return false;
-    }
 
     /**
      * 构建API URL

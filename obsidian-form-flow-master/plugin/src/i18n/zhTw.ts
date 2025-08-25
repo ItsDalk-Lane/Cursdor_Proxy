@@ -47,8 +47,7 @@ export class ZhTw implements Local {
 	ai_verify_model = "驗證模型";
 	ai_model_verified = "模型已驗證";
 	ai_model_verification_failed = "模型驗證失敗";
-	ai_reasoning_capability = "推理能力";
-	ai_web_search_capability = "網路搜尋";
+
 	ai_call_action = "呼叫 AI";
 	ai_prompt_setting = "提示設定";
 	ai_builtin_template = "內建範本";

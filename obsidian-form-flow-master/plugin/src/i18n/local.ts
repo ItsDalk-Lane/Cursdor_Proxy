@@ -237,8 +237,7 @@ export interface Local {
 	ai_verify_model: string;
 	ai_model_verified: string;
 	ai_model_verification_failed: string;
-	ai_reasoning_capability: string;
-	ai_web_search_capability: string;
+
 	ai_call_action: string;
 	ai_prompt_setting: string;
 	ai_builtin_template: string;

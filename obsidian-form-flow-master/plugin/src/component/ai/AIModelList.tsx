@@ -1,4 +1,4 @@
-import { Brain, Globe, Edit, Trash2 } from "lucide-react";
+import { Edit, Trash2 } from "lucide-react";
 import { IAIModelConfig, AI_PROVIDER_CONFIGS } from "../../model/ai/AIModelConfig";
 import { localInstance } from "../../i18n/locals";
 
@@ -48,24 +48,7 @@ export function AIModelList({ models, onEdit, onDelete }: AIModelListProps) {
                             {formatTokens(model.maxOutputTokens)}
                         </div>
                         
-                        <div className="ai-model-capabilities">
-                            {model.capabilities.reasoning && (
-                                <div 
-                                    className="ai-capability-icon"
-                                    title={localInstance.ai_reasoning_capability}
-                                >
-                                    <Brain size={12} />
-                                </div>
-                            )}
-                            {model.capabilities.webSearch && (
-                                <div 
-                                    className="ai-capability-icon"
-                                    title={localInstance.ai_web_search_capability}
-                                >
-                                    <Globe size={12} />
-                                </div>
-                            )}
-                        </div>
+
                         
                         <div className="ai-verification-status">
                             {model.verified ? (
