@@ -1,0 +1,88 @@
+{
+  "id": "5d43057a-f299-4d7d-b0c1-fa9bb743494e",
+  "fields": [
+    {
+      "id": "fa1fb026-0a37-473c-b9f2-227fc95b3fe1",
+      "label": "模式",
+      "type": "select",
+      "options": [
+        {
+          "id": "a5c4df82-9c52-4bc6-b59a-3df845593770",
+          "label": "转换为表格",
+          "value": "请将选中的文本转换成为标准的 markdown 表格格式，只需要输出表格内容即可，不需要输出冗余内容"
+        },
+        {
+          "id": "df231d38-a5fa-4810-a803-c644fb42fda8",
+          "label": "转换为无序列表",
+          "value": "请将选中的文本转换成为标准的 markdown 无序列表式，只需要输出无序列表内容即可，不需要输出冗余内容"
+        },
+        {
+          "id": "d9bab556-b6d6-424d-b862-33375d4225ec",
+          "label": "转换为有序列表",
+          "value": "请将选中的文本转换成为标准的 markdown 有序序列表格式，只需要输出有序列表内容即可，不需要输出冗余内容"
+        },
+        {
+          "id": "94c16933-e0ec-4d71-b964-52f25cf801df",
+          "label": "转为 Mermaid 流程图",
+          "value": "请基于选中的文本内容生成 mermaid 流程图 markdown 代码块，只需要输出 markdown 代码块即可，不需要输出多余的内容"
+        },
+        {
+          "id": "bb3d6461-4f3d-46e1-94fd-ae818a223c99",
+          "label": "润色",
+          "value": "请润色选中的文本内容，直接给出润色后的内容即可，不需要输出多余的内容"
+        }
+      ],
+      "description": "不同的转换模式"
+    },
+    {
+      "id": "f13d940a-4b34-4ff0-8c2a-917ab6fd5b4c",
+      "label": "token",
+      "type": "text",
+      "defaultValue": "",
+      "description": "AI 平台的密钥"
+    },
+    {
+      "id": "55be39d9-bfba-49b2-b70e-8c90eee5c9cd",
+      "label": "ai",
+      "type": "select",
+      "options": [
+        {
+          "id": "c71c3e28-b79e-4b38-ac11-3602f72b1d57",
+          "label": "智谱清言",
+          "value": "zhipu"
+        },
+        {
+          "id": "916f7727-c058-46cb-a636-20534f0b4c2f",
+          "label": "硅基流动",
+          "value": "siliconFlow"
+        }
+      ],
+      "defaultValue": "zhipu",
+      "description": "要调用的 AI 平台",
+      "enableCustomValue": true
+    },
+    {
+      "id": "b10a76e0-09fc-459c-ba71-bc9da76f3111",
+      "label": "modelType",
+      "type": "text",
+      "description": "此处可以从模型平台上选择合适的模型"
+    },
+    {
+      "id": "a7ce82e2-053f-49af-bfdb-64d1757355ab",
+      "label": "如何使用？",
+      "type": "textarea",
+      "rows": 20,
+      "defaultValue": "如果选择「硅基流动」的话\n\n1. 前往 https://cloud.siliconflow.cn/ 注册账号\n\n2. 在 https://cloud.siliconflow.cn/account/ak 生成密钥\n\n将生成的密钥填入上方的 token 输入框中\n\n---\n\n如果选择「智谱轻言」的话，请参考 https://wxycbt0cjk.feishu.cn/wiki/XWAkwwuLQihrYZkBixKcGhpnn2g 教程获取密钥\n\n## 使用\n\n在笔记中选择一段文本，然后选取并执行该表单"
+    }
+  ],
+  "action": {
+    "id": "ad74bca7-5f39-479f-ac89-d4ac78a25afa",
+    "type": "runScript",
+    "targetFolder": "",
+    "fileName": "",
+    "scriptSource": "inline",
+    "code": "async function entry() {\n  const { form, $selection } = this.$context;\n\n  const token = form.token;\n  if (!token) {\n    throw new Error(\"请设置密钥\");\n  }\n  if (!form.模式 || form.模式 === \"\") {\n    throw new Error(\"请设置提示语\");\n  }\n  if (!$selection || $selection === \"\") {\n    throw new Error(\"请选中一段文本\");\n  }\n\n  // 提示语\n  const prompt = `\n请严格按照要求来处理内容：\n\n${form.模式}\n\n内容为：\n\n${$selection}\n`;\n  return form.ai === \"siliconFlow\"\n    ? await siliconFlow(prompt, this.$context)\n    : await zhipu(prompt, this.$context);\n}\n\nasync function zhipu(prompt, $context) {\n  const { form } = $context;\n  // 智谱清言模型，GLM-4-Flash 是一个免费模型，其他模型需要付费\n  const model = form.modelType || \"GLM-4-Flash\";\n  return await callAiProvider(\n    \"https://open.bigmodel.cn/api/paas/v4/chat/completions\",\n    prompt,\n    model,\n    $context\n  );\n}\n\nasync function siliconFlow(prompt, $context) {\n  const { form } = $context;\n  // Qwen/Qwen2.5-72B-Instruct\n  // THUDM/GLM-Z1-9B-0414 是一个免费模型\n  const model = form.modelType || \"THUDM/GLM-Z1-9B-0414\";\n  return await callAiProvider(\n    \"https://api.siliconflow.cn/v1/chat/completions\",\n    prompt,\n    model,\n    $context\n  );\n}\n\nasync function callAiProvider(url, prompt, model, $context) {\n  const { SelectionPopup, fetchJsonStream, form } = $context;\n\n  const token = form.token;\n  let text = \"\";\n  const popup = new SelectionPopup(\"waiting...\");\n  await fetchJsonStream(\n    url,\n    {\n      method: \"POST\",\n      headers: {\n        Authorization: `Bearer ${token}`,\n        \"Content-Type\": \"application/json\",\n      },\n      body: JSON.stringify({\n        model: model,\n        stream: true,\n        messages: [\n          {\n            role: \"user\",\n            content: prompt,\n          },\n        ],\n      }),\n    },\n    {\n      onParsedData: (data) => {\n        if (data.choices?.[0]?.delta?.content) {\n          const curr = data.choices[0].delta.content;\n          text += curr;\n          popup.update(text);\n        }\n      },\n    }\n  );\n  return text;\n}\n\n/**\n * Must reserve export.default and set a entry function\n */\nexports.default = {\n  entry: entry,\n};\n"
+  },
+  "title": "AI 文本转换.cform",
+  "showSubmitMessage": true
+}
