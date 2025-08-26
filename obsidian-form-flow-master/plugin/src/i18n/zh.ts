@@ -260,4 +260,9 @@ export class Zh implements Local {
 	ai_template_file = "模板文件";
 	ai_custom_content = "自定义内容";
 	content_cleanup = "内容清理";
+	
+	// 新增功能
+	copy_as_rich_text = "复制为Markdown格式";
+    convert_image_links = "复制为纯文本格式";
+	add_spaces_between_cjk_and_latin = "中英文加空格";
 }

@@ -12,6 +12,12 @@ import { useActionTypeStyle } from "src/hooks/useActionTypeStyle";
 import { useActionValidation } from "src/hooks/useActionValidation";
 import { localInstance } from "src/i18n/locals";
 import { IFormAction } from "src/model/action/IFormAction";
+import { ContentTemplateSource } from "src/model/action/CreateFileFormAction";
+import { CleanupType } from "src/model/action/ContentCleanupFormAction";
+import { FormActionType } from "src/model/enums/FormActionType";
+import { OpenPageInType } from "src/model/enums/OpenPageInType";
+import { TargetFileType } from "src/model/enums/TargetFileType";
+import { TextInsertPosition } from "src/model/enums/TextInsertPosition";
 import { Filter, FilterType } from "src/model/filter/Filter";
 import { OperatorType } from "src/model/filter/OperatorType";
 import { FormCondition } from "src/view/shared/filter-content/FormCondition";
@@ -24,6 +30,89 @@ import { DragHandler } from "src/component/drag-handler/DragHandler";
 import Dialog2 from "src/component/dialog/Dialog2";
 import { FilterRoot } from "src/component/filter/FilterRoot";
 import "./CpsFormAction.css";
+
+/**
+ * 转换动作类型时保留通用字段并初始化特定字段
+ * @param currentAction 当前动作
+ * @param newType 新的动作类型
+ * @returns 转换后的动作
+ */
+function convertActionType(currentAction: IFormAction, newType: FormActionType): any {
+	const baseAction = {
+		id: currentAction.id,
+		type: newType,
+		condition: currentAction.condition, // 保留条件设置
+	};
+
+	switch (newType) {
+		case FormActionType.CREATE_FILE:
+			return {
+				...baseAction,
+				type: FormActionType.CREATE_FILE,
+				targetFolder: "",
+				fileName: "",
+				contentTemplateSource: ContentTemplateSource.TEXT,
+				content: "",
+				templateFile: "",
+				openPageIn: OpenPageInType.none,
+			};
+		case FormActionType.CONTENT_CLEANUP:
+			return {
+				...baseAction,
+				type: FormActionType.CONTENT_CLEANUP,
+				cleanupType: CleanupType.DELETE_FILES,
+				targetFiles: [""], // 确保初始化时就有一个空的输入框
+				requireConfirmation: false,
+				enableDebug: false,
+			};
+		case FormActionType.COPY_AS_RICH_TEXT:
+			return {
+				...baseAction,
+				type: FormActionType.COPY_AS_RICH_TEXT,
+				targetMode: 'current',
+				includeImages: true,
+				maxImageSize: 10,
+				imageQuality: 85,
+			};
+		case FormActionType.CONVERT_IMAGE_LINKS:
+			return {
+				...baseAction,
+				type: FormActionType.CONVERT_IMAGE_LINKS,
+				targetMode: 'current',
+				backupOriginal: false,
+				preserveDisplayText: true,
+			};
+		case FormActionType.ADD_SPACES_BETWEEN_CJK_AND_LATIN:
+			return {
+				...baseAction,
+				type: FormActionType.ADD_SPACES_BETWEEN_CJK_AND_LATIN,
+				targetMode: 'current',
+				tabWidth: '4',
+				formatEmbeddedCode: false,
+				preserveCodeBlocks: true,
+			};
+		case FormActionType.INSERT_TEXT:
+			return {
+				...baseAction,
+				type: FormActionType.INSERT_TEXT,
+				filePath: "",
+				targetFolder: "",
+				fileName: "",
+				openPageIn: OpenPageInType.none,
+				newFileTemplate: "",
+				targetFileType: TargetFileType.CURRENT_FILE,
+				position: TextInsertPosition.END_OF_CONTENT,
+				heading: "",
+				content: "",
+			};
+		default:
+			// 对于其他类型，保持原有逻辑
+			return {
+				...currentAction,
+				type: newType,
+			};
+	}
+}
 
 export default function (props: {
 	value: IFormAction;
@@ -143,10 +232,7 @@ function CpsFormAcionHeader(props: {
 				value={value.type}
 				styles={typeStyles}
 				onChange={(type) => {
-					const newAction = {
-						...value,
-						type: type,
-					};
+					const newAction = convertActionType(value, type);
 					props.onChange(newAction);
 				}}
 			/>

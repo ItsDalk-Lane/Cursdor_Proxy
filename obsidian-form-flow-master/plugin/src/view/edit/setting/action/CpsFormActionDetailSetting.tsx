@@ -17,6 +17,9 @@ import { OpenLinkActionSetting } from "./open-link/OpenLinkActionSetting";
 import { ExecuteCommandActionSetting } from "./execute-command/ExecuteCommandActionSetting";
 import { AICallActionSetting } from "./AICallActionSetting";
 import { ContentCleanupSetting } from "./content-cleanup/ContentCleanupSetting";
+import { CopyAsRichTextActionSetting } from "./copy-as-rich-text/CopyAsRichTextActionSetting";
+import { ConvertImageLinksActionSetting } from "./convert-image-links/ConvertImageLinksActionSetting";
+import { AddSpacesBetweenCjkAndLatinActionSetting } from "./add-spaces-between-cjk-and-latin/AddSpacesBetweenCjkAndLatinActionSetting";
 import useFormConfig from "src/hooks/useFormConfig";
 
 /**
@@ -111,6 +114,9 @@ export default function (props: {
 				onChange={onChange} 
 			/>
 			<ContentCleanupSetting value={value} onChange={onChange} />
+			<CopyAsRichTextActionSetting value={value} onChange={onChange} />
+			<ConvertImageLinksActionSetting value={value} onChange={onChange} />
+			<AddSpacesBetweenCjkAndLatinActionSetting value={value} onChange={onChange} />
 		</CpsForm>
 	);
 }

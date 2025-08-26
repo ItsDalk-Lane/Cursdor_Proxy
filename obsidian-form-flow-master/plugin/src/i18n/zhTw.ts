@@ -262,4 +262,9 @@ export class ZhTw implements Local {
 	content_cleanup = "內容清理";
 	add_selection_to_field = "添加選中內容到欄位";
 	add_file_content_to_field = "添加檔案內容到欄位";
+	
+	// 新增功能翻译
+    copy_as_rich_text = "複製為Markdown格式";
+    convert_image_links = "複製為純文本格式";
+	add_spaces_between_cjk_and_latin = "中英文加空格";
 }

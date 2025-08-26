@@ -12,6 +12,32 @@
 	gap: 8px;
 	font-size: 1rem;
 	font-weight: 500;
+	position: relative;
+}
+
+.form--CpsFormSettingGroup .form--SettingGroupHeader--collapsible {
+	transition: all 0.2s ease;
+	border-radius: var(--radius-s);
+	padding: 4px 8px;
+	margin: -4px -8px;
+}
+
+.form--CpsFormSettingGroup .form--SettingGroupHeader--collapsible:hover {
+	background-color: var(--background-modifier-hover);
+	color: var(--text-normal);
+}
+
+.form--CpsFormSettingGroup .form--SettingGroupCollapseIcon {
+	margin-left: auto;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: var(--text-muted);
+	transition: color 0.2s ease;
+}
+
+.form--CpsFormSettingGroup .form--SettingGroupHeader--collapsible:hover .form--SettingGroupCollapseIcon {
+	color: var(--text-normal);
 }
 
 .form--CpsFormSettingGroup .form--SettingGroupHeader .lucide {

@@ -100,14 +100,16 @@ export default function (props: {
 							className="form--CpsFormEditView"
 						>
 							<CpsFormSettingGroup
-								icon={<ClipboardIcon />}
-								title={localInstance.form_fields_setting}
-							>
-								<CpsFormFields
-									fields={formConfig.fields}
-									onSave={onFieldsChanged}
-								/>
-							</CpsFormSettingGroup>
+						icon={<ClipboardIcon />}
+						title={localInstance.form_fields_setting}
+						defaultCollapsed={true}
+						collapsible={true}
+					>
+						<CpsFormFields
+							fields={formConfig.fields}
+							onSave={onFieldsChanged}
+						/>
+					</CpsFormSettingGroup>
 
 							<CpsFormSettingGroup
 								icon={<Zap />}

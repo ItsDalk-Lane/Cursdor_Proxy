@@ -43,29 +43,24 @@
       "label": "日期选择",
       "type": "date",
       "description": "日期选择字段测试",
-      "enableDescription": true
+      "enableDescription": true,
+      "defaultValueType": "current"
     },
     {
       "id": "field-time-006",
       "label": "时间选择",
       "type": "time",
       "description": "时间选择字段测试",
-      "enableDescription": true
+      "enableDescription": true,
+      "defaultValueType": "current"
     },
     {
       "id": "field-datetime-007",
       "label": "日期时间",
       "type": "datetime",
       "description": "日期时间选择字段测试",
-      "enableDescription": true
-    },
-    {
-      "id": "field-checkbox-008",
-      "label": "复选框",
-      "type": "checkbox",
-      "description": "复选框字段测试",
       "enableDescription": true,
-      "defaultValue": true
+      "defaultValueType": "current"
     },
     {
       "id": "field-toggle-009",
@@ -151,25 +146,6 @@
       ]
     },
     {
-      "id": "field-select2-013",
-      "label": "高级下拉",
-      "type": "select2",
-      "description": "高级下拉选择字段测试",
-      "enableDescription": true,
-      "options": [
-        {
-          "id": "select2-option-1",
-          "label": "高级选项一",
-          "value": "advanced1"
-        },
-        {
-          "id": "select2-option-2",
-          "label": "高级选项二",
-          "value": "advanced2"
-        }
-      ]
-    },
-    {
       "id": "field-property-014",
       "label": "属性值",
       "type": "property_value",
@@ -200,6 +176,14 @@
       "type": "template_list",
       "description": "模板列表字段测试",
       "enableDescription": true
+    },
+    {
+      "id": "652fa431-738e-489e-ae5b-41563dbcd446",
+      "label": "文件路径",
+      "type": "file_list",
+      "extractContent": true,
+      "enableDescription": true,
+      "description": "提取文件中的内容"
     }
   ],
   "actions": [
@@ -207,17 +191,24 @@
       "id": "action-createfile-001",
       "type": "createFile",
       "title": "创建测试文件",
-      "filePath": "测试输出/综合测试-{{@文本输入}}-{{datetime_YYYY-MM-DD-HH-mm-ss}}.md",
+      "filePath": "测试输出/综合测试-{{@文本输入}}-{{date:YYYY-MM-DD}}.md",
       "contentTemplateSource": "text",
-      "content": "# 综合功能测试结果\n\n## 字段测试结果\n\n### 基础字段\n- 文本输入：{{@文本输入}}\n- 多行文本：{{@多行文本}}\n- 密码字段：{{@密码字段}}\n- 数字输入：{{@数字输入}}\n\n### 时间字段\n- 日期选择：{{@日期选择}}\n- 时间选择：{{@时间选择}}\n- 日期时间：{{@日期时间}}\n\n### 选择字段\n- 复选框：{{@复选框}}\n- 开关切换：{{@开关切换}}\n- 单选按钮：{{@单选按钮}}\n- 下拉选择：{{@下拉选择}}\n- 多选下拉：{{@多选下拉}}\n- 高级下拉：{{@高级下拉}}\n\n### 特殊字段\n- 属性值：{{@属性值}}\n- 文件列表：{{@文件列表}}\n- AI模型：{{@AI模型}}\n- 模板列表：{{@模板列表}}\n\n---\n\n测试时间：{{datetime_YYYY-MM-DD HH-mm-ss}}\n测试用户：{{user}}\n",
-      "openPageIn": "tab"
+      "content": "# 综合功能测试结果\n\n## 字段测试结果\n\n### 基础字段\n- 文本输入：{{@文本输入}}\n- 多行文本：{{@多行文本}}\n- 密码字段：{{@密码字段}}\n- 数字输入：{{@数字输入}}\n\n### 时间字段\n- 日期选择：{{@日期选择}}\n- 时间选择：{{@时间选择}}\n- 日期时间：{{@日期时间}}\n\n### 选择字段\n- 提取文字：{{@文件路径}}\n- 开关切换：{{@开关切换}}\n- 单选按钮：{{@单选按钮}}\n- 下拉选择：{{@下拉选择}}\n- 多选下拉：{{@多选下拉}}\n\n### 特殊字段\n- 属性值：{{@属性值}}\n- 文件列表：{{@文件列表}}\n- AI模型：{{@AI模型}}\n- 模板列表：{{@模板列表}}\n\n---\n\n测试时间：{{date:YYYY-MM-DD HH:mm}}\n测试用户：{{user}}\n",
+      "openPageIn": "none"
     },
     {
       "id": "action-updatefrontmatter-002",
       "type": "updateFrontmatter",
       "title": "更新文件属性",
-      "filePath": "测试输出/综合测试-{{@文本输入}}-{{datetime_YYYY-MM-DD-HH-mm-ss}}.md",
+      "filePath": "测试输出/综合测试-{{@文本输入}}-{{date:YYYY-MM-DD}}.md",
       "propertyUpdates": [
+        {
+          "id": "f2c872d0-90da-4e1b-b565-128b98cc308a",
+          "name": "tags",
+          "value": [
+            "{{@属性值}}"
+          ]
+        },
         {
           "id": "prop-update-1",
           "name": "测试类型",
@@ -226,12 +217,16 @@
         {
           "id": "prop-update-2",
           "name": "测试字段",
-          "value": ["{{@文本输入}}", "{{@下拉选择}}", "{{@单选按钮}}"]
+          "value": [
+            "{{@文本输入}}",
+            "{{@下拉选择}}",
+            "{{@单选按钮}}"
+          ]
         },
         {
           "id": "prop-update-3",
           "name": "测试时间",
-          "value": "{{datetime_YYYY-MM-DD HH-mm-ss}}"
+          "value": "{{date:YYYY-MM-DD HH:mm}}"
         },
         {
           "id": "prop-update-4",
@@ -250,8 +245,8 @@
       "type": "insertText",
       "title": "插入测试内容",
       "targetFileType": "specified_file",
-      "filePath": "测试输出/综合测试-{{@文本输入}}-{{datetime_YYYY-MM-DD-HH-mm-ss}}.md",
-      "content": "\n\n## 动作测试记录\n\n### 插入文本动作测试\n\n此内容由 insertText 动作插入。\n\n**插入时间**：{{datetime_YYYY-MM-DD HH-mm-ss}}\n**用户输入**：{{@文本输入}}\n**选择结果**：{{@下拉选择}}\n\n---\n\n",
+      "filePath": "测试输出/综合测试-{{@文本输入}}-{{date:YYYY-MM-DD}}.md",
+      "content": "\n\n## 动作测试记录\n\n### 插入文本动作测试\n\n此内容由 insertText 动作插入。\n\n**插入时间**：{{date:YYYY-MM-DD HH:mm}}\n**用户输入**：{{@文本输入}}\n**选择结果**：{{@下拉选择}}\n\n---\n\n",
       "insertPosition": "end"
     },
     {
@@ -261,14 +256,15 @@
       "promptSource": "custom",
       "customPrompt": "请分析以下测试数据并提供简要总结：\n\n用户输入：{{@文本输入}}\n数字数据：{{@数字输入}}\n选择结果：{{@下拉选择}}\n布尔值：{{@复选框}}\n\n请提供一个简洁的分析报告。",
       "outputVariableName": "ai_analysis_result",
-      "modelFieldName": "AI模型"
+      "modelFieldName": "AI模型",
+      "templateFieldName": ""
     },
     {
       "id": "action-inserttext-ai-005",
       "type": "insertText",
       "title": "插入AI分析结果",
       "targetFileType": "specified_file",
-      "filePath": "测试输出/综合测试-{{@文本输入}}-{{datetime_YYYY-MM-DD-HH-mm-ss}}.md",
+      "filePath": "测试输出/综合测试-{{@文本输入}}-{{date:YYYY-MM-DD}}.md",
       "content": "\n\n### AI分析结果\n\n{{output:ai_analysis_result}}\n\n---\n\n",
       "insertPosition": "end"
     },
@@ -296,38 +292,95 @@
       ]
     },
     {
-      "id": "action-runscript-007",
-      "type": "runScript",
-      "title": "运行测试脚本",
-      "script": "/**\n * 测试脚本功能\n * 验证表单数据处理和通知功能\n */\nasync function entry() {\n  const { app, form, Notice } = this.$context;\n  \n  // 获取表单数据\n  const textInput = form['文本输入'] || '未输入';\n  const numberInput = form['数字输入'] || 0;\n  const selectValue = form['下拉选择'] || '未选择';\n  \n  // 显示测试结果\n  new Notice(`脚本测试成功！\n文本：${textInput}\n数字：${numberInput}\n选择：${selectValue}`, 5000);\n  \n  // 在控制台输出详细信息\n  console.log('=== 表单测试脚本执行 ===');\n  console.log('表单数据:', form);\n  console.log('========================');\n  \n  return '脚本执行完成';\n}\n\nexports.default = {\n  entry: entry\n};"
-    },
-    {
       "id": "action-openfile-008",
       "type": "openFile",
       "title": "打开测试文件",
-      "filePath": "测试输出/综合测试-{{@文本输入}}-{{datetime_YYYY-MM-DD-HH-mm-ss}}.md",
+      "filePath": "测试输出/综合测试-{{@文本输入}}-{{date:YYYY-MM-DD}}.md",
       "openPageIn": "tab"
     },
     {
       "id": "action-openlink-009",
       "type": "openLink",
       "title": "打开项目链接",
-      "linkUrl": "https://github.com/obsidian-form-flow"
-    },
-    {
-      "id": "action-executecommand-010",
-      "type": "executeCommand",
-      "title": "执行Obsidian命令",
-      "commandId": "file-explorer:reveal-active-file"
+      "linkUrl": "https://github.com/ItsDalk-Lane/Plugin"
     },
     {
       "id": "action-contentcleanup-011",
       "type": "contentCleanup",
       "title": "内容清理测试",
-      "cleanupType": "formatContent",
+      "cleanupType": "deleteFolders",
       "targetFileType": "specified_file",
       "filePath": "测试输出/综合测试-{{@文本输入}}-{{datetime_YYYY-MM-DD-HH-mm-ss}}.md",
-      "cleanupOptions": ["clearBold", "clearItalic", "clearHighlight"]
+      "cleanupOptions": [
+        "clearBold",
+        "clearItalic",
+        "clearHighlight"
+      ],
+      "targetFolders": [
+        "components"
+      ],
+      "recursive": true,
+      "condition": {
+        "id": "96dc194a-b7b1-41ab-825a-17e96c5067bd",
+        "type": "group",
+        "operator": "and",
+        "conditions": [
+          {
+            "id": "68cb9d0c-ce96-4175-9d2a-b30cf9fff141",
+            "type": "filter",
+            "property": "field-toggle-009",
+            "operator": "equals",
+            "value": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "ae4ed459-a11b-49e8-8f0a-d3e45e73f18f",
+      "type": "copyAsRichText",
+      "targetMode": "specified",
+      "includeImages": true,
+      "maxImageSize": 10,
+      "imageQuality": 85
+    },
+    {
+      "id": "80fd28c5-a62d-4d40-b487-46b33b63b955",
+      "type": "insertText",
+      "filePath": "",
+      "targetFolder": "",
+      "fileName": "",
+      "openPageIn": "none",
+      "newFileTemplate": "",
+      "targetFileType": "current_file",
+      "position": "endOfContent",
+      "heading": "",
+      "content": ""
+    },
+    {
+      "id": "b72f75c5-6e4b-4d0a-b90c-141245926d93",
+      "type": "convertImageLinks",
+      "targetMode": "current",
+      "backupOriginal": false,
+      "preserveDisplayText": true
+    },
+    {
+      "id": "1b744225-5ba4-4bb5-8e1c-c5311f8cdd0f",
+      "type": "insertText",
+      "targetFolder": "",
+      "fileName": "",
+      "contentTemplateSource": "text",
+      "content": "",
+      "templateFile": "",
+      "openPageIn": "none"
+    },
+    {
+      "id": "7e6953a1-5755-4734-9685-7f35d0d9a6d2",
+      "type": "addSpacesBetweenCjkAndLatin",
+      "targetMode": "specified",
+      "tabWidth": "2",
+      "formatEmbeddedCode": false,
+      "preserveCodeBlocks": false,
+      "filePath": "测试箱/中英文加空格.md"
     }
   ],
   "showSubmitMessage": true

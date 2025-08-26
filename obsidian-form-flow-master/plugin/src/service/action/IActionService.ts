@@ -13,6 +13,9 @@ import OpenLinkActionService from "./open-link/OpenLinkActionService";
 import ExecuteCommandActionService from "./execute-command/ExecuteCommandActionService";
 import AICallActionService from "./AICallActionService";
 import ContentCleanupActionService from "./content-cleanup/ContentCleanupActionService";
+import CopyAsRichTextActionService from "./copy-as-rich-text/CopyAsRichTextActionService";
+import ConvertImageLinksActionService from "./convert-image-links/ConvertImageLinksActionService";
+import AddSpacesBetweenCjkAndLatinActionService from "./add-spaces-between-cjk-and-latin/AddSpacesBetweenCjkAndLatinActionService";
 import { hasConditions } from "./util/hasConditions";
 import { FilterService } from "../filter/FilterService";
 
@@ -45,6 +48,9 @@ export class ActionChain {
         new ExecuteCommandActionService(),
         new AICallActionService(),
         new ContentCleanupActionService(),
+        new CopyAsRichTextActionService(),
+        new ConvertImageLinksActionService(),
+        new AddSpacesBetweenCjkAndLatinActionService(),
     ]
 
     constructor(actions: IFormAction[]) {

@@ -248,4 +248,9 @@ export interface Local {
 	edit: string;
 	save: string;
 	content_cleanup: string;
+	
+	// New features
+	copy_as_rich_text: string;
+	convert_image_links: string;
+	add_spaces_between_cjk_and_latin: string;
 }

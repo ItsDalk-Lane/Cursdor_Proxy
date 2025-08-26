@@ -173,6 +173,10 @@ export function advancedSearch<T>(
     
     for (const item of items) {
         const text = getSearchText(item);
+        // 安全检查：确保 text 不是 undefined 或 null
+        if (!text || typeof text !== 'string') {
+            continue;
+        }
         const textLower = text.toLowerCase();
         
         let matchType: MatchType;

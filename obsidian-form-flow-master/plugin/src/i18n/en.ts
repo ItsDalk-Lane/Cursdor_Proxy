@@ -263,4 +263,9 @@ export class En implements Local {
 	content_cleanup = "Content Cleanup";
 	add_selection_to_field = "Add Selection to Field";
 	add_file_content_to_field = "Add File Content to Field";
+	
+	// New features
+    copy_as_rich_text = "Copy as Markdown";
+    convert_image_links = "Copy as Plain Text";
+	add_spaces_between_cjk_and_latin = "Add Spaces Between CJK and Latin";
 }

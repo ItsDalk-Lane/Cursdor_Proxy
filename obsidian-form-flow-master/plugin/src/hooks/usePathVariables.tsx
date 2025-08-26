@@ -16,12 +16,16 @@ export function usePathVariables(actionId: string, formConfig: FormConfig) {
 				if (f.type === FormFieldType.FILE_LIST && (f as IFileListField).extractContent === true) {
 					return false;
 				}
+				// 确保字段有有效的 label
+				if (!f.label || typeof f.label !== 'string') {
+					return false;
+				}
 				return true;
 			})
 			.map((f) => {
 				return {
 					label: f.label,
-					info: f.description,
+					info: f.description || '',
 					type: "variable",
 				};
 			});
@@ -30,6 +34,10 @@ export function usePathVariables(actionId: string, formConfig: FormConfig) {
 			const action = actions[i];
 			if (action.type === FormActionType.SUGGEST_MODAL) {
 				const a = action as SuggestModalFormAction;
+				// 确保 fieldName 有效
+				if (!a.fieldName || typeof a.fieldName !== 'string') {
+					continue;
+				}
 				if (fields.find((f) => f.label === a.fieldName)) {
 					continue;
 				}
@@ -44,10 +52,14 @@ export function usePathVariables(actionId: string, formConfig: FormConfig) {
 				const a = action as GenerateFormAction;
 				const afields = a.fields || [];
 				afields.forEach((f) => {
+					// 确保字段有有效的 label
+					if (!f.label || typeof f.label !== 'string') {
+						return;
+					}
 					if (!fields.find((ff) => ff.label === f.label)) {
 						fields.push({
 							label: f.label,
-							info: f.description,
+							info: f.description || '',
 							type: "variable",
 						});
 					}

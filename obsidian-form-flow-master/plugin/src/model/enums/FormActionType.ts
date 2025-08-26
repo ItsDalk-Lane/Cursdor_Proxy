@@ -10,4 +10,7 @@ export enum FormActionType {
     EXECUTE_COMMAND = "executeCommand",
     AI_CALL = "aiCall",
     CONTENT_CLEANUP = "contentCleanup",
+    COPY_AS_RICH_TEXT = "copyAsRichText",
+    CONVERT_IMAGE_LINKS = "convertImageLinks",
+    ADD_SPACES_BETWEEN_CJK_AND_LATIN = "addSpacesBetweenCjkAndLatin",
 }

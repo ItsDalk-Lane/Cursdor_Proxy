@@ -1,4 +1,4 @@
-import { Code, File, FileJson, MessageSquare, Text, ExternalLink, Link, Command, Brain, Trash2 } from "lucide-react";
+import { Code, File, FileJson, MessageSquare, Text, ExternalLink, Link, Command, Brain, Trash2, Copy, Image, Type, FileText } from "lucide-react";
 import { localInstance } from "src/i18n/locals";
 import { FormActionType } from "src/model/enums/FormActionType";
 import { FormTypeSelect } from "src/view/shared/select/FormTypeSelect";
@@ -78,5 +78,20 @@ export const formActionTypeOptions = [
 		value: FormActionType.CONTENT_CLEANUP,
 		label: localInstance.content_cleanup,
 		icon: <Trash2 />,
+	},
+	{
+		value: FormActionType.COPY_AS_RICH_TEXT,
+		label: localInstance.copy_as_rich_text,
+		icon: <FileText />,
+	},
+	{
+		value: FormActionType.CONVERT_IMAGE_LINKS,
+		label: localInstance.convert_image_links,
+		icon: <Text />,
+	},
+	{
+		value: FormActionType.ADD_SPACES_BETWEEN_CJK_AND_LATIN,
+		label: localInstance.add_spaces_between_cjk_and_latin,
+		icon: <Type />,
 	},
 ];

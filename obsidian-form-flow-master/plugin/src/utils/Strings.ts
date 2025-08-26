@@ -26,7 +26,7 @@ export class Strings {
         return value.length === 0;
     }
 
-    static isNotEmpty(v: string): boolean {
+    static isNotEmpty(v: string | null | undefined): boolean {
         return !this.isEmpty(v);
     }
 
