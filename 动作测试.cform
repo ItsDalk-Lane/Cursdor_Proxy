@@ -1,0 +1,107 @@
+{
+  "id": "704b89b7-3f5a-4ccf-b881-f6c0e006f8b5",
+  "fields": [
+    {
+      "id": "720d76cf-5b3d-4b62-885a-3c911c70a482",
+      "label": "用户输入",
+      "type": "text",
+      "rightClickSubmit": true
+    },
+    {
+      "id": "adedc35b-f556-4185-a7f3-9d0080092240",
+      "label": "模型",
+      "type": "ai_model_list",
+      "defaultValue": "d1d21265-f31f-42c3-b8aa-d2d1c779d982"
+    },
+    {
+      "id": "189070eb-d65e-45ee-86ea-a62687a4df6f",
+      "label": "提示词",
+      "type": "template_list",
+      "defaultValue": "提示词/费曼式概念解释专家.md"
+    }
+  ],
+  "actions": [
+    {
+      "id": "d1943f1d-be33-4385-b1ab-b080b183b204",
+      "type": "createFile",
+      "targetFolder": "",
+      "fileName": "",
+      "contentTemplateSource": "file",
+      "templateFile": "System/Template/003.md",
+      "filePath": "0-Lnbox（收件箱）/{{@用户输入}}.md"
+    },
+    {
+      "type": "updateFrontmatter",
+      "targetFolder": "",
+      "fileName": "",
+      "id": "7697e0cf-c63b-4269-9542-4463f76f6e78",
+      "contentTemplateSource": "text",
+      "content": "",
+      "templateFile": "",
+      "openPageIn": "none",
+      "filePath": "测试箱/动作测试01.md",
+      "propertyUpdates": [
+        {
+          "id": "2d529886-636e-42bf-a34e-a975e334ea7b",
+          "name": "tags",
+          "value": [
+            "{{@用户输入}}"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "aiCall",
+      "targetFolder": "",
+      "fileName": "",
+      "id": "fe0ae9e2-ecd4-46f2-8f14-75d3709cb3f9",
+      "contentTemplateSource": "text",
+      "content": "",
+      "templateFile": "",
+      "openPageIn": "none",
+      "items": [],
+      "suggestSource": "list",
+      "promptSource": "builtin_template",
+      "outputVariableName": "fmgljs",
+      "modelFieldName": "模型",
+      "templateFieldName": "提示词"
+    },
+    {
+      "type": "insertText",
+      "targetFolder": "",
+      "fileName": "",
+      "id": "d3fe7a35-4740-41a2-a563-895169db7640",
+      "contentTemplateSource": "text",
+      "content": "## 调用AI输出内容\n\n### 用户输入内容：{{@用户输入}}\n\n### AI输出内容\n\n{{output:fmgljs}}\n\n",
+      "templateFile": "",
+      "openPageIn": "none",
+      "filePath": "测试箱/动作测试01.md"
+    },
+    {
+      "type": "contentCleanup",
+      "targetFolder": "",
+      "fileName": "",
+      "id": "f3a4eed2-0a49-4b05-9f10-eb5621c14bdf",
+      "contentTemplateSource": "text",
+      "content": "",
+      "templateFile": "",
+      "openPageIn": "none",
+      "cleanupType": "deleteFiles",
+      "targetFiles": [
+        "0-Lnbox（收件箱）/{{@用户输入}}.md"
+      ]
+    },
+    {
+      "type": "openFile",
+      "targetFolder": "",
+      "fileName": "",
+      "id": "754a19fe-e9c6-4e68-99d9-457a3786a17e",
+      "contentTemplateSource": "text",
+      "content": "",
+      "templateFile": "",
+      "openPageIn": "tab",
+      "filePath": "测试箱/动作测试01.md"
+    }
+  ],
+  "showSubmitMessage": false
+}

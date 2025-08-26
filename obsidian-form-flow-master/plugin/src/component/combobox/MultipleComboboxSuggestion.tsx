@@ -21,7 +21,7 @@ export type Option = {
 	description?: string;
 };
 
-export function MultipleComboboxSuggestion(props: {
+export const MultipleComboboxSuggestion = React.memo(function MultipleComboboxSuggestion(props: {
 	id?: string;
 	label?: string;
 	value: string[] | string;
@@ -38,9 +38,11 @@ export function MultipleComboboxSuggestion(props: {
 	const containerRef = useRef<HTMLDivElement>(null);
 	const inputRef = useRef<HTMLInputElement>(null);
 
-	const values = (
-		Array.isArray(props.value) ? props.value : [props.value]
-	).filter((v) => Strings.isNotEmpty(v));
+	const values = useMemo(() => {
+		return (
+			Array.isArray(props.value) ? props.value : [props.value]
+		).filter((v) => Strings.isNotEmpty(v));
+	}, [props.value]);
 
 	const matches = useMemo(() => {
 		if (query.length === 0) {
@@ -92,7 +94,7 @@ export function MultipleComboboxSuggestion(props: {
 				setIsOpen(false);
 			}
 		},
-		[matches, activeIndex, onSelect]
+		[matches, activeIndex, onSelect, isOpen]
 	);
 
 	const handleInputKeyDown = useCallback(
@@ -108,7 +110,7 @@ export function MultipleComboboxSuggestion(props: {
 				setIsOpen(false);
 			}
 		},
-		[query, values, props]
+		[query, values, props.onChange]
 	);
 
 	useEffect(() => {
@@ -169,7 +171,7 @@ export function MultipleComboboxSuggestion(props: {
 				</Popover.Trigger>
 
 				{isOpen && (
-					<Popover.Portal container={containerRef.current?.doc.body}>
+					<Popover.Portal container={document.body}>
 						<Popover.Content
 							className="form--MultipleComboboxContent"
 							align="start"
@@ -239,7 +241,7 @@ export function MultipleComboboxSuggestion(props: {
 			</Popover.Root>
 		</div>
 	);
-}
+});
 
 function ChipItems(props: {
 	values: string[];

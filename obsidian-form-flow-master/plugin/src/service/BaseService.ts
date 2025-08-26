@@ -1,8 +1,13 @@
 import { debugManager } from '../utils/DebugManager';
-import { errorHandler, ErrorType, ErrorSeverity, FormFlowError } from '../utils/ErrorHandler';
 import { performanceMonitor } from '../utils/PerformanceMonitor';
 import { debugConfig, DebugModule, DebugLevel } from '../utils/DebugConfig';
 import { LoggerUtils } from '../utils/LoggerUtils';
+
+// 新的核心模块导入
+import { globalErrorHandler, ErrorType, ErrorSeverity, FormFlowError } from '../core/ErrorHandler';
+import { globalPerformanceMonitor } from '../core/PerformanceMonitor';
+import { globalEventBus } from '../core/EventBus';
+import { serviceContainer } from '../core/ServiceContainer';
 
 /**
  * 基础服务类，提供通用的调试日志、错误处理和性能监控功能
@@ -99,10 +104,11 @@ export abstract class BaseService {
     }
 
     /**
-     * 处理错误
+     * 处理错误 - 使用新的错误处理机制
      */
     protected handleError(message: string, type: ErrorType = ErrorType.UNKNOWN, severity: ErrorSeverity = ErrorSeverity.MEDIUM, details?: any): FormFlowError {
-        return errorHandler.handleError({
+        // 使用新的错误处理机制
+        return globalErrorHandler.handleError({
             type,
             severity,
             message,
@@ -112,14 +118,14 @@ export abstract class BaseService {
     }
 
     /**
-     * 抛出错误
+     * 抛出错误 - 使用新的错误处理机制
      */
     protected throwError(message: string, type: ErrorType = ErrorType.UNKNOWN, severity: ErrorSeverity = ErrorSeverity.MEDIUM, details?: any): never {
         throw this.handleError(message, type, severity, details);
     }
 
     /**
-     * 安全执行函数
+     * 安全执行函数 - 使用新的错误处理机制
      */
     protected async safeExecute<T>(
         fn: () => Promise<T> | T,
@@ -127,11 +133,11 @@ export abstract class BaseService {
         errorType: ErrorType = ErrorType.UNKNOWN,
         defaultValue?: T
     ): Promise<T | undefined> {
-        return errorHandler.safeExecute(
+        return globalErrorHandler.safeExecute(
             fn,
             {
-                type: errorType,
-                severity: ErrorSeverity.MEDIUM,
+                type: errorType as any,
+                severity: ErrorSeverity.MEDIUM as any,
                 message: errorMessage,
                 source: this.serviceName
             },
@@ -140,31 +146,31 @@ export abstract class BaseService {
     }
 
     /**
-     * 开始性能监控
+     * 开始性能监控 - 使用新的性能监控机制
      */
     protected startPerformanceMetric(name: string, metadata?: Record<string, any>): string {
-        return performanceMonitor.startMetric(`${this.serviceName}.${name}`, {
+        return globalPerformanceMonitor.startMetric(`${this.serviceName}.${name}`, {
             service: this.serviceName,
             ...metadata
         });
     }
 
     /**
-     * 结束性能监控
+     * 结束性能监控 - 使用新的性能监控机制
      */
     protected endPerformanceMetric(metricId: string): void {
-        performanceMonitor.endMetric(metricId);
+        globalPerformanceMonitor.endMetric(metricId);
     }
 
     /**
-     * 测量方法性能
+     * 测量方法性能 - 使用新的性能监控机制
      */
     protected async measurePerformance<T>(
         name: string,
         fn: () => Promise<T> | T,
         metadata?: Record<string, any>
     ): Promise<T> {
-        return performanceMonitor.measureFunction(
+        return globalPerformanceMonitor.measureFunction(
             `${this.serviceName}.${name}`,
             fn,
             {
@@ -175,11 +181,11 @@ export abstract class BaseService {
     }
 
     /**
-     * 获取服务统计信息
+     * 获取服务统计信息 - 使用新的监控机制
      */
     protected getServiceStats(): Record<string, any> {
-        const performanceStats = performanceMonitor.getStats();
-        const errorStats = errorHandler.getErrorStats();
+        const performanceStats = globalPerformanceMonitor.getStats();
+        const errorStats = globalErrorHandler.getErrorStats();
         
         return {
             serviceName: this.serviceName,

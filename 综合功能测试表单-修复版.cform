@@ -1,0 +1,334 @@
+{
+  "id": "comprehensive-test-form-2024-fixed",
+  "fields": [
+    {
+      "id": "field-text-001",
+      "label": "文本输入",
+      "type": "text",
+      "placeholder": "请输入文本内容",
+      "description": "基础文本输入字段测试",
+      "enableDescription": true,
+      "required": true,
+      "rightClickSubmit": true
+    },
+    {
+      "id": "field-textarea-002",
+      "label": "多行文本",
+      "type": "textarea",
+      "placeholder": "请输入多行文本内容",
+      "description": "多行文本输入字段测试",
+      "enableDescription": true,
+      "defaultValue": "默认多行文本内容\n第二行内容"
+    },
+    {
+      "id": "field-password-003",
+      "label": "密码字段",
+      "type": "password",
+      "placeholder": "请输入密码",
+      "description": "密码输入字段测试",
+      "enableDescription": true,
+      "required": true
+    },
+    {
+      "id": "field-number-004",
+      "label": "数字输入",
+      "type": "number",
+      "placeholder": "请输入数字",
+      "description": "数字输入字段测试",
+      "enableDescription": true,
+      "defaultValue": 100
+    },
+    {
+      "id": "field-date-005",
+      "label": "日期选择",
+      "type": "date",
+      "description": "日期选择字段测试",
+      "enableDescription": true
+    },
+    {
+      "id": "field-time-006",
+      "label": "时间选择",
+      "type": "time",
+      "description": "时间选择字段测试",
+      "enableDescription": true
+    },
+    {
+      "id": "field-datetime-007",
+      "label": "日期时间",
+      "type": "datetime",
+      "description": "日期时间选择字段测试",
+      "enableDescription": true
+    },
+    {
+      "id": "field-checkbox-008",
+      "label": "复选框",
+      "type": "checkbox",
+      "description": "复选框字段测试",
+      "enableDescription": true,
+      "defaultValue": true
+    },
+    {
+      "id": "field-toggle-009",
+      "label": "开关切换",
+      "type": "toggle",
+      "description": "开关切换字段测试",
+      "enableDescription": true,
+      "defaultValue": false
+    },
+    {
+      "id": "field-radio-010",
+      "label": "单选按钮",
+      "type": "radio",
+      "description": "单选按钮字段测试",
+      "enableDescription": true,
+      "options": [
+        {
+          "id": "radio-option-1",
+          "label": "选项一",
+          "value": "option1"
+        },
+        {
+          "id": "radio-option-2",
+          "label": "选项二",
+          "value": "option2"
+        },
+        {
+          "id": "radio-option-3",
+          "label": "选项三",
+          "value": "option3"
+        }
+      ],
+      "defaultValue": "option1"
+    },
+    {
+      "id": "field-select-011",
+      "label": "下拉选择",
+      "type": "select",
+      "description": "下拉选择字段测试",
+      "enableDescription": true,
+      "multiple": false,
+      "options": [
+        {
+          "id": "select-option-1",
+          "label": "下拉选项一",
+          "value": "dropdown1"
+        },
+        {
+          "id": "select-option-2",
+          "label": "下拉选项二",
+          "value": "dropdown2"
+        },
+        {
+          "id": "select-option-3",
+          "label": "下拉选项三",
+          "value": "dropdown3"
+        }
+      ]
+    },
+    {
+      "id": "field-select-multi-012",
+      "label": "多选下拉",
+      "type": "select",
+      "description": "多选下拉字段测试",
+      "enableDescription": true,
+      "multiple": true,
+      "options": [
+        {
+          "id": "multi-option-1",
+          "label": "多选项一",
+          "value": "multi1"
+        },
+        {
+          "id": "multi-option-2",
+          "label": "多选项二",
+          "value": "multi2"
+        },
+        {
+          "id": "multi-option-3",
+          "label": "多选项三",
+          "value": "multi3"
+        }
+      ]
+    },
+    {
+      "id": "field-select2-013",
+      "label": "高级下拉",
+      "type": "select2",
+      "description": "高级下拉选择字段测试",
+      "enableDescription": true,
+      "options": [
+        {
+          "id": "select2-option-1",
+          "label": "高级选项一",
+          "value": "advanced1"
+        },
+        {
+          "id": "select2-option-2",
+          "label": "高级选项二",
+          "value": "advanced2"
+        }
+      ]
+    },
+    {
+      "id": "field-property-014",
+      "label": "属性值",
+      "type": "property_value",
+      "description": "属性值字段测试",
+      "enableDescription": true,
+      "propertyName": "tags"
+    },
+    {
+      "id": "field-filelist-015",
+      "label": "文件列表",
+      "type": "file_list",
+      "description": "文件列表字段测试",
+      "enableDescription": true,
+      "internalLink": true,
+      "multiple": true,
+      "extractContent": false
+    },
+    {
+      "id": "field-aimodel-016",
+      "label": "AI模型",
+      "type": "ai_model_list",
+      "description": "AI模型列表字段测试",
+      "enableDescription": true
+    },
+    {
+      "id": "field-template-017",
+      "label": "模板列表",
+      "type": "template_list",
+      "description": "模板列表字段测试",
+      "enableDescription": true
+    }
+  ],
+  "actions": [
+    {
+      "id": "action-createfile-001",
+      "type": "createFile",
+      "title": "创建测试文件",
+      "filePath": "测试输出/综合测试-{{@文本输入}}-{{datetime_YYYY-MM-DD-HH-mm-ss}}.md",
+      "contentTemplateSource": "text",
+      "content": "# 综合功能测试结果\n\n## 字段测试结果\n\n### 基础字段\n- 文本输入：{{@文本输入}}\n- 多行文本：{{@多行文本}}\n- 密码字段：{{@密码字段}}\n- 数字输入：{{@数字输入}}\n\n### 时间字段\n- 日期选择：{{@日期选择}}\n- 时间选择：{{@时间选择}}\n- 日期时间：{{@日期时间}}\n\n### 选择字段\n- 复选框：{{@复选框}}\n- 开关切换：{{@开关切换}}\n- 单选按钮：{{@单选按钮}}\n- 下拉选择：{{@下拉选择}}\n- 多选下拉：{{@多选下拉}}\n- 高级下拉：{{@高级下拉}}\n\n### 特殊字段\n- 属性值：{{@属性值}}\n- 文件列表：{{@文件列表}}\n- AI模型：{{@AI模型}}\n- 模板列表：{{@模板列表}}\n\n---\n\n测试时间：{{datetime_YYYY-MM-DD HH-mm-ss}}\n测试用户：{{user}}\n",
+      "openPageIn": "tab"
+    },
+    {
+      "id": "action-updatefrontmatter-002",
+      "type": "updateFrontmatter",
+      "title": "更新文件属性",
+      "filePath": "测试输出/综合测试-{{@文本输入}}-{{datetime_YYYY-MM-DD-HH-mm-ss}}.md",
+      "propertyUpdates": [
+        {
+          "id": "prop-update-1",
+          "name": "测试类型",
+          "value": "综合功能测试"
+        },
+        {
+          "id": "prop-update-2",
+          "name": "测试字段",
+          "value": ["{{@文本输入}}", "{{@下拉选择}}", "{{@单选按钮}}"]
+        },
+        {
+          "id": "prop-update-3",
+          "name": "测试时间",
+          "value": "{{datetime_YYYY-MM-DD HH-mm-ss}}"
+        },
+        {
+          "id": "prop-update-4",
+          "name": "数字测试",
+          "value": "{{@数字输入}}"
+        },
+        {
+          "id": "prop-update-5",
+          "name": "布尔测试",
+          "value": "{{@复选框}}"
+        }
+      ]
+    },
+    {
+      "id": "action-inserttext-003",
+      "type": "insertText",
+      "title": "插入测试内容",
+      "targetFileType": "specified_file",
+      "filePath": "测试输出/综合测试-{{@文本输入}}-{{datetime_YYYY-MM-DD-HH-mm-ss}}.md",
+      "content": "\n\n## 动作测试记录\n\n### 插入文本动作测试\n\n此内容由 insertText 动作插入。\n\n**插入时间**：{{datetime_YYYY-MM-DD HH-mm-ss}}\n**用户输入**：{{@文本输入}}\n**选择结果**：{{@下拉选择}}\n\n---\n\n",
+      "insertPosition": "end"
+    },
+    {
+      "id": "action-aicall-004",
+      "type": "aiCall",
+      "title": "AI分析测试",
+      "promptSource": "custom",
+      "customPrompt": "请分析以下测试数据并提供简要总结：\n\n用户输入：{{@文本输入}}\n数字数据：{{@数字输入}}\n选择结果：{{@下拉选择}}\n布尔值：{{@复选框}}\n\n请提供一个简洁的分析报告。",
+      "outputVariableName": "ai_analysis_result",
+      "modelFieldName": "AI模型"
+    },
+    {
+      "id": "action-inserttext-ai-005",
+      "type": "insertText",
+      "title": "插入AI分析结果",
+      "targetFileType": "specified_file",
+      "filePath": "测试输出/综合测试-{{@文本输入}}-{{datetime_YYYY-MM-DD-HH-mm-ss}}.md",
+      "content": "\n\n### AI分析结果\n\n{{output:ai_analysis_result}}\n\n---\n\n",
+      "insertPosition": "end"
+    },
+    {
+      "id": "action-suggestmodal-006",
+      "type": "suggestModal",
+      "title": "建议选择测试",
+      "suggestSource": "list",
+      "items": [
+        {
+          "id": "suggest-1",
+          "label": "测试选项一",
+          "value": "test_option_1"
+        },
+        {
+          "id": "suggest-2",
+          "label": "测试选项二",
+          "value": "test_option_2"
+        },
+        {
+          "id": "suggest-3",
+          "label": "基于用户输入-{{@文本输入}}",
+          "value": "user_input_based"
+        }
+      ]
+    },
+    {
+      "id": "action-runscript-007",
+      "type": "runScript",
+      "title": "运行测试脚本",
+      "script": "/**\n * 测试脚本功能\n * 验证表单数据处理和通知功能\n */\nasync function entry() {\n  const { app, form, Notice } = this.$context;\n  \n  // 获取表单数据\n  const textInput = form['文本输入'] || '未输入';\n  const numberInput = form['数字输入'] || 0;\n  const selectValue = form['下拉选择'] || '未选择';\n  \n  // 显示测试结果\n  new Notice(`脚本测试成功！\n文本：${textInput}\n数字：${numberInput}\n选择：${selectValue}`, 5000);\n  \n  // 在控制台输出详细信息\n  console.log('=== 表单测试脚本执行 ===');\n  console.log('表单数据:', form);\n  console.log('========================');\n  \n  return '脚本执行完成';\n}\n\nexports.default = {\n  entry: entry\n};"
+    },
+    {
+      "id": "action-openfile-008",
+      "type": "openFile",
+      "title": "打开测试文件",
+      "filePath": "测试输出/综合测试-{{@文本输入}}-{{datetime_YYYY-MM-DD-HH-mm-ss}}.md",
+      "openPageIn": "tab"
+    },
+    {
+      "id": "action-openlink-009",
+      "type": "openLink",
+      "title": "打开项目链接",
+      "linkUrl": "https://github.com/obsidian-form-flow"
+    },
+    {
+      "id": "action-executecommand-010",
+      "type": "executeCommand",
+      "title": "执行Obsidian命令",
+      "commandId": "file-explorer:reveal-active-file"
+    },
+    {
+      "id": "action-contentcleanup-011",
+      "type": "contentCleanup",
+      "title": "内容清理测试",
+      "cleanupType": "formatContent",
+      "targetFileType": "specified_file",
+      "filePath": "测试输出/综合测试-{{@文本输入}}-{{datetime_YYYY-MM-DD-HH-mm-ss}}.md",
+      "cleanupOptions": ["clearBold", "clearItalic", "clearHighlight"]
+    }
+  ],
+  "showSubmitMessage": true
+}

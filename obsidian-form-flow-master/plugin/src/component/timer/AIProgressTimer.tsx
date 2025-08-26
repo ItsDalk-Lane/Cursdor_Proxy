@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import './AIProgressTimer.css';
 
 interface AIProgressTimerProps {
@@ -6,7 +6,7 @@ interface AIProgressTimerProps {
     onComplete?: () => void;
 }
 
-export function AIProgressTimer({ isRunning, onComplete }: AIProgressTimerProps) {
+export const AIProgressTimer = React.memo(function AIProgressTimer({ isRunning, onComplete }: AIProgressTimerProps) {
     const [seconds, setSeconds] = useState(0);
     const [milliseconds, setMilliseconds] = useState(0);
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -44,7 +44,7 @@ export function AIProgressTimer({ isRunning, onComplete }: AIProgressTimerProps)
         };
     }, [isRunning, onComplete]);
 
-    const formatTime = () => {
+    const formatTime = useCallback(() => {
         const mins = Math.floor(seconds / 60);
         const secs = seconds % 60;
         const ms = Math.floor(milliseconds / 10);
@@ -54,7 +54,25 @@ export function AIProgressTimer({ isRunning, onComplete }: AIProgressTimerProps)
         } else {
             return `${secs}.${ms.toString().padStart(2, '0')}s`;
         }
-    };
+    }, [seconds, milliseconds]);
+
+    // 使用useMemo缓存图标渲染
+    const timerIcon = useMemo(() => {
+        if (isRunning) {
+            return (
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <polyline points="12,6 12,12 16,14"/>
+                </svg>
+            );
+        } else {
+            return (
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <polyline points="20,6 9,17 4,12"/>
+                </svg>
+            );
+        }
+    }, [isRunning]);
 
     if (!isRunning && seconds === 0) {
         return null;
@@ -63,16 +81,7 @@ export function AIProgressTimer({ isRunning, onComplete }: AIProgressTimerProps)
     return (
         <div className="ai-progress-timer">
             <div className="ai-progress-timer__icon">
-                {isRunning ? (
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <circle cx="12" cy="12" r="10"/>
-                        <polyline points="12,6 12,12 16,14"/>
-                    </svg>
-                ) : (
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <polyline points="20,6 9,17 4,12"/>
-                    </svg>
-                )}
+                {timerIcon}
             </div>
             <div className="ai-progress-timer__text">
                 {isRunning ? 'AI处理中' : 'AI处理完成'}
@@ -82,4 +91,4 @@ export function AIProgressTimer({ isRunning, onComplete }: AIProgressTimerProps)
             </div>
         </div>
     );
-}
+});
