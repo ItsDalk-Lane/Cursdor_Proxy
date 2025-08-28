@@ -17,20 +17,22 @@ export class ConversationSaveService {
     }
 
     /**
-     * 保存对话到文件
+     * 保存对话到文件（支持增量保存）
      * @param messages 对话消息列表
      * @param saveConfig 保存配置
+     * @param isFirstSave 是否为首次保存
      */
     public async saveConversation(
         messages: ChatMessage[],
-        saveConfig: ConversationSaveConfig
+        saveConfig: ConversationSaveConfig,
+        isFirstSave: boolean = true
     ): Promise<void> {
         if (!saveConfig.enabled || messages.length === 0) {
             return;
         }
 
         try {
-            const content = this.formatConversation(messages);
+            const content = this.formatConversation(messages, isFirstSave);
             const targetFile = await this.getTargetFile(saveConfig);
 
             if (targetFile) {
@@ -46,14 +48,21 @@ export class ConversationSaveService {
     }
 
     /**
-     * 格式化对话内容为Markdown格式
+     * 格式化对话内容为Markdown格式（支持增量保存）
      * @param messages 对话消息列表
+     * @param isFirstSave 是否为首次保存
      * @returns 格式化后的Markdown内容
      */
-    private formatConversation(messages: ChatMessage[]): string {
+    private formatConversation(messages: ChatMessage[], isFirstSave: boolean = true): string {
         const timestamp = new Date().toLocaleString();
-        let content = `\n\n---\n\n## AI对话记录 - ${timestamp}\n\n`;
+        let content = '';
+        
+        // 首次保存时添加完整的标题和分隔符
+        if (isFirstSave) {
+            content = `\n\n---\n\n## AI对话记录 - ${timestamp}\n\n`;
+        }
 
+        // 添加消息内容
         for (const message of messages) {
             const messageTime = new Date(message.timestamp).toLocaleTimeString();
             const roleLabel = message.role === 'user' ? '👤 用户' : '🤖 AI助手';
@@ -62,7 +71,11 @@ export class ConversationSaveService {
             content += `${message.content}\n\n`;
         }
 
-        content += `---\n\n`;
+        // 首次保存时添加结束分隔符，增量保存时不添加（保持对话连续性）
+        if (isFirstSave) {
+            content += `---\n\n`;
+        }
+        
         return content;
     }
 

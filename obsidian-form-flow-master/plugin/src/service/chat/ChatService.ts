@@ -34,6 +34,7 @@ export interface ChatContext {
     messages: ChatMessage[];
     config: ChatConfig;
     variableContext?: VariableContext;
+    savedMessageCount?: number; // 已保存的消息数量，用于增量保存
 }
 
 /**
@@ -72,7 +73,8 @@ export class ChatService {
                     currentTime: new Date().toISOString(),
                     userName: 'User'
                 }
-            }
+            },
+            savedMessageCount: 0 // 初始化已保存消息数量
         };
         
         this.activeChats.set(sessionId, context);
@@ -120,6 +122,7 @@ export class ChatService {
         const context = this.activeChats.get(sessionId);
         if (context) {
             context.messages = [];
+            context.savedMessageCount = 0; // 重置已保存消息计数
             debugManager.info('ChatService', `清除对话历史: ${sessionId}`);
             return true;
         }
@@ -432,7 +435,7 @@ export class ChatService {
     }
     
     /**
-     * 保存对话到文件
+     * 保存对话到文件（增量保存）
      * @param sessionId 会话ID
      */
     public async saveConversation(sessionId: string): Promise<void> {
@@ -447,12 +450,30 @@ export class ChatService {
             return;
         }
 
+        // 获取已保存的消息数量，默认为0
+        const savedCount = context.savedMessageCount || 0;
+        const totalMessages = context.messages.length;
+        
+        // 如果没有新消息需要保存，直接返回
+        if (savedCount >= totalMessages) {
+            debugManager.info('ChatService', `会话 ${sessionId} 没有新消息需要保存`);
+            return;
+        }
+
+        // 获取需要保存的新消息
+        const newMessages = context.messages.slice(savedCount);
+        
         try {
             await this.conversationSaveService.saveConversation(
-                context.messages,
-                context.config.saveConfig
+                newMessages,
+                context.config.saveConfig,
+                savedCount === 0 // 是否为首次保存
             );
-            debugManager.info('ChatService', `对话已保存，会话 ${sessionId}`);
+            
+            // 更新已保存的消息数量
+            context.savedMessageCount = totalMessages;
+            
+            debugManager.info('ChatService', `对话已保存，会话 ${sessionId}，新保存 ${newMessages.length} 条消息`);
         } catch (error) {
             debugManager.error('ChatService', '保存对话失败', error);
             throw error;

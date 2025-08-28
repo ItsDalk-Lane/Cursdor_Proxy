@@ -45,6 +45,7 @@ export class FloatingChatDialog {
     private minimizedEl: HTMLElement;
     private chatContentEl: HTMLElement;
     private inputEl: HTMLTextAreaElement;
+    private sendBtn: HTMLButtonElement;
     private modelSelectEl: HTMLSelectElement;
     private templateSelectEl: HTMLSelectElement;
     
@@ -337,46 +338,77 @@ export class FloatingChatDialog {
         const inputAreaEl = document.createElement('div');
         inputAreaEl.className = 'chat-input-area';
         inputAreaEl.style.cssText = `
-            padding: 12px;
+            padding: 8px;
             border-top: 1px solid var(--background-modifier-border);
             background: var(--background-primary);
+        `;
+        
+        // 创建输入框容器（包含输入框和发送按钮）
+        const inputContainerEl = document.createElement('div');
+        inputContainerEl.style.cssText = `
+            position: relative;
+            width: 100%;
             display: flex;
-            gap: 8px;
             align-items: flex-end;
         `;
         
         this.inputEl = document.createElement('textarea');
         this.inputEl.placeholder = '输入您的问题...';
         this.inputEl.style.cssText = `
-            flex: 1;
+            width: 100%;
             min-height: 40px;
             max-height: 120px;
-            padding: 8px 12px;
+            padding: 8px 48px 8px 12px;
             border: 1px solid var(--background-modifier-border);
-            border-radius: 6px;
+            border-radius: 20px;
             background: var(--background-primary);
             color: var(--text-normal);
-            resize: vertical;
+            resize: none;
             font-family: var(--font-interface);
             line-height: 1.4;
+            outline: none;
         `;
         
-        const sendBtn = document.createElement('button');
-        sendBtn.textContent = '发送';
-        sendBtn.style.cssText = `
-            padding: 8px 16px;
+        this.sendBtn = document.createElement('button');
+        this.sendBtn.innerHTML = '➤';
+        this.sendBtn.title = '发送消息';
+        this.sendBtn.style.cssText = `
+            position: absolute;
+            right: 6px;
+            bottom: 6px;
+            width: 32px;
+            height: 32px;
             background: var(--interactive-accent);
             color: var(--text-on-accent);
             border: none;
-            border-radius: 6px;
+            border-radius: 50%;
             cursor: pointer;
-            font-weight: 500;
-            white-space: nowrap;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            z-index: 1;
         `;
-        sendBtn.addEventListener('click', () => this.sendMessage());
+        this.sendBtn.addEventListener('click', () => this.sendMessage());
         
-        inputAreaEl.appendChild(this.inputEl);
-        inputAreaEl.appendChild(sendBtn);
+        // 添加悬停效果
+        this.sendBtn.addEventListener('mouseenter', () => {
+            if (!this.sendBtn.disabled) {
+                this.sendBtn.style.background = 'var(--interactive-accent-hover)';
+                this.sendBtn.style.transform = 'scale(1.05)';
+            }
+        });
+        this.sendBtn.addEventListener('mouseleave', () => {
+            this.sendBtn.style.transform = 'scale(1)';
+            if (!this.sendBtn.disabled) {
+                this.sendBtn.style.background = 'var(--interactive-accent)';
+            }
+        });
+        
+        inputContainerEl.appendChild(this.inputEl);
+        inputContainerEl.appendChild(this.sendBtn);
+        inputAreaEl.appendChild(inputContainerEl);
         
         // 组装对话界面
         this.dialogEl = document.createElement('div');
@@ -623,6 +655,7 @@ export class FloatingChatDialog {
         if (!content || this.isProcessing) return;
         
         this.isProcessing = true;
+        this.updateSendButtonState();
         
         // 清空输入框
         this.inputEl.value = '';
@@ -668,7 +701,11 @@ export class FloatingChatDialog {
                 
                 if (isComplete) {
                     this.isProcessing = false;
+                    this.updateSendButtonState();
                     debugManager.info('FloatingChatDialog', 'AI响应完成');
+                    
+                    // AI响应完成后，添加时间戳和刷新按钮
+                    this.addTimestampAndRefreshButton();
                     
                     // 移除自动保存功能，用户需要手动点击保存按钮
                     // 自动保存已禁用，用户可通过保存按钮手动保存对话
@@ -684,6 +721,10 @@ export class FloatingChatDialog {
             assistantMessage.content = `抱歉，AI调用失败：${error.message}`;
             this.updateLastMessage(assistantMessage.content);
             this.isProcessing = false;
+            this.updateSendButtonState();
+            
+            // 错误情况下也添加时间戳和刷新按钮
+            this.addTimestampAndRefreshButton();
         }
     }
     
@@ -698,14 +739,15 @@ export class FloatingChatDialog {
         messageEl.style.cssText = `
             display: flex;
             flex-direction: column;
-            gap: 4px;
-            padding: 12px;
-            border-radius: 8px;
-            max-width: 85%;
+            gap: 8px;
+            padding: 16px;
+            margin: 0;
+            width: 100%;
             word-wrap: break-word;
+            position: relative;
             ${message.role === 'user' 
-                ? 'align-self: flex-end; background: var(--interactive-accent); color: var(--text-on-accent);'
-                : 'align-self: flex-start; background: var(--background-secondary); color: var(--text-normal);'
+                ? 'background: var(--background-secondary); color: var(--text-normal); border-radius: 8px; border: 1px solid var(--background-modifier-border); box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);'
+                : 'background: transparent; color: var(--text-normal);'
             }
         `;
         
@@ -724,16 +766,22 @@ export class FloatingChatDialog {
             contentEl.textContent = message.content;
         }
         
-        const timeEl = document.createElement('div');
-        timeEl.style.cssText = `
-            font-size: 0.8em;
-            opacity: 0.7;
-            text-align: ${message.role === 'user' ? 'right' : 'left'};
-        `;
-        timeEl.textContent = new Date(message.timestamp).toLocaleTimeString();
-        
         messageEl.appendChild(contentEl);
-        messageEl.appendChild(timeEl);
+        
+        // 为用户消息添加时间戳
+        if (message.role === 'user') {
+            const timeEl = document.createElement('div');
+            timeEl.style.cssText = `
+                font-size: 0.8em;
+                opacity: 0.7;
+                text-align: right;
+                margin-top: 4px;
+            `;
+            timeEl.textContent = new Date(message.timestamp).toLocaleTimeString();
+            messageEl.appendChild(timeEl);
+        }
+        
+        // AI消息的时间戳和刷新按钮将在内容生成完成后动态添加
         
         this.chatContentEl.appendChild(messageEl);
         
@@ -915,5 +963,198 @@ export class FloatingChatDialog {
         } catch (error) {
             debugManager.error('FloatingChatDialog', '保存对话失败', error);
         }
+    }
+    
+    /**
+     * 重新生成最后一个AI回答
+     */
+    private async regenerateLastResponse(): Promise<void> {
+        if (this.isProcessing) {
+            debugManager.warn('FloatingChatDialog', '正在处理中，无法重新生成');
+            return;
+        }
+        
+        // 找到最后一个用户消息
+        let lastUserMessage: ChatMessage | null = null;
+        for (let i = this.messages.length - 1; i >= 0; i--) {
+            if (this.messages[i].role === 'user') {
+                lastUserMessage = this.messages[i];
+                break;
+            }
+        }
+        
+        if (!lastUserMessage) {
+            debugManager.warn('FloatingChatDialog', '没有找到用户消息，无法重新生成');
+            return;
+        }
+        
+        // 移除最后一个AI回答（如果存在）
+        const lastMessage = this.messages[this.messages.length - 1];
+        if (lastMessage && lastMessage.role === 'assistant') {
+            this.messages.pop();
+            const lastMessageEl = this.chatContentEl.lastElementChild;
+            if (lastMessageEl) {
+                lastMessageEl.remove();
+            }
+        }
+        
+        // 重新发送最后一个用户消息
+        this.isProcessing = true;
+        this.updateSendButtonState();
+        
+        // 创建AI响应消息占位符
+        const assistantMessage: ChatMessage = {
+            id: Date.now().toString(),
+            role: 'assistant',
+            content: '正在思考中...',
+            timestamp: Date.now()
+        };
+        
+        this.addMessage(assistantMessage);
+        
+        try {
+            // 更新聊天配置
+            const selectedModel = this.getSelectedModel();
+            const selectedTemplate = this.getSelectedTemplate();
+            
+            if (selectedModel) {
+                this.chatService.updateChatConfig(this.sessionId, {
+                    modelId: selectedModel,
+                    promptTemplate: selectedTemplate || undefined
+                });
+            }
+            
+            // 重置消息内容为空，准备流式更新
+            assistantMessage.content = '';
+            
+            // 流式响应回调
+            const streamCallback: StreamResponseCallback = (chunk: string, isComplete: boolean) => {
+                if (chunk) {
+                    assistantMessage.content += chunk;
+                    this.updateLastMessage(assistantMessage.content);
+                }
+                
+                if (isComplete) {
+                    this.isProcessing = false;
+                    this.updateSendButtonState();
+                    debugManager.info('FloatingChatDialog', 'AI重新生成完成');
+                    
+                    // 流式输出完成后，添加时间戳和刷新按钮
+                    this.addTimestampAndRefreshButton();
+                }
+            };
+            
+            // 使用流式发送消息
+            await this.chatService.sendMessageStream(this.sessionId, lastUserMessage.content, streamCallback);
+            
+        } catch (error) {
+            debugManager.error('FloatingChatDialog', '重新生成回答失败', error);
+            
+            assistantMessage.content = `抱歉，重新生成回答失败：${error.message}`;
+            this.updateLastMessage(assistantMessage.content);
+            this.isProcessing = false;
+            this.updateSendButtonState();
+            
+            // 错误情况下也添加时间戳和刷新按钮
+            this.addTimestampAndRefreshButton();
+        }
+    }
+    
+    /**
+     * 更新发送按钮状态
+     */
+    private updateSendButtonState(): void {
+        if (this.sendBtn) {
+            this.sendBtn.disabled = this.isProcessing;
+            if (this.isProcessing) {
+                this.sendBtn.style.background = 'var(--background-modifier-border)';
+                this.sendBtn.style.color = 'var(--text-muted)';
+                this.sendBtn.style.cursor = 'not-allowed';
+                this.sendBtn.innerHTML = '⏳';
+            } else {
+                this.sendBtn.style.background = 'var(--interactive-accent)';
+                this.sendBtn.style.color = 'var(--text-on-accent)';
+                this.sendBtn.style.cursor = 'pointer';
+                this.sendBtn.innerHTML = '➤';
+            }
+        }
+    }
+    
+    /**
+     * 为AI消息添加时间戳和刷新按钮（在内容生成完成后）
+     */
+    private addTimestampAndRefreshButton(): void {
+        const lastMessageEl = this.chatContentEl.lastElementChild as HTMLElement;
+        if (lastMessageEl && lastMessageEl.classList.contains('chat-message-assistant')) {
+            const lastMessage = this.messages[this.messages.length - 1];
+            if (lastMessage && lastMessage.role === 'assistant' && lastMessage.content && lastMessage.content.trim() !== '' && !lastMessage.content.includes('正在思考中')) {
+                // 检查是否已经有底部容器
+                let bottomContainer = lastMessageEl.querySelector('.ai-message-bottom') as HTMLElement;
+                if (!bottomContainer) {
+                    // 创建底部容器（包含时间戳和刷新按钮）
+                    bottomContainer = document.createElement('div');
+                    bottomContainer.className = 'ai-message-bottom';
+                    bottomContainer.style.cssText = `
+                        display: flex;
+                        align-items: center;
+                        gap: 8px;
+                        margin-top: 8px;
+                        font-size: 0.8em;
+                        opacity: 0.7;
+                    `;
+                    
+                    // 添加时间戳
+                    const timeEl = document.createElement('span');
+                    timeEl.textContent = new Date(lastMessage.timestamp).toLocaleTimeString();
+                    timeEl.style.cssText = `
+                        color: var(--text-muted);
+                    `;
+                    
+                    // 添加刷新按钮
+                    const refreshBtn = document.createElement('button');
+                    refreshBtn.innerHTML = '🔄';
+                    refreshBtn.title = '重新生成AI回答';
+                    refreshBtn.style.cssText = `
+                        background: none;
+                        border: none;
+                        cursor: pointer;
+                        padding: 2px 4px;
+                        border-radius: 3px;
+                        font-size: 12px;
+                        transition: all 0.2s;
+                        color: var(--text-muted);
+                        opacity: 0.7;
+                    `;
+                    
+                    refreshBtn.addEventListener('click', () => {
+                        this.regenerateLastResponse();
+                    });
+                    
+                    refreshBtn.addEventListener('mouseenter', () => {
+                        refreshBtn.style.background = 'var(--background-modifier-hover)';
+                        refreshBtn.style.color = 'var(--text-normal)';
+                        refreshBtn.style.opacity = '1';
+                    });
+                    
+                    refreshBtn.addEventListener('mouseleave', () => {
+                        refreshBtn.style.background = 'none';
+                        refreshBtn.style.color = 'var(--text-muted)';
+                        refreshBtn.style.opacity = '0.7';
+                    });
+                    
+                    bottomContainer.appendChild(timeEl);
+                    bottomContainer.appendChild(refreshBtn);
+                    lastMessageEl.appendChild(bottomContainer);
+                }
+            }
+        }
+    }
+    
+    /**
+     * 重新渲染最后一条消息（用于在流式完成后添加刷新按钮）
+     */
+    private rerenderLastMessage(): void {
+        // 调用新的方法
+        this.addTimestampAndRefreshButton();
     }
 }

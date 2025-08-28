@@ -57,6 +57,7 @@ export class ContextMenuService extends BaseService {
     initialize() {
         this.debugLog("ContextMenuService: 初始化右键菜单服务");
         this.registerEditorMenu();
+        this.registerFileMenu();
     }
 
     /**
@@ -74,30 +75,61 @@ export class ContextMenuService extends BaseService {
     }
 
     /**
+     * 注册文件右键菜单
+     */
+    private registerFileMenu() {
+        this.debugLog("ContextMenuService: 注册文件右键菜单");
+        
+        this.plugin.registerEvent(
+            this.app.workspace.on("file-menu", (menu: Menu, file: TFile) => {
+                this.debugLog("ContextMenuService: 文件右键菜单被触发");
+                this.handleFileMenu(menu, file);
+            })
+        );
+    }
+
+    /**
+     * 处理文件右键菜单事件
+     */
+    private handleFileMenu(menu: Menu, file: TFile) {
+        try {
+            this.debugLog(`ContextMenuService: 处理文件右键菜单 - ${file.path}`);
+            
+            // 在文件右键菜单中添加创建表单选项
+            this.addCreateFormMenuItemForFile(menu, file);
+            
+        } catch (error) {
+            debugManager.error("ContextMenuService", "处理文件右键菜单时发生错误:", error);
+        }
+    }
+
+    /**
      * 处理编辑器右键菜单事件
      */
     private handleEditorMenu(menu: Menu, editor: Editor, view: any) {
         try {
             this.debugLog("ContextMenuService: 开始处理编辑器右键菜单");
             
+            // 添加创建表单菜单项
+            this.addCreateFormMenuItem(menu, editor, view);
+            
             // 获取当前活动的表单和支持右键提交的字段
             const rightClickFields = this.getRightClickSubmitFields();
             
-            if (rightClickFields.length === 0) {
+            if (rightClickFields.length > 0) {
+                this.debugLog(`ContextMenuService: 找到 ${rightClickFields.length} 个支持右键提交的字段`);
+
+                // 获取选中的文本
+                const selectedText = editor.getSelection();
+                const hasSelection: boolean = !!(selectedText && selectedText.trim().length > 0);
+                
+                this.debugLog(`ContextMenuService: 选中文本: "${selectedText}", 是否有选中: ${hasSelection}`);
+
+                // 添加字段菜单项（使用折叠结构）
+                this.addFieldMenuItems(menu, editor, view, selectedText, hasSelection);
+            } else {
                 this.debugLog("ContextMenuService: 没有找到支持右键提交的字段");
-                return;
             }
-
-            this.debugLog(`ContextMenuService: 找到 ${rightClickFields.length} 个支持右键提交的字段`);
-
-            // 获取选中的文本
-            const selectedText = editor.getSelection();
-            const hasSelection: boolean = !!(selectedText && selectedText.trim().length > 0);
-            
-            this.debugLog(`ContextMenuService: 选中文本: "${selectedText}", 是否有选中: ${hasSelection}`);
-
-            // 添加字段菜单项（使用折叠结构）
-            this.addFieldMenuItems(menu, editor, view, selectedText, hasSelection);
 
         } catch (error) {
             debugManager.error("ContextMenuService", "处理编辑器右键菜单时发生错误:", error);
@@ -313,6 +345,57 @@ export class ContextMenuService extends BaseService {
         return Array.from(this.registeredFields.values());
     }
     
+    /**
+     * 添加创建表单菜单项
+     */
+    private addCreateFormMenuItem(menu: Menu, editor: Editor, view: any) {
+        try {
+            menu.addItem((item) => {
+                item
+                    .setTitle(localInstance.create_form)
+                    .setIcon("file-plus")
+                    .onClick(async () => {
+                        try {
+                            // 调用ApplicationCommandService的createFormFile方法
+                        const { ApplicationCommandService } = await import('../command/ApplicationCommandService');
+                        const applicationCommandService = new ApplicationCommandService(this.plugin);
+                        await applicationCommandService.createFormFile();
+                        } catch (error) {
+                            debugManager.error("ContextMenuService", "创建表单文件时发生错误:", error);
+                        }
+                    });
+            });
+            
+            this.debugLog("ContextMenuService: 已添加创建表单菜单项");
+        } catch (error) {
+            debugManager.error("ContextMenuService", "添加创建表单菜单项时发生错误:", error);
+        }
+    }
+
+    /**
+     * 在文件右键菜单中添加创建表单的选项
+     */
+    private addCreateFormMenuItemForFile(menu: Menu, file: TFile) {
+        menu.addItem((item) => {
+            item
+                .setTitle(localInstance.create_form)
+                .setIcon("file-plus")
+                .onClick(async () => {
+                    try {
+                        // 动态导入ApplicationCommandService以避免循环依赖
+                        const { ApplicationCommandService } = await import('../command/ApplicationCommandService');
+                        const applicationCommandService = new ApplicationCommandService(this.plugin);
+                        
+                        // 获取文件所在的文件夹作为默认目标文件夹
+                        const targetFolder = file.parent?.path || "";
+                        await applicationCommandService.createFormFile(targetFolder);
+                    } catch (error) {
+                        debugManager.error("ContextMenuService", "在文件夹中创建表单文件时发生错误:", error);
+                    }
+                });
+        });
+    }
+
     /**
      * 获取当前支持右键提交的字段
      */

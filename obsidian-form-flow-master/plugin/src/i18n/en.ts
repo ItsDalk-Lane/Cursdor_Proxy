@@ -38,6 +38,7 @@ export class En implements Local {
 	copy_success = "Copied successfully";
 	create_file = "Create File";
 	create_form = "Create Form";
+	create_form_here = "Create Form Here";
 	create_from_template = "Create file from template";
 	ctrl_enter_to_submit = "Ctrl ↩";
 	default_location_for_form_file = "Default location for new form files";

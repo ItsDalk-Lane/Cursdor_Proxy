@@ -161,6 +161,8 @@ export class Zh implements Local {
 	right_click_submit_description = "启用后，可以通过右键菜单将选中内容或整个文件添加到此字段";
 	add_selection_to_field = "添加选中内容到字段";
 	add_file_content_to_field = "添加文件内容到字段";
+	create_new_form = "创建新表单";
+	create_form_here = "在此处创建表单";
 	run_extend_function_error = "运行扩展函数错误";
 	run_script = "运行脚本";
 	save = "保存";

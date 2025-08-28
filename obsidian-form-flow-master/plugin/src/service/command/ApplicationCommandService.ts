@@ -13,6 +13,11 @@ import { CreateFileModal } from "src/component/modal/CreateFileModal";
 import { Files } from "src/utils/Files";
 
 export class ApplicationCommandService {
+    private plugin: FormPlugin;
+
+    constructor(plugin: FormPlugin) {
+        this.plugin = plugin;
+    }
 
     initialize(plugin: FormPlugin) {
         const app = plugin.app;
@@ -34,7 +39,7 @@ export class ApplicationCommandService {
             name: localInstance.create_form,
             icon: "file-spreadsheet",
             callback: () => {
-                this.createFormFile(plugin)
+                this.createFormFileInternal(plugin)
             },
         });
     }
@@ -43,11 +48,16 @@ export class ApplicationCommandService {
         // Unload any application commands if necessary
     }
 
-    private createFormFile(plugin: FormPlugin) {
+    /**
+     * 创建表单文件（内部方法）
+     * @param plugin FormPlugin实例
+     * @param defaultTargetFolder 可选的默认目标文件夹
+     */
+    private createFormFileInternal(plugin: FormPlugin, defaultTargetFolder?: string) {
         const app = plugin.app;
         const settings = plugin.settings;
         const folder = Strings.defaultIfBlank(settings.formFolder, DEFAULT_SETTINGS.formFolder);
-        const targetFolder = normalizePath(processObTemplate(folder));
+        const targetFolder = defaultTargetFolder || normalizePath(processObTemplate(folder));
         const modal = new CreateFileModal(app, {
             defaultFilebasename: localInstance.unnamed,
             defaultTargetFolder: targetFolder,
@@ -62,6 +72,12 @@ export class ApplicationCommandService {
         })
         modal.open();
     }
-}
 
-export const applicationCommandService = new ApplicationCommandService();
+    /**
+     * 公共方法：创建表单文件
+     * @param defaultTargetFolder 可选的默认目标文件夹
+     */
+    public async createFormFile(defaultTargetFolder?: string) {
+        this.createFormFileInternal(this.plugin, defaultTargetFolder);
+    }
+}

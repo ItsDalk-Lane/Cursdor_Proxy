@@ -2,7 +2,7 @@ import { Plugin, Notice } from 'obsidian';
 import { PluginSettings, DEFAULT_SETTINGS } from './settings/PluginSettings';
 import { formScriptService } from './service/extend/FormScriptService';
 import { formIntegrationService } from './service/command/FormIntegrationService';
-import { applicationCommandService } from './service/command/ApplicationCommandService';
+import { ApplicationCommandService } from './service/command/ApplicationCommandService';
 import { applicationFileViewService } from './service/file-view/ApplicationFileViewService';
 import { ContextMenuService } from './service/context-menu/ContextMenuService';
 import { FormStateManager } from './service/FormStateManager';
@@ -21,6 +21,7 @@ export default class FormPlugin extends Plugin {
 	settings: PluginSettings = DEFAULT_SETTINGS;
 	contextMenuService: ContextMenuService;
 	formIntegrationService: any; // FormIntegrationService 实例
+	applicationCommandService: ApplicationCommandService; // ApplicationCommandService 实例
 	api: FormFlowApi | null = null;
 	debugManager = debugManager; // 调试管理器实例
 	private serviceContainer: ServiceContainer;
@@ -106,7 +107,8 @@ export default class FormPlugin extends Plugin {
 		const metricId = globalPerformanceMonitor.startMetric('plugin-services-init');
 		
 		try {
-			await applicationCommandService.initialize(this);
+			this.applicationCommandService = new ApplicationCommandService(this);
+			await this.applicationCommandService.initialize(this);
 			await applicationFileViewService.initialize(this);
 			await formIntegrationService.initialize(this);
 			this.formIntegrationService = formIntegrationService;
@@ -255,7 +257,7 @@ export default class FormPlugin extends Plugin {
 
 			// 清理服务
 			formScriptService.unload();
-			applicationCommandService.unload(this);
+			this.applicationCommandService.unload(this);
 			applicationFileViewService.unload(this);
 			if (this.contextMenuService) {
 				this.contextMenuService.unload();

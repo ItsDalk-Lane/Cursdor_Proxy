@@ -33,6 +33,7 @@ export interface Local {
 	copy: string;
 	create_file: string;
 	create_form: string;
+	create_form_here: string;
 	create_from_template: string;
 	ctrl_enter_to_submit: string;
 	default_location_for_form_file_desc: string;

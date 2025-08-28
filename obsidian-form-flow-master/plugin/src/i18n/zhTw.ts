@@ -86,6 +86,7 @@ export class ZhTw implements Local {
 	copy_success = "複製成功";
 	create_file = "創建檔案";
 	create_form = "創建表單";
+	create_form_here = "在此處創建表單";
 	create_from_template = "基於模板創建檔案";
 	ctrl_enter_to_submit = "Ctrl ↩︎";
 	default_location_for_form_file = "新表單檔案預設存放路徑";
