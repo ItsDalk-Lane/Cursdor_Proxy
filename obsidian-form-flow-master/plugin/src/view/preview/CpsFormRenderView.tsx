@@ -85,14 +85,48 @@ function CpsFormRenderViewComponent(props: Props) {
 		createInitialFormValues()
 	);
 
-	// 监听预填充数据变化，更新表单值
+	// 监听预填充数据和字段变化，智能更新表单值
 	useEffect(() => {
-		debugManager.log('CpsFormRenderView', 'useEffect: prefilledData 发生变化');
+		debugManager.log('CpsFormRenderView', 'useEffect: prefilledData 或 fields 发生变化');
 		debugManager.logObject('CpsFormRenderView', 'useEffect: 新的 prefilledData', prefilledData);
-		const newFormValues = createInitialFormValues();
-		setFormIdValues(newFormValues);
-		debugManager.logObject('CpsFormRenderView', 'useEffect: 更新后的表单值', newFormValues);
-	}, [prefilledData, fields]); // 依赖prefilledData和fields的变化
+		
+		// 智能合并：只更新新增字段或预填充数据变化的字段，保留用户已输入的内容
+		setFormIdValues(prevValues => {
+			const defaultValues = resolveDefaultFormIdValues(fields);
+			const newValues = { ...prevValues };
+			
+			// 处理新增字段：为新字段设置默认值
+			fields.forEach(field => {
+				if (!(field.id in prevValues)) {
+					newValues[field.id] = defaultValues[field.id];
+					debugManager.log('CpsFormRenderView', `新增字段 '${field.id}' 设置默认值:`, defaultValues[field.id]);
+				}
+			});
+			
+			// 处理预填充数据：只覆盖预填充字段，不影响用户已输入的内容
+			if (prefilledData) {
+				for (const [fieldId, value] of prefilledData.entries()) {
+					// 只有当字段存在且预填充值与当前值不同时才更新
+					if (fields.some(f => f.id === fieldId) && newValues[fieldId] !== value) {
+						newValues[fieldId] = value;
+						debugManager.log('CpsFormRenderView', `预填充字段 '${fieldId}' 更新值:`, value);
+					}
+				}
+			}
+			
+			// 移除已删除字段的值
+			const fieldIds = new Set(fields.map(f => f.id));
+			Object.keys(prevValues).forEach(fieldId => {
+				if (!fieldIds.has(fieldId)) {
+					delete newValues[fieldId];
+					debugManager.log('CpsFormRenderView', `删除字段 '${fieldId}' 的值`);
+				}
+			});
+			
+			debugManager.logObject('CpsFormRenderView', 'useEffect: 智能合并后的表单值', newValues);
+			return newValues;
+		});
+	}, [prefilledData, fields, createInitialFormValues]); // 依赖prefilledData、fields和createInitialFormValues的变化
 	const [submitState, setSubmitState] = useState<SubmitState>({
 		submitting: false,
 		error: false,
@@ -156,21 +190,8 @@ function CpsFormRenderViewComponent(props: Props) {
 	);
 	useAutoFocus(formRef);
 
-	/**
-	 * 优化的值变更处理函数（柯里化版本）
-	 * 返回指定字段的单参数回调，供子组件直接调用
-	 * - 使用函数式 setState 避免闭包捕获旧状态
-	 * - 在调试模式下输出详细日志，便于问题排查
-	 */
-	const createFieldValueChangeHandler = useCallback((fieldId: string) => {
-		return (value: any) => {
-			debugManager.log('CpsFormRenderView', '字段值变更', { fieldId, value });
-			setFormIdValues((prev) => ({
-				...prev,
-				[fieldId]: value,
-			}));
-		};
-	}, []);
+	// 移除复杂的回调函数缓存机制，恢复到早期版本的简单内联回调
+	// 这样可以避免因回调函数引用问题导致的输入内容丢失
 
 	/**
 	 * 检查字段是否有固定值
@@ -260,7 +281,13 @@ function CpsFormRenderViewComponent(props: Props) {
 							field={field}
 							value={formIdValues[field.id]}
 							autoFocus={index === 0}
-							onValueChange={createFieldValueChangeHandler(field.id)}
+							onValueChange={(value) => {
+								const newValues = {
+									...formIdValues,
+									[field.id]: value,
+								};
+								setFormIdValues(newValues);
+							}}
 						/>
 					</CpsFormItem>
 				))}
@@ -306,17 +333,6 @@ function CpsFormRenderViewComponent(props: Props) {
 	);
 }
 
-// 使用React.memo优化组件性能，避免不必要的重新渲染
-const CpsFormRenderViewMemo = React.memo(CpsFormRenderViewComponent, (prevProps, nextProps) => {
-	// 自定义比较函数，只在关键属性变化时重新渲染
-	return (
-		prevProps.fields === nextProps.fields &&
-		prevProps.formConfig === nextProps.formConfig &&
-		prevProps.onSubmit === nextProps.onSubmit &&
-		prevProps.afterSubmit === nextProps.afterSubmit &&
-		prevProps.prefilledData === nextProps.prefilledData &&
-		prevProps.className === nextProps.className
-	);
-});
-
-export { CpsFormRenderViewMemo as CpsFormRenderView };
+// 移除React.memo优化，恢复到早期版本的简单实现
+// 这样可以避免因优化导致的输入内容丢失问题
+export { CpsFormRenderViewComponent as CpsFormRenderView };

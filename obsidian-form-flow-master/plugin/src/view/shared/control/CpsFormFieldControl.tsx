@@ -338,17 +338,66 @@ function CpsFormFieldControlComponent(props: CpsFormFieldControlProps) {
     );
 }
 
-const CpsFormFieldControlMemo = React.memo(CpsFormFieldControlComponent, (prevProps, nextProps) => {
-    // 自定义比较函数：当字段和对应值发生变化时才重新渲染
-    const isEqual = prevProps.field === nextProps.field && prevProps.value === nextProps.value;
-    if (!isEqual) {
-        debugManager.log('CpsFormFieldControl', 'Props changed, re-rendering', {
-            fieldId: nextProps.field.id,
-            prevValue: prevProps.value,
-            nextValue: nextProps.value,
-        });
+/**
+ * 深度比较字段对象的函数
+ * 避免使用JSON.stringify进行比较，提高性能
+ */
+function deepCompareField(prevField: IFormField, nextField: IFormField): boolean {
+    // 基础属性比较
+    if (
+        prevField.id !== nextField.id ||
+        prevField.type !== nextField.type ||
+        prevField.label !== nextField.label ||
+        prevField.required !== nextField.required ||
+        prevField.enableDescription !== nextField.enableDescription ||
+        prevField.description !== nextField.description ||
+        prevField.rightClickSubmit !== nextField.rightClickSubmit
+    ) {
+        return false;
     }
-    return isEqual;
-});
+    
+    // 默认值比较（支持数组类型）
+    if (Array.isArray(prevField.defaultValue) && Array.isArray(nextField.defaultValue)) {
+        if (prevField.defaultValue.length !== nextField.defaultValue.length) {
+            return false;
+        }
+        for (let i = 0; i < prevField.defaultValue.length; i++) {
+            if (prevField.defaultValue[i] !== nextField.defaultValue[i]) {
+                return false;
+            }
+        }
+    } else if (prevField.defaultValue !== nextField.defaultValue) {
+        return false;
+    }
+    
+    // 特定字段类型的属性比较
+    if (prevField.type === FormFieldType.SELECT || prevField.type === FormFieldType.RADIO) {
+        const prevSelect = prevField as ISelectField;
+        const nextSelect = nextField as ISelectField;
+        if (JSON.stringify(prevSelect.options) !== JSON.stringify(nextSelect.options)) {
+            return false;
+        }
+    }
+    
+    if (prevField.type === FormFieldType.TEXTAREA) {
+        const prevTextArea = prevField as ITextAreaField;
+        const nextTextArea = nextField as ITextAreaField;
+        if (prevTextArea.rows !== nextTextArea.rows) {
+            return false;
+        }
+    }
+    
+    if (prevField.type === FormFieldType.PROPERTY_VALUE) {
+        const prevProperty = prevField as IPropertyValueField;
+        const nextProperty = nextField as IPropertyValueField;
+        if (prevProperty.propertyName !== nextProperty.propertyName) {
+            return false;
+        }
+    }
+    
+    return true;
+}
 
-export { CpsFormFieldControlMemo as CpsFormFieldControl };
+// 移除React.memo优化，恢复到早期版本的简单实现
+// 这样可以避免因回调函数引用变化导致的输入内容丢失问题
+export { CpsFormFieldControlComponent as CpsFormFieldControl };

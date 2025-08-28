@@ -15,63 +15,86 @@ export default function (props: {
 	fields: IFormField[];
 	onSave: (fields: IFormField[], modified: IFormField[]) => void;
 }) {
-	const { fields } = props;
+	const { fields, onSave } = props;
 	useSortable({
 		items: fields || [],
 		getId: (item) => item.id,
 		onChange: (orders) => {
-			props.onSave(orders, []);
+			onSave(orders, []);
 		},
 	});
 
+	/**
+	 * 字段保存处理函数 - 优化状态更新逻辑
+	 */
 	const onFieldSave = useCallback(
 		(field: IFormField) => {
-			const modified = fields.find((f) => f.id === field.id);
-			let newFields;
-			if (fields.find((f) => f.id === field.id)) {
+			const existingField = fields.find((f) => f.id === field.id);
+			let newFields: IFormField[];
+			
+			if (existingField) {
+				// 更新现有字段
 				newFields = updateField(field, fields);
 			} else {
+				// 添加新字段
 				newFields = [...fields, field];
 			}
-			props.onSave(newFields, modified ? [modified] : []);
+			
+			onSave(newFields, existingField ? [existingField] : []);
 		},
-		[fields, props.onSave]
+		[fields, onSave]
 	);
 
+	/**
+	 * 字段删除处理函数
+	 */
 	const onFieldDeleted = useCallback(
 		(field: IFormField) => {
 			const newFields = fields.filter((f) => f.id !== field.id);
-			props.onSave(newFields, []);
+			onSave(newFields, []);
 		},
-		[fields, props.onSave]
+		[fields, onSave]
 	);
 
+	/**
+	 * 添加新字段处理函数 - 优化标签生成逻辑
+	 */
 	const onFieldAdd = useCallback(() => {
-		const names = fields.map((f) => f.label);
-		const newField = {
+		const existingLabels = fields.map((f) => f.label);
+		const newField: IFormField = {
 			id: v4(),
-			label: generateSequenceName(names),
+			label: generateSequenceName(existingLabels, "字段"), // 使用更友好的默认前缀
 			type: FormFieldType.TEXT,
+			required: false,
+			enableDescription: false,
+			rightClickSubmit: false
 		};
 		const newFields = [...fields, newField];
-		props.onSave(newFields, []);
-	}, [fields, props.onSave]);
+		onSave(newFields, []);
+	}, [fields, onSave]);
 
+	/**
+	 * 字段复制处理函数 - 优化复制逻辑
+	 */
 	const onDuplicate = useCallback(
 		(field: IFormField) => {
-			const newField = {
+			const existingLabels = fields.map((f) => f.label);
+			const duplicatedField: IFormField = {
 				...field,
 				id: v4(),
+				label: generateSequenceName(existingLabels, field.label + " 副本")
 			};
+			
+			// 在原字段后面插入复制的字段
 			const newFields = fields.flatMap((f) => {
 				if (f.id === field.id) {
-					return [newField, f];
+					return [f, duplicatedField];
 				}
 				return [f];
 			});
-			props.onSave(newFields, []);
+			onSave(newFields, []);
 		},
-		[fields, props.onSave]
+		[fields, onSave]
 	);
 
 	return (
