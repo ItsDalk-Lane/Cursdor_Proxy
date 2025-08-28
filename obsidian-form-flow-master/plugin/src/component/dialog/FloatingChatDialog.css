@@ -1,0 +1,246 @@
+.floating-chat-dialog {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 400px;
+    height: 500px;
+    background: var(--background-primary);
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 8px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    resize: both;
+    min-width: 300px;
+    min-height: 200px;
+}
+
+.floating-chat-dialog.minimized {
+    height: 40px;
+    resize: none;
+}
+
+.floating-chat-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    background: var(--background-secondary);
+    border-bottom: 1px solid var(--background-modifier-border);
+    cursor: move;
+    user-select: none;
+}
+
+.floating-chat-title {
+    font-weight: 600;
+    color: var(--text-normal);
+    font-size: 14px;
+}
+
+.floating-chat-controls {
+    display: flex;
+    gap: 4px;
+}
+
+.floating-chat-control-btn {
+    width: 20px;
+    height: 20px;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+}
+
+.floating-chat-control-btn:hover {
+    background: var(--background-modifier-hover);
+    color: var(--text-normal);
+}
+
+.floating-chat-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.floating-chat-messages {
+    flex: 1;
+    padding: 12px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.floating-chat-message {
+    max-width: 80%;
+    padding: 8px 12px;
+    border-radius: 12px;
+    word-wrap: break-word;
+    line-height: 1.4;
+}
+
+.floating-chat-message.user {
+    align-self: flex-end;
+    background: var(--interactive-accent);
+    color: var(--text-on-accent);
+}
+
+.floating-chat-message.assistant {
+    align-self: flex-start;
+    background: var(--background-secondary);
+    color: var(--text-normal);
+    border: 1px solid var(--background-modifier-border);
+}
+
+.floating-chat-message.thinking {
+    align-self: flex-start;
+    background: var(--background-secondary);
+    color: var(--text-muted);
+    font-style: italic;
+    border: 1px solid var(--background-modifier-border);
+}
+
+.floating-chat-input-area {
+    padding: 12px;
+    border-top: 1px solid var(--background-modifier-border);
+    background: var(--background-primary);
+}
+
+.floating-chat-input-container {
+    display: flex;
+    gap: 8px;
+    align-items: flex-end;
+}
+
+.floating-chat-input {
+    flex: 1;
+    min-height: 36px;
+    max-height: 100px;
+    padding: 8px 12px;
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 18px;
+    background: var(--background-primary);
+    color: var(--text-normal);
+    resize: none;
+    font-family: inherit;
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+.floating-chat-input:focus {
+    outline: none;
+    border-color: var(--interactive-accent);
+}
+
+.floating-chat-send-btn {
+    width: 36px;
+    height: 36px;
+    border: none;
+    background: var(--interactive-accent);
+    color: var(--text-on-accent);
+    border-radius: 18px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    flex-shrink: 0;
+}
+
+.floating-chat-send-btn:hover {
+    background: var(--interactive-accent-hover);
+}
+
+.floating-chat-send-btn:disabled {
+    background: var(--background-modifier-border);
+    color: var(--text-muted);
+    cursor: not-allowed;
+}
+
+.floating-chat-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.floating-chat-action-btn {
+    padding: 4px 8px;
+    border: 1px solid var(--background-modifier-border);
+    background: var(--background-primary);
+    color: var(--text-muted);
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+.floating-chat-action-btn:hover {
+    background: var(--background-modifier-hover);
+    color: var(--text-normal);
+}
+
+/* 滚动条样式 */
+.floating-chat-messages::-webkit-scrollbar {
+    width: 6px;
+}
+
+.floating-chat-messages::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.floating-chat-messages::-webkit-scrollbar-thumb {
+    background: var(--background-modifier-border);
+    border-radius: 3px;
+}
+
+.floating-chat-messages::-webkit-scrollbar-thumb:hover {
+    background: var(--text-muted);
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .floating-chat-dialog {
+        width: 90vw;
+        height: 70vh;
+        max-width: 400px;
+    }
+}
+
+/* 动画效果 */
+.floating-chat-dialog {
+    animation: fadeInScale 0.2s ease-out;
+}
+
+@keyframes fadeInScale {
+    from {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+    }
+}
+
+.floating-chat-message {
+    animation: slideInUp 0.2s ease-out;
+}
+
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

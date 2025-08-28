@@ -14,6 +14,14 @@ export interface AIRequest {
     topP?: number;
     frequencyPenalty?: number;
     presencePenalty?: number;
+    stream?: boolean;
+}
+
+/**
+ * 流式响应回调接口
+ */
+export interface StreamCallback {
+    (chunk: string, isComplete: boolean): void;
 }
 
 export interface AIResponse {
@@ -32,6 +40,95 @@ export class AIApiClient {
 
     constructor(model: IAIModelConfig) {
         this.model = model;
+    }
+
+    /**
+     * 调用AI模型（流式输出）
+     */
+    async callStream(request: AIRequest, callback: StreamCallback): Promise<AIResponse> {
+        try {
+            debugManager.log('AIApiClient', `开始流式调用AI模型: ${this.model.provider} - ${this.model.modelName}`);
+            
+            const requestBody = this.buildRequestBody({ ...request, stream: true });
+            const headers = this.buildHeaders();
+            const url = this.buildApiUrl();
+
+            debugManager.log('AIApiClient', `流式请求URL: ${url}`);
+            
+            // 使用fetch进行流式请求
+            const response = await fetch(url, {
+                method: 'POST',
+                headers,
+                body: JSON.stringify(requestBody)
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                debugManager.error('AIApiClient', `流式调用失败: ${response.status} - ${errorText}`);
+                return {
+                    success: false,
+                    error: `HTTP ${response.status}: ${errorText}`
+                };
+            }
+
+            const reader = response.body?.getReader();
+            if (!reader) {
+                return {
+                    success: false,
+                    error: '无法获取响应流'
+                };
+            }
+
+            let fullContent = '';
+            const decoder = new TextDecoder();
+
+            try {
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+
+                    const chunk = decoder.decode(value, { stream: true });
+                    const lines = chunk.split('\n');
+
+                    for (const line of lines) {
+                        if (line.trim() === '' || !line.startsWith('data: ')) continue;
+                        if (line.includes('[DONE]')) {
+                            callback('', true);
+                            break;
+                        }
+
+                        try {
+                            const data = JSON.parse(line.substring(6));
+                            const content = this.extractStreamContent(data);
+                            if (content) {
+                                fullContent += content;
+                                callback(content, false);
+                            }
+                        } catch (parseError) {
+                            debugManager.warn('AIApiClient', `解析流式数据失败: ${parseError}`);
+                        }
+                    }
+                }
+            } finally {
+                reader.releaseLock();
+            }
+
+            callback('', true);
+            debugManager.log('AIApiClient', `流式调用完成，总内容长度: ${fullContent.length}`);
+
+            return {
+                success: true,
+                content: fullContent
+            };
+
+        } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : "流式AI调用失败";
+            debugManager.error('AIApiClient', `流式调用异常: ${errorMessage}`, error);
+            return {
+                success: false,
+                error: errorMessage
+            };
+        }
     }
 
     /**
@@ -135,7 +232,7 @@ export class AIApiClient {
                     max_tokens: Math.min(request.maxTokens || this.model.maxOutputTokens, this.model.maxOutputTokens),
                     temperature: request.temperature || this.model.advancedSettings?.temperature || 0.7,
                     top_p: request.topP || this.model.advancedSettings?.topP || 0.9,
-                    stream: false
+                    stream: request.stream || false
                 };
                 debugManager.log('AIApiClient', `通义千问请求体: ${JSON.stringify(tongyiBody, null, 2)}`);
                 return tongyiBody;
@@ -148,7 +245,7 @@ export class AIApiClient {
                     top_p: request.topP || this.model.advancedSettings?.topP || 0.9,
                     frequency_penalty: request.frequencyPenalty || this.model.advancedSettings?.frequencyPenalty || 0.0,
                     presence_penalty: request.presencePenalty || this.model.advancedSettings?.presencePenalty || 0.0,
-                    stream: false
+                    stream: request.stream || false
                 };
             case AIProvider.GEMINI:
                 debugManager.log('AIApiClient', '构建Gemini请求体');
@@ -218,8 +315,32 @@ export class AIApiClient {
                     temperature: request.temperature || this.model.advancedSettings?.temperature || 0.7,
                     top_p: request.topP || this.model.advancedSettings?.topP || 0.9,
                     frequency_penalty: request.frequencyPenalty || this.model.advancedSettings?.frequencyPenalty || 0.0,
-                    presence_penalty: request.presencePenalty || this.model.advancedSettings?.presencePenalty || 0.0
+                    presence_penalty: request.presencePenalty || this.model.advancedSettings?.presencePenalty || 0.0,
+                    stream: request.stream || false
                 };
+        }
+    }
+
+    /**
+     * 从流式响应中提取内容
+     */
+    private extractStreamContent(data: any): string {
+        try {
+            switch (this.model.provider) {
+                case AIProvider.TONGYI:
+                case AIProvider.ZHIPU:
+                    // OpenAI兼容格式
+                    return data.choices?.[0]?.delta?.content || '';
+                case AIProvider.GEMINI:
+                    // Gemini格式
+                    return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+                default:
+                    // 默认OpenAI格式
+                    return data.choices?.[0]?.delta?.content || '';
+            }
+        } catch (error) {
+            debugManager.warn('AIApiClient', `提取流式内容失败: ${error}`);
+            return '';
         }
     }
 

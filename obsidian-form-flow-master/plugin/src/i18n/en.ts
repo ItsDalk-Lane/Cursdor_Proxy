@@ -255,6 +255,28 @@ export class En implements Local {
 	ai_output_variable_name = "Output Variable Name";
 	ai_template_file = "Template File";
 	ai_custom_content = "Custom Content";
+	// AI Output Mode
+	ai_output_mode = "Output Mode";
+	ai_output_mode_variable = "Store to Variable";
+	ai_output_mode_floating_chat = "Floating Chat Interface";
+	// Floating Chat Interface
+	floating_chat_title = "AI Chat";
+	floating_chat_placeholder = "Please enter your question...";
+	floating_chat_send = "Send";
+	floating_chat_clear = "Clear";
+	floating_chat_minimize = "Minimize";
+	floating_chat_maximize = "Maximize";
+	floating_chat_close = "Close";
+	floating_chat_thinking = "AI is thinking...";
+	floating_chat_error = "An error occurred, please try again";
+	// Conversation Save
+	conversation_save = "Conversation Save";
+	conversation_save_enabled = "Enable Conversation Save";
+	conversation_save_to_current = "Save to Current File";
+	conversation_save_to_file = "Save to Specified File";
+	conversation_save_file_path = "Save File Path";
+	conversation_saved = "Conversation Saved";
+	conversation_save_failed = "Conversation Save Failed";
 	edit = "Edit";
 	
 	// 右键提交相关翻译

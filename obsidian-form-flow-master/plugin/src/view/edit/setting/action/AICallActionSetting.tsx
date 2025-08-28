@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { AICallFormAction, PromptSourceType } from "../../../../model/action/AICallFormAction";
+import { AICallFormAction, PromptSourceType, AIOutputMode, ConversationSaveConfig } from "../../../../model/action/AICallFormAction";
 import { IFormAction } from "../../../../model/action/IFormAction";
 import { FormActionType } from "../../../../model/enums/FormActionType";
 import { FormConfig } from "../../../../model/FormConfig";
@@ -31,6 +31,18 @@ export function AICallActionSetting({ value, config, onChange }: AICallActionSet
     const [outputVariableName, setOutputVariableName] = useState(aiAction.outputVariableName || "");
     const [modelFieldName, setModelFieldName] = useState(aiAction.modelFieldName || "");
     const [templateFieldName, setTemplateFieldName] = useState(aiAction.templateFieldName || "");
+    
+    // 新增的输出模式相关状态
+    const [outputMode, setOutputMode] = useState<AIOutputMode>(
+        aiAction.outputMode || AIOutputMode.VARIABLE
+    );
+    const [conversationSave, setConversationSave] = useState<ConversationSaveConfig>(
+        aiAction.conversationSave || {
+            enabled: false,
+            saveToCurrentFile: true,
+            targetFilePath: ""
+        }
+    );
 
     // 获取表单中的AI模型字段
     const aiModelFields = config.fields.filter(field => field.type === "ai_model_list");
@@ -43,12 +55,14 @@ export function AICallActionSetting({ value, config, onChange }: AICallActionSet
             promptSource,
             templateFile: promptSource === PromptSourceType.BUILTIN_TEMPLATE ? templateFile : undefined,
             customPrompt: promptSource === PromptSourceType.CUSTOM ? customPrompt : undefined,
-            outputVariableName,
+            outputVariableName: outputMode === AIOutputMode.VARIABLE ? outputVariableName : undefined,
             modelFieldName,
-            templateFieldName
+            templateFieldName,
+            outputMode,
+            conversationSave: outputMode === AIOutputMode.FLOATING_CHAT ? conversationSave : undefined
         };
         onChange(updatedAction);
-    }, [promptSource, templateFile, customPrompt, outputVariableName, modelFieldName, templateFieldName]);
+    }, [promptSource, templateFile, customPrompt, outputVariableName, modelFieldName, templateFieldName, outputMode, conversationSave]);
 
     return (
         <div className="ai-call-action-setting">
@@ -77,12 +91,12 @@ export function AICallActionSetting({ value, config, onChange }: AICallActionSet
                 </div>
             )}
 
-            {/* 提示词设置 */}
+            {/* 输出模式选择 - 移到提示词设置位置 */}
             <div className="setting-item">
                 <div className="setting-item-info">
-                    <div className="setting-item-name">{localInstance.ai_prompt_setting}</div>
+                    <div className="setting-item-name">输出模式</div>
                     <div className="setting-item-description">
-                        选择使用内置模板还是自定义提示词
+                        选择AI响应的输出方式
                     </div>
                 </div>
                 <div className="setting-item-control">
@@ -90,27 +104,129 @@ export function AICallActionSetting({ value, config, onChange }: AICallActionSet
                         <label className="radio-item">
                             <input
                                 type="radio"
-                                value={PromptSourceType.BUILTIN_TEMPLATE}
-                                checked={promptSource === PromptSourceType.BUILTIN_TEMPLATE}
-                                onChange={(e) => setPromptSource(e.target.value as PromptSourceType)}
+                                value={AIOutputMode.VARIABLE}
+                                checked={outputMode === AIOutputMode.VARIABLE}
+                                onChange={(e) => setOutputMode(e.target.value as AIOutputMode)}
                             />
-                            <span>{localInstance.ai_builtin_template}</span>
+                            <span>存储到变量</span>
                         </label>
                         <label className="radio-item">
                             <input
                                 type="radio"
-                                value={PromptSourceType.CUSTOM}
-                                checked={promptSource === PromptSourceType.CUSTOM}
-                                onChange={(e) => setPromptSource(e.target.value as PromptSourceType)}
+                                value={AIOutputMode.FLOATING_CHAT}
+                                checked={outputMode === AIOutputMode.FLOATING_CHAT}
+                                onChange={(e) => setOutputMode(e.target.value as AIOutputMode)}
                             />
-                            <span>{localInstance.ai_custom_prompt}</span>
+                            <span>悬浮对话界面</span>
                         </label>
                     </div>
                 </div>
             </div>
 
-            {/* 模板文件选择 */}
-            {promptSource === PromptSourceType.BUILTIN_TEMPLATE && (
+            {/* 对话保存设置 - 仅在悬浮界面模式下显示 */}
+            {outputMode === AIOutputMode.FLOATING_CHAT && (
+                <div className="setting-item">
+                    <div className="setting-item-info">
+                        <div className="setting-item-name">对话保存设置</div>
+                        <div className="setting-item-description">
+                            配置对话内容的保存选项
+                        </div>
+                    </div>
+                    <div className="setting-item-control">
+                        <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                            <label style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                                <input
+                                    type="checkbox"
+                                    checked={conversationSave.enabled}
+                                    onChange={(e) => setConversationSave({
+                                        ...conversationSave,
+                                        enabled: e.target.checked
+                                    })}
+                                />
+                                <span>启用对话保存</span>
+                            </label>
+                            
+                            {conversationSave.enabled && (
+                                <div style={{ marginLeft: "24px", display: "flex", flexDirection: "column", gap: "8px" }}>
+                                    <div className="radio-group">
+                                        <label className="radio-item">
+                                            <input
+                                                type="radio"
+                                                checked={conversationSave.saveToCurrentFile}
+                                                onChange={() => setConversationSave({
+                                                    ...conversationSave,
+                                                    saveToCurrentFile: true,
+                                                    targetFilePath: ""
+                                                })}
+                                            />
+                                            <span>保存到当前文件</span>
+                                        </label>
+                                        <label className="radio-item">
+                                            <input
+                                                type="radio"
+                                                checked={!conversationSave.saveToCurrentFile}
+                                                onChange={() => setConversationSave({
+                                                    ...conversationSave,
+                                                    saveToCurrentFile: false
+                                                })}
+                                            />
+                                            <span>保存到指定文件</span>
+                                        </label>
+                                    </div>
+                                    
+                                    {!conversationSave.saveToCurrentFile && (
+                                        <MarkdownFileSuggestInput
+                                            value={conversationSave.targetFilePath || ""}
+                                            onChange={(value) => setConversationSave({
+                                                ...conversationSave,
+                                                targetFilePath: value
+                                            })}
+                                            placeholder="输入目标文件路径..."
+                                        />
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* 提示词设置 - 仅在变量模式下显示 */}
+            {outputMode === AIOutputMode.VARIABLE && (
+                <div className="setting-item">
+                    <div className="setting-item-info">
+                        <div className="setting-item-name">{localInstance.ai_prompt_setting}</div>
+                        <div className="setting-item-description">
+                            选择使用内置模板还是自定义提示词
+                        </div>
+                    </div>
+                    <div className="setting-item-control">
+                        <div className="radio-group">
+                            <label className="radio-item">
+                                <input
+                                    type="radio"
+                                    value={PromptSourceType.BUILTIN_TEMPLATE}
+                                    checked={promptSource === PromptSourceType.BUILTIN_TEMPLATE}
+                                    onChange={(e) => setPromptSource(e.target.value as PromptSourceType)}
+                                />
+                                <span>{localInstance.ai_builtin_template}</span>
+                            </label>
+                            <label className="radio-item">
+                                <input
+                                    type="radio"
+                                    value={PromptSourceType.CUSTOM}
+                                    checked={promptSource === PromptSourceType.CUSTOM}
+                                    onChange={(e) => setPromptSource(e.target.value as PromptSourceType)}
+                                />
+                                <span>{localInstance.ai_custom_prompt}</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* 模板文件选择 - 仅在变量模式且选择内置模板时显示 */}
+            {outputMode === AIOutputMode.VARIABLE && promptSource === PromptSourceType.BUILTIN_TEMPLATE && (
                 <div className="setting-item" style={{ position: "relative", zIndex: 1 }}>
                     <div className="setting-item-info">
                         <div className="setting-item-name">
@@ -171,26 +287,28 @@ export function AICallActionSetting({ value, config, onChange }: AICallActionSet
                 </div>
             )}
 
-            {/* 输出变量名 */}
-            <div className="setting-item">
-                <div className="setting-item-info">
-                    <div className="setting-item-name">{localInstance.ai_output_variable_name}</div>
-                    <div className="setting-item-description">
-                        设置存储AI返回结果的变量名，可在后续动作中通过 {"{{output:variableName}}"} 引用
+            {/* 输出变量名 - 仅在变量模式下显示 */}
+            {outputMode === AIOutputMode.VARIABLE && (
+                <div className="setting-item">
+                    <div className="setting-item-info">
+                        <div className="setting-item-name">{localInstance.ai_output_variable_name}</div>
+                        <div className="setting-item-description">
+                            设置存储AI返回结果的变量名，可在后续动作中通过 {"{{output:variableName}}"} 引用
+                        </div>
+                    </div>
+                    <div className="setting-item-control">
+                        <input
+                            type="text"
+                            value={outputVariableName}
+                            onChange={(e) => setOutputVariableName(e.target.value)}
+                            placeholder="例如：aiResponse"
+                        />
                     </div>
                 </div>
-                <div className="setting-item-control">
-                    <input
-                        type="text"
-                        value={outputVariableName}
-                        onChange={(e) => setOutputVariableName(e.target.value)}
-                        placeholder="例如：aiResponse"
-                    />
-                </div>
-            </div>
+            )}
 
-            {/* 自定义提示词 - 移到最后，分上下两个容器 */}
-            {promptSource === PromptSourceType.CUSTOM && (
+            {/* 自定义提示词 - 仅在变量模式且选择自定义提示时显示 */}
+            {outputMode === AIOutputMode.VARIABLE && promptSource === PromptSourceType.CUSTOM && (
                 <div className="setting-item ai-custom-prompt-setting">
                     <div className="setting-item-info">
                         <div className="setting-item-name">{localInstance.ai_custom_content}</div>
@@ -200,7 +318,7 @@ export function AICallActionSetting({ value, config, onChange }: AICallActionSet
                     </div>
                 </div>
             )}
-            {promptSource === PromptSourceType.CUSTOM && (
+            {outputMode === AIOutputMode.VARIABLE && promptSource === PromptSourceType.CUSTOM && (
                 <div className="setting-item ai-custom-prompt-textarea">
                     <div className="setting-item-control" style={{ width: "100%" }}>
                         <textarea

@@ -1,5 +1,5 @@
 import { Notice } from "obsidian";
-import { AICallFormAction, PromptSourceType } from "../../model/action/AICallFormAction";
+import { AICallFormAction, PromptSourceType, AIOutputMode } from "../../model/action/AICallFormAction";
 import { IFormAction } from "../../model/action/IFormAction";
 import { FormActionType } from "../../model/enums/FormActionType";
 import { ActionContext, ActionChain, IActionService } from "./IActionService";
@@ -11,6 +11,7 @@ import { FormFieldType } from "../../model/enums/FormFieldType";
 import { AIModelListField } from "../../model/field/AIModelListField";
 import { TemplateListField } from "../../model/field/TemplateListField";
 import { debugManager } from "../../utils/DebugManager";
+import { FloatingChatDialog } from "../../view/shared/chat/FloatingChatDialog";
 
 export default class AICallActionService implements IActionService {
 
@@ -22,8 +23,6 @@ export default class AICallActionService implements IActionService {
         const aiAction = action as AICallFormAction;
         
         try {
-
-            
             // 获取AI模型
             const model = await AICallActionService.getSelectedModel(aiAction, context);
             if (!model) {
@@ -31,39 +30,13 @@ export default class AICallActionService implements IActionService {
                 throw new Error('未找到有效的AI模型');
             }
 
-
-            // 准备提示词
-            const prompt = await AICallActionService.preparePrompt(aiAction, context);
-            if (!prompt.trim()) {
-                debugManager.error('AICallAction', '提示词内容为空');
-                throw new Error('提示词内容为空');
-            }
-
-
-            // 准备消息
-            const messages = await AICallActionService.prepareMessages(prompt, context);
-
-
-            // 创建AI客户端并调用
-            const client = AIApiClient.create(model);
-
-            const response = await client.call({
-                messages,
-                maxTokens: model.maxOutputTokens
-            });
-
-
-            if (response.success && response.content) {
-                // 存储结果到输出变量
-                if (aiAction.outputVariableName) {
-                    AICallActionService.storeOutputVariable(aiAction.outputVariableName, response.content, context);
-
-                }
-
-                new Notice(`AI调用成功，结果已存储到变量 ${aiAction.outputVariableName}`);
+            // 根据输出模式选择不同的执行逻辑
+            if (aiAction.outputMode === AIOutputMode.FLOATING_CHAT) {
+                // 悬浮对话界面模式
+                await this.runFloatingChatMode(aiAction, model, context);
             } else {
-                debugManager.error('AICallAction', 'AI调用失败', response.error);
-                throw new Error(response.error || 'AI调用失败');
+                // 默认变量存储模式
+                await this.runVariableMode(aiAction, model, context);
             }
 
         } catch (error) {
@@ -74,6 +47,73 @@ export default class AICallActionService implements IActionService {
 
         // 继续执行链中的下一个动作
         await chain.next(context);
+    }
+
+    /**
+     * 执行变量存储模式的AI调用
+     */
+    private async runVariableMode(aiAction: AICallFormAction, model: IAIModelConfig, context: ActionContext): Promise<void> {
+        // 准备提示词
+        const prompt = await AICallActionService.preparePrompt(aiAction, context);
+        if (!prompt.trim()) {
+            debugManager.error('AICallAction', '提示词内容为空');
+            throw new Error('提示词内容为空');
+        }
+
+        // 准备消息
+        const messages = await AICallActionService.prepareMessages(prompt, context);
+
+        // 创建AI客户端并调用
+        const client = AIApiClient.create(model);
+        const response = await client.call({
+            messages,
+            maxTokens: model.maxOutputTokens
+        });
+
+        if (response.success && response.content) {
+            // 存储结果到输出变量
+            if (aiAction.outputVariableName) {
+                AICallActionService.storeOutputVariable(aiAction.outputVariableName, response.content, context);
+                new Notice(`AI调用成功，结果已存储到变量 ${aiAction.outputVariableName}`);
+            }
+        } else {
+            debugManager.error('AICallAction', 'AI调用失败', response.error);
+            throw new Error(response.error || 'AI调用失败');
+        }
+    }
+
+    /**
+     * 执行悬浮对话界面模式的AI调用
+     */
+    private async runFloatingChatMode(aiAction: AICallFormAction, model: IAIModelConfig, context: ActionContext): Promise<void> {
+        debugManager.info('AICallAction', '启动悬浮对话界面模式');
+        
+        // 创建悬浮对话界面
+        const chatDialog = new FloatingChatDialog({
+            app: context.app,
+            modelId: model.id,
+            promptTemplate: aiAction.promptSource === PromptSourceType.BUILTIN_TEMPLATE ? aiAction.templateFile : undefined,
+            conversationSave: aiAction.conversationSave,
+            onClose: () => {
+                debugManager.info('AICallAction', '悬浮对话界面已关闭');
+            }
+        });
+
+        // 设置模型选项
+        const aiSettingsService = new AISettingsService(context.app);
+        const allModels = aiSettingsService.getModels();
+        const modelOptions = allModels.map((m: IAIModelConfig) => ({ id: m.id, name: m.displayName }));
+        chatDialog.setModelOptions(modelOptions);
+
+        // 异步加载模板选项（包含内置提示词）
+        await chatDialog.loadAndSetTemplateOptions();
+        
+        debugManager.info('AICallAction', '已完成模板选项加载');
+
+        // 显示对话界面
+        chatDialog.show();
+        
+        new Notice('悬浮对话界面已启动');
     }
     
     /**

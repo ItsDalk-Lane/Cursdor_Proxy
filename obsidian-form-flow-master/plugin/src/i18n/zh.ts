@@ -259,6 +259,28 @@ export class Zh implements Local {
 	ai_output_variable_name = "输出变量名称";
 	ai_template_file = "模板文件";
 	ai_custom_content = "自定义内容";
+	// AI输出模式相关
+	ai_output_mode = "输出模式";
+	ai_output_mode_variable = "存储到变量";
+	ai_output_mode_floating_chat = "悬浮对话界面";
+	// 悬浮对话界面相关
+	floating_chat_title = "AI对话";
+	floating_chat_placeholder = "请输入您的问题...";
+	floating_chat_send = "发送";
+	floating_chat_clear = "清空";
+	floating_chat_minimize = "最小化";
+	floating_chat_maximize = "最大化";
+	floating_chat_close = "关闭";
+	floating_chat_thinking = "AI正在思考中...";
+	floating_chat_error = "发生错误，请重试";
+	// 对话保存相关
+	conversation_save = "对话保存";
+	conversation_save_enabled = "启用对话保存";
+	conversation_save_to_current = "保存到当前文件";
+	conversation_save_to_file = "保存到指定文件";
+	conversation_save_file_path = "保存文件路径";
+	conversation_saved = "对话已保存";
+	conversation_save_failed = "对话保存失败";
 	content_cleanup = "内容清理";
 	
 	// 新增功能
