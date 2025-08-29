@@ -132,14 +132,15 @@ function TemplateListControl({ field, value, onChange, autoFocus = false }: Temp
 }
 
 // 使用React.memo优化组件性能，避免不必要的重新渲染
+// 注意：不比较onChange回调函数，避免因回调函数引用变化导致的问题
 export const TemplateListControlMemo = React.memo(TemplateListControl, (prevProps, nextProps) => {
     // 自定义比较函数，只在关键属性变化时重新渲染
     return (
         prevProps.value === nextProps.value &&
         prevProps.field.id === nextProps.field.id &&
         prevProps.field.templateFolder === nextProps.field.templateFolder &&
-        prevProps.autoFocus === nextProps.autoFocus &&
-        prevProps.onChange === nextProps.onChange
+        prevProps.autoFocus === nextProps.autoFocus
+        // 移除 onChange 回调函数比较，避免引用不稳定导致的重新渲染问题
     );
 });
 

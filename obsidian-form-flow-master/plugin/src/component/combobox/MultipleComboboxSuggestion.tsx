@@ -21,7 +21,7 @@ export type Option = {
 	description?: string;
 };
 
-export const MultipleComboboxSuggestion = React.memo(function MultipleComboboxSuggestion(props: {
+function MultipleComboboxSuggestionComponent(props: {
 	id?: string;
 	label?: string;
 	value: string[] | string;
@@ -238,10 +238,10 @@ export const MultipleComboboxSuggestion = React.memo(function MultipleComboboxSu
 						</Popover.Content>
 					</Popover.Portal>
 				)}
-			</Popover.Root>
-		</div>
-	);
-});
+		</Popover.Root>
+	</div>
+);
+}
 
 function ChipItems(props: {
 	values: string[];
@@ -388,3 +388,18 @@ function VirtualList(props: {
 		</div>
 	);
 }
+
+// 使用React.memo优化组件性能，避免不必要的重新渲染
+// 注意：不比较onChange回调函数，避免因回调函数引用变化导致的问题
+export const MultipleComboboxSuggestion = React.memo(MultipleComboboxSuggestionComponent, (prevProps, nextProps) => {
+	// 自定义比较函数，只在关键属性变化时重新渲染
+	return (
+		prevProps.id === nextProps.id &&
+		prevProps.label === nextProps.label &&
+		prevProps.value === nextProps.value &&
+		prevProps.options === nextProps.options &&
+		prevProps.placeholder === nextProps.placeholder &&
+		prevProps.disabled === nextProps.disabled
+		// 移除 onChange 回调函数比较，避免引用不稳定导致的重新渲染问题
+	);
+});

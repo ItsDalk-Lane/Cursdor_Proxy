@@ -102,12 +102,13 @@ function deepCompareFields(field1: IFormField, field2: IFormField): boolean {
  */
 export const CpsFormFieldItemEditing = React.memo(CpsFormFieldItemEditingComponent, (prevProps, nextProps) => {
 	// 优化的比较函数：避免不必要的重新渲染
+	// 注意：不比较回调函数，避免因回调函数引用变化导致的问题
 	return (
 		prevProps.index === nextProps.index &&
-		deepCompareFields(prevProps.field, nextProps.field) &&
-		// 比较回调函数引用（通常这些函数是稳定的）
-		prevProps.onChange === nextProps.onChange &&
-		prevProps.onDelete === nextProps.onDelete &&
-		prevProps.onDuplicate === nextProps.onDuplicate
+		deepCompareFields(prevProps.field, nextProps.field)
+		// 移除回调函数比较，避免引用不稳定导致的重新渲染问题
+		// prevProps.onChange === nextProps.onChange &&
+		// prevProps.onDelete === nextProps.onDelete &&
+		// prevProps.onDuplicate === nextProps.onDuplicate
 	);
 });
